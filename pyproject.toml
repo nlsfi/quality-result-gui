@@ -1,0 +1,21 @@
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+follow_imports = "normal"
+show_column_numbers = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.qgis_plugin_dev_tools]
+plugin_package_name = "quality_result_gui_plugin"
+runtime_requires = [
+    "qgis_plugin_tools",
+    "quality-result-gui"
+]
+version_number_source = "distribution"

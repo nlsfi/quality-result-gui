@@ -1,0 +1,34 @@
+{
+	"extensions": {
+		"recommendations": [
+			"editorconfig.editorconfig",
+			"mikestead.dotenv",
+		]
+	},
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.languageServer": "Pylance",
+		"python.testing.pytestEnabled": true,
+		"python.testing.unittestEnabled": false,
+		"python.linting.enabled": true,
+		"python.linting.flake8Enabled": true,
+		"python.linting.mypyEnabled": true,
+		"python.linting.pylintEnabled": false,
+		"python.formatting.provider": "black",
+		"editor.formatOnSave": true,
+		"[python]": {
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": true
+			}
+		},
+		"files.associations": {
+			"*.ts": "xml"
+		},
+		"editor.bracketPairColorization.enabled": true,
+		"editor.guides.bracketPairs": "active",
+	}
+}
