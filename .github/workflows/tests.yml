@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    container:
+      image: qgis/qgis:${{ matrix.qgis-image-tag }}
+    strategy:
+      matrix:
+        qgis-image-tag:
+          - release-3_22
+          # - release-3_26
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          pip3 install virtualenv && virtualenv .venv --system-site-packages
+      - run: |
+          .venv/bin/pip3 install -r requirements-ci.txt --no-deps --only-binary=:all:
+      - run: |
+          .venv/bin/pytest
+        env:
+          QT_QPA_PLATFORM: offscreen
