@@ -18,4 +18,4 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 
-__version__ = "0.0.2"
+__version__ = "0.0.2.post0"
