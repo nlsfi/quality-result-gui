@@ -22,7 +22,8 @@ jobs:
       - run: |
           pip3 install virtualenv && virtualenv .venv --system-site-packages
       - run: |
-          .venv/bin/pip3 install -r requirements-ci.txt --no-deps --only-binary=:all:
+          .venv/bin/pip3 install -r requirements.txt --no-deps --only-binary=:all:
+          .venv/bin/pip3 install . --no-deps
       - run: |
           .venv/bin/pytest
         env:
