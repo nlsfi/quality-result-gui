@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [0.0.3] - 2022-12-15
 
 - Fix: Use glob paths for missing build resource files
 
@@ -14,3 +14,4 @@
 
 [0.0.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.1
 [0.0.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.2
+[0.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.3
