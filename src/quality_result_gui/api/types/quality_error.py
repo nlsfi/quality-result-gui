@@ -29,12 +29,14 @@ class QualityErrorType(Enum):
     ATTRIBUTE = 1
     GEOMETRY = 2
     TOPOLOGY = 3
+    CONTINUITY = 4
 
 
 ERROR_TYPE_LABEL = {
     QualityErrorType.ATTRIBUTE: tr("Attribute error"),
     QualityErrorType.GEOMETRY: tr("Geometry error"),
     QualityErrorType.TOPOLOGY: tr("Topology error"),
+    QualityErrorType.CONTINUITY: tr("Continuity error"),
 }
 
 

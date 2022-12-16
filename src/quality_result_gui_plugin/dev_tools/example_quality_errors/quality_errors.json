@@ -167,6 +167,17 @@
                 "error_description_en": "Self-intersection",
                 "is_user_processed": false,
                 "wkt_geom": "LineStringZ (234877.73099999999976717 6711974.97400000039488077 0, 234826.9280000000144355 6711932.34700000006705523 0, 234850.86999999999534339 6711893.223000000230968 0, 234866.05199999999604188 6711934.09900000039488077 0, 234832.1840000000083819 6711950.44900000002235174 0)"
+              },
+              {
+                "error_id": 106,
+                "unique_identifier": "106",
+                "error_type": 4,
+                "attribute_name": "road_link_road_class_id",
+                "error_description_fi": "Attribuutin arvo poikkeaa liittyvän kohteen arvosta",
+                "error_description_sv": "",
+                "error_description_en": "Attribute value does match value of connecting feature",
+                "is_user_processed": false,
+                "wkt_geom": "LineStringZ (234877.73099999999976717 6711974.97400000039488077 0, 234826.9280000000144355 6711932.34700000006705523 0, 234850.86999999999534339 6711893.223000000230968 0, 234866.05199999999604188 6711934.09900000039488077 0, 234832.1840000000083819 6711950.44900000002235174 0)"
               }
             ]
           }

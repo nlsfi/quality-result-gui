@@ -254,7 +254,7 @@ def test_select_action_checks_all(
             "Error type",
             [ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]],
             {"building_part_area", "chimney_point"},
-            {2, 3},
+            {2, 3, 4},
             True,
         ),
         (
@@ -264,21 +264,21 @@ def test_select_action_checks_all(
                 ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY],
             ],
             {"building_part_area", "chimney_point"},
-            {3},
+            {3, 4},
             True,
         ),
         (
             "Feature type",
             ["chimney_point"],
             {"building_part_area"},
-            {1, 2, 3},
+            {1, 2, 3, 4},
             True,
         ),
         (
             "User processed",
             ["Show user processed"],
             {"building_part_area", "chimney_point"},
-            {1, 2, 3},
+            {1, 2, 3, 4},
             False,
         ),
     ],
@@ -313,7 +313,7 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     # Baseline filters for menu
     assert filter_menu._available_feature_types == error_feature_types
     assert filter_menu._filtered_feature_types == error_feature_types
-    assert filter_menu._filtered_error_types == {1, 2, 3}
+    assert filter_menu._filtered_error_types == {1, 2, 3, 4}
     assert filter_menu._show_user_processed is True
 
     # Do selection in menu (in this test checkbox is toggled to false):
@@ -332,7 +332,7 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     _trigger_action(filter_menu, "Reset filters")
 
     # Filters should be back to baseline
-    on_filters_changed.assert_called_with(error_feature_types, {1, 2, 3}, True)
+    on_filters_changed.assert_called_with(error_feature_types, {1, 2, 3, 4}, True)
 
 
 @pytest.mark.parametrize(
@@ -416,18 +416,18 @@ def test_filters_are_retained_when_data_changes(
         menu,
         "chimney_point",
     )
-    on_filters_changed.assert_called_with({"building_part_area"}, {1, 2, 3}, True)
+    on_filters_changed.assert_called_with({"building_part_area"}, {1, 2, 3, 4}, True)
 
     # update quality errors
     filter_menu.refresh_feature_type_filters(request.getfixturevalue(new_errors))
 
     on_filters_changed.assert_called_with(
-        expected_feature_type_filters, {1, 2, 3}, True
+        expected_feature_type_filters, {1, 2, 3, 4}, True
     )
 
     # revert quality errors back to original value
     filter_menu.refresh_feature_type_filters(quality_errors)
 
     on_filters_changed.assert_called_with(
-        expected_filters_after_revert, {1, 2, 3}, True
+        expected_filters_after_revert, {1, 2, 3, 4}, True
     )
