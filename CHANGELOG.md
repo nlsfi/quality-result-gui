@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-- Feat: Add pre-commit hook for style checks of markdown files
-
 ## [0.0.3] - 2022-12-15
 
 - Fix: Use glob paths for missing build resource files
