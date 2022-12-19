@@ -214,6 +214,7 @@ class ShowErrorsOnMapCheckBox(QCheckBox):
 
 class QualityErrorTreeView(QTreeView):
     quality_error_checked = pyqtSignal(str, bool)
+    quality_error_selected = pyqtSignal(QualityError, QMouseEvent)
 
     def __init__(
         self,
@@ -298,10 +299,12 @@ class QualityErrorTreeView(QTreeView):
     def _on_current_item_changed(
         self, current_index: QModelIndex, previous_index: QModelIndex
     ) -> None:
-        error_feature = self._get_error_feature_from_row(current_index)
+        quality_error = self._get_quality_error_from_row(current_index)
 
-        if error_feature is None:
+        if quality_error is None:
             return
+
+        error_feature = ErrorFeature.from_quality_error(quality_error, self._crs)
 
         # Right button behaviour
         if (
@@ -317,6 +320,7 @@ class QualityErrorTreeView(QTreeView):
                 [error_feature], preserve_scale=False
             )
 
+        self.quality_error_selected.emit(quality_error, self.source_button_event)
         self.visualizer.refresh_selected_error(error_feature)
 
     def _get_error_features_to_visualize(self) -> List[ErrorFeature]:
@@ -349,9 +353,17 @@ class QualityErrorTreeView(QTreeView):
         self.quality_error_checked.emit(error_hash, is_checked)
 
     def _get_error_feature_from_row(
+        self, row_index: QModelIndex
+    ) -> Optional[ErrorFeature]:
+        quality_error = self._get_quality_error_from_row(row_index)
+        if quality_error is not None:
+            return ErrorFeature.from_quality_error(quality_error, self._crs)
+        return None
+
+    def _get_quality_error_from_row(
         self,
         row_index: QModelIndex,
-    ) -> Optional[ErrorFeature]:
+    ) -> Optional[QualityError]:
         data = row_index.data(Qt.UserRole)
 
         if not QVariant(data).isValid():
@@ -361,11 +373,5 @@ class QualityErrorTreeView(QTreeView):
 
         # Single quality error
         if item_type == QualityErrorTreeItemType.ERROR:
-            quality_error = cast(QualityError, item_data)
-            return ErrorFeature(
-                quality_error.unique_identifier,
-                quality_error.priority,
-                quality_error.geometry,
-                self._crs,
-            )
+            return cast(QualityError, item_data)
         return None

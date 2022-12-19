@@ -185,15 +185,16 @@ def test_show_quality_errors_dock_should_have_rows_with_quality_errors(
         "expected_value",
         "should_zoom_to_feature",
         "expected_annotation_feature_count",
+        "should_trigger_selected_signal",
     ),
     [
         # num all errors: 5
-        (0, "Fatal", False, 5),
-        (1, "building_part_area", False, 5),
-        (2, "123c1e9b", False, 5),
+        (0, "Fatal", False, 5, False),
+        (1, "building_part_area", False, 5, False),
+        (2, "123c1e9b", False, 5, False),
         # single errors of feature 123c1e9b
-        (3, "Geometry error", True, 5 + 1),
-        (4, "Attribute error", True, 5 + 1),
+        (3, "Geometry error", True, 5 + 1, True),
+        (4, "Attribute error", True, 5 + 1, True),
     ],
     ids=[
         "priority-selected",
@@ -213,6 +214,7 @@ def test_clicking_tree_view_row_zooms_to_feature_if_feature_or_quality_error_sel
     expected_value: str,
     should_zoom_to_feature: bool,
     expected_annotation_feature_count: int,
+    should_trigger_selected_signal: bool,
 ):
     qgis_iface.mapCanvas().setExtent(QgsRectangle(100, 100, 200, 200))
     original_extent = qgis_iface.mapCanvas().extent()
@@ -232,27 +234,35 @@ def test_clicking_tree_view_row_zooms_to_feature_if_feature_or_quality_error_sel
 
     tree.scrollTo(index_to_select)
     item_location = tree.visualRect(index_to_select).center()
-    qtbot.mouseClick(tree.viewport(), mouse_button, pos=item_location, delay=50)
 
-    # Sanity check to test that correct row was selected
-    assert index_to_select.data() == expected_value
+    with qtbot.waitSignal(
+        quality_errors_dock_with_data.error_tree_view.quality_error_selected,
+        timeout=100,
+        raising=False,
+    ) as item_selected_signal:
+        qtbot.mouseClick(tree.viewport(), mouse_button, pos=item_location, delay=50)
 
-    # Check that zoom function was triggered
-    if should_zoom_to_feature is True:
-        assert original_extent != qgis_iface.mapCanvas().extent()
+        # Sanity check to test that correct row was selected
+        assert index_to_select.data() == expected_value
 
-        if should_preserve_scale is True:
-            assert round(original_extent.area(), 1) == round(
-                qgis_iface.mapCanvas().extent().area(), 1
-            )
-    else:
-        assert original_extent == qgis_iface.mapCanvas().extent()
+        # Check that zoom function was triggered
+        if should_zoom_to_feature is True:
+            assert original_extent != qgis_iface.mapCanvas().extent()
 
-    quality_layer = (
-        quality_errors_dock_with_data.error_tree_view.visualizer._quality_error_layer.find_layer_from_project()
-    )
-    assert quality_layer is not None
-    assert len(quality_layer.items()) == expected_annotation_feature_count
+            if should_preserve_scale is True:
+                assert round(original_extent.area(), 1) == round(
+                    qgis_iface.mapCanvas().extent().area(), 1
+                )
+        else:
+            assert original_extent == qgis_iface.mapCanvas().extent()
+
+        quality_layer = (
+            quality_errors_dock_with_data.error_tree_view.visualizer._quality_error_layer.find_layer_from_project()
+        )
+        assert quality_layer is not None
+        assert len(quality_layer.items()) == expected_annotation_feature_count
+
+        assert item_selected_signal.signal_triggered == should_trigger_selected_signal
 
 
 @pytest.mark.parametrize(
