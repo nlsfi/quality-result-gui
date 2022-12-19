@@ -28,7 +28,10 @@ from qgis.core import (
     QgsProject,
 )
 
-from quality_result_gui.api.types.quality_error import QualityErrorPriority
+from quality_result_gui.api.types.quality_error import (
+    QualityError,
+    QualityErrorPriority,
+)
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.utils import layer_utils
 
@@ -41,6 +44,17 @@ class ErrorFeature:
     priority: QualityErrorPriority
     geometry: QgsGeometry
     crs: QgsCoordinateReferenceSystem
+
+    @staticmethod
+    def from_quality_error(
+        quality_error: QualityError, crs: QgsCoordinateReferenceSystem
+    ) -> "ErrorFeature":
+        return ErrorFeature(
+            quality_error.unique_identifier,
+            quality_error.priority,
+            quality_error.geometry,
+            crs,
+        )
 
 
 class QualityErrorVisualizer:

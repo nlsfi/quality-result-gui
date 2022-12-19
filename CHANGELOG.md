@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add: Emit mouse event signal for selected error feature
+
 ## [0.0.3] - 2022-12-15
 
 - Fix: Use glob paths for missing build resource files
