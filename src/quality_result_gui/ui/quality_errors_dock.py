@@ -43,6 +43,7 @@ from qgis_plugin_tools.tools.i18n import tr
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import (
     QualityError,
+    QualityErrorPriority,
     QualityErrorsByPriority,
 )
 from quality_result_gui.quality_data_fetcher import (
@@ -91,14 +92,11 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     filter_with_map_extent_check_box: QCheckBox
     show_errors_on_map_check_box: QCheckBox
 
-    quality_errors: List[QualityErrorsByPriority]
-
     def __init__(
         self, api_client: QualityResultClient, parent: Optional[QWidget]
     ) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.quality_errors = []
         self._api_client = api_client
 
         # Create filter menu before tree view
@@ -133,10 +131,13 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
         self.error_tree_view = QualityErrorTreeView(
             self.quality_errors_tree_filter_menu,
             self.filter_with_map_extent_check_box,
-            self.show_errors_on_map_check_box,
             self._fetcher,
             api_client.get_crs(),
         )
+        self.show_errors_on_map_check_box.toggled.connect(
+            self.error_tree_view.toggle_error_visibility
+        )
+
         self.visibilityChanged.connect(self._on_visibility_changed)
 
         self.error_tree_layout.insertWidget(0, self.error_tree_view)
@@ -158,7 +159,9 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
 
     def _on_visibility_changed(self, visible: bool) -> None:
         if visible:
-            self.error_tree_view.on_visualized_data_changed()
+            self.error_tree_view.toggle_error_visibility(
+                self.show_errors_on_map_check_box.isChecked()
+            )
             self._fetcher.set_checks_enabled(True)
         else:
             self._fetcher.set_checks_enabled(False)
@@ -170,7 +173,15 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
             self.error_tree_view.visualizer.remove_quality_error_layer()
 
     def _update_filter_menu_icon_state(self) -> None:
-        if self.error_tree_view.base_model.rowCount(QModelIndex()) == 0:
+        model = self.error_tree_view.base_model
+        num_rows = sum(
+            [
+                model.rowCount(model.index(i, 0, QModelIndex()))
+                for i in range(len(QualityErrorPriority))
+            ]
+        )
+
+        if num_rows == 0:
             self.filter_button.setDisabled(True)
         else:
             self.filter_button.setEnabled(True)
@@ -220,7 +231,6 @@ class QualityErrorTreeView(QTreeView):
         self,
         filter_menu: QualityErrorsTreeFilterMenu,
         map_extent_check_box: MapExtentCheckBox,
-        show_errors_on_map_check_box: ShowErrorsOnMapCheckBox,
         fetcher: BackgroundQualityResultsFetcher,
         crs: QgsCoordinateReferenceSystem,
         parent: Optional[QWidget] = None,
@@ -229,27 +239,23 @@ class QualityErrorTreeView(QTreeView):
 
         self._crs = crs
         self.visualizer = QualityErrorVisualizer()
-        show_errors_on_map_check_box.toggled.connect(self.visualizer.change_visibility)
 
         self.source_button_event = None
 
         self.setColumnWidth(ModelColumn.TYPE_OR_ID.value, 250)
         self.setIndentation(10)
         self.setUniformRowHeights(True)
+        self.setUpdatesEnabled(True)
 
         self.base_model = QualityErrorsTreeBaseModel(
             self, self._quality_error_checked_callback
         )
-        fetcher.results_received.connect(self.base_model.refresh_model)
         self.base_model.filterable_data_changed.connect(
             filter_menu.refresh_feature_filters
         )
-        self.base_model.filterable_data_changed.connect(self.on_visualized_data_changed)
 
         self.filter_by_menu_model = FilterByMenuModel(self)
         self.filter_by_menu_model.setSourceModel(self.base_model)
-        self.filter_by_menu_model.rowsInserted.connect(self.on_visualized_data_changed)
-        self.filter_by_menu_model.rowsRemoved.connect(self.on_visualized_data_changed)
 
         filter_menu.filters_changed.connect(self.filter_by_menu_model.update_filters)
 
@@ -262,17 +268,15 @@ class QualityErrorTreeView(QTreeView):
 
         styled_model = QualityErrorIdentityProxyModel(self)
         styled_model.setSourceModel(filter_by_extent_model)
-        self.setModel(styled_model)
-        self.selectionModel().currentChanged.connect(self._on_current_item_changed)
-        self.model().rowsInserted.connect(self._on_rows_inserted)
 
-        # connect reset after setting model to fire expansion after view is reset
-        # https://www.qtcentre.org/threads/61009-QTreeView-expansion-after-model-reset?p=269908#post269908
-        # for some reason initial model open wont expand if directconnection is used,
-        # queue instead to wait for synchronous code to run the model reset first
-        filter_by_extent_model.modelReset.connect(
-            self._expand_all_error_rows, Qt.ConnectionType.QueuedConnection
-        )
+        self.setModel(styled_model)
+
+        self.selectionModel().currentChanged.connect(self._on_current_item_changed)
+
+        self.model().rowsInserted.connect(self._on_rows_inserted)
+        self.model().rowsAboutToBeRemoved.connect(self._on_rows_about_to_be_removed)
+
+        fetcher.results_received.connect(self._on_results_updated)
 
     def mousePressEvent(  # noqa: N802 (override qt method)
         self, event: QMouseEvent
@@ -283,17 +287,46 @@ class QualityErrorTreeView(QTreeView):
 
         self.source_button_event = None
 
-    def on_visualized_data_changed(self) -> None:
-        self.visualizer.refresh_all_errors(
-            self._get_error_features_to_visualize(),
-            self._get_error_feature_from_row(self.selectionModel().currentIndex()),
-        )
+    def toggle_error_visibility(self, show_errors: bool) -> None:
+        self.visualizer.toggle_visibility(show_errors)
+
+    def _on_results_updated(
+        self, quality_errors: List[QualityErrorsByPriority]
+    ) -> None:
+        self.setUpdatesEnabled(False)
+        self.base_model.refresh_model(quality_errors)
+        self.setUpdatesEnabled(True)
 
     def _on_rows_inserted(self, parent: QModelIndex, first: int, last: int) -> None:
-        self.expandRecursively(parent)
+        for i in range(first, last + 1):
+            index = self.model().index(i, 0, parent)
 
-    def _expand_all_error_rows(self) -> None:
-        self.expandRecursively(QModelIndex())
+            # Expand new rows always
+            self.expandRecursively(index)
+
+            # Update visualized errors
+            new_errors_to_visualize = list(self._get_quality_errors_from_index(index))
+            self.visualizer.add_new_errors(
+                [
+                    ErrorFeature.from_quality_error(error, self._crs)
+                    for error in new_errors_to_visualize
+                ]
+            )
+
+    def _on_rows_about_to_be_removed(
+        self, parent: QModelIndex, first: int, last: int
+    ) -> None:
+        for i in range(first, last + 1):
+            index = self.model().index(i, 0, parent)
+
+            # Update visualized errors
+            errors_to_remove = list(self._get_quality_errors_from_index(index))
+            self.visualizer.remove_errors(
+                [
+                    ErrorFeature.from_quality_error(error, self._crs)
+                    for error in errors_to_remove
+                ]
+            )
 
     @log_if_fails
     def _on_current_item_changed(
@@ -323,42 +356,10 @@ class QualityErrorTreeView(QTreeView):
         self.quality_error_selected.emit(quality_error, self.source_button_event)
         self.visualizer.refresh_selected_error(error_feature)
 
-    def _get_error_features_to_visualize(self) -> List[ErrorFeature]:
-        error_features: List[ErrorFeature] = []
-
-        def _get_quality_errors_from_rows(index: QModelIndex) -> Iterator[ErrorFeature]:
-            """Get quality error rows from index."""
-            if not index.isValid():
-                return
-
-            row_count = self.filter_by_menu_model.rowCount(index)
-            if row_count == 0:
-                # Index is for quality error row, which has no children
-                error = self._get_error_feature_from_row(index)
-                if error is not None:
-                    yield error
-            else:
-                for i in range(row_count):
-                    yield from _get_quality_errors_from_rows(index.child(i, 0))
-
-        for i in range(self.filter_by_menu_model.rowCount(QModelIndex())):
-            index = self.filter_by_menu_model.index(i, 0, QModelIndex())
-            error_features += list(_get_quality_errors_from_rows(index))
-
-        return error_features
-
     def _quality_error_checked_callback(
         self, error_hash: str, is_checked: bool
     ) -> None:
         self.quality_error_checked.emit(error_hash, is_checked)
-
-    def _get_error_feature_from_row(
-        self, row_index: QModelIndex
-    ) -> Optional[ErrorFeature]:
-        quality_error = self._get_quality_error_from_row(row_index)
-        if quality_error is not None:
-            return ErrorFeature.from_quality_error(quality_error, self._crs)
-        return None
 
     def _get_quality_error_from_row(
         self,
@@ -370,8 +371,24 @@ class QualityErrorTreeView(QTreeView):
             return None
 
         item_type, item_data = cast(ErrorDataType, data)
-
         # Single quality error
         if item_type == QualityErrorTreeItemType.ERROR:
             return cast(QualityError, item_data)
         return None
+
+    def _get_quality_errors_from_index(
+        self, index: QModelIndex
+    ) -> Iterator[QualityError]:
+        """Get quality errors recursively from index."""
+        if not index.isValid():
+            return
+
+        row_count = self.model().rowCount(index)
+        if row_count == 0:
+            # Index may now be at quality error row, which has never any children
+            error = self._get_quality_error_from_row(index)
+            if error is not None:
+                yield error
+        else:
+            for i in range(row_count):
+                yield from self._get_quality_errors_from_index(index.child(i, 0))

@@ -76,7 +76,9 @@ class QualityErrorResponse:
             QualityErrorsByFeature(
                 feature_type,
                 error_obj["feature_id"],
-                self._parse_errors(priority, feature_type, error_obj["errors"]),
+                self._parse_errors(
+                    priority, feature_type, error_obj["feature_id"], error_obj["errors"]
+                ),
             )
             for error_obj in errors_obj
         ]
@@ -85,12 +87,14 @@ class QualityErrorResponse:
         self,
         priority: QualityErrorPriority,
         feature_type: str,
+        feature_id: str,
         errors_obj: List[Dict[str, Any]],
     ) -> List[QualityError]:
         return [
             QualityError(
                 priority,
                 feature_type,
+                feature_id,
                 error_obj["error_id"],
                 error_obj["unique_identifier"],
                 QualityErrorType(error_obj["error_type"]),

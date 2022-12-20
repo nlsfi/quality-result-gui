@@ -65,55 +65,27 @@ class QualityErrorVisualizer:
     ID_PREFIX_FOR_SELECTED = "selected-"
 
     def __init__(self) -> None:
-        self.show_errors = True
+        self.errors_visible = True
 
         self._all_error_features: List[ErrorFeature] = []
         self._selected_error_feature: Optional[ErrorFeature] = None
 
         self._quality_error_layer = QualityErrorLayer()
 
-    def change_visibility(self, show_errors: bool) -> None:
-        self.show_errors = show_errors
-        self.show_or_hide_errors()
-
-    def show_or_hide_errors(self) -> None:
-        if self.show_errors is True:
-            self.show_all_errors()
+    def toggle_visibility(self, show_errors: bool) -> None:
+        if show_errors is True:
+            self.show_errors()
         else:
-            self.hide_all_errors()
+            self.hide_errors()
 
-    def _get_or_create_layer(self) -> QgsAnnotationLayer:
-        layer = self._quality_error_layer.find_layer_from_project()
-
-        if layer is None:
-            layer = self._quality_error_layer.get_annotation_layer()
-            QgsProject.instance().addMapLayer(layer, False)
-            QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
-
-        return layer
-
-    def refresh_all_errors(
-        self,
-        all_error_features: List[ErrorFeature],
-        selected_error_feature: Optional[ErrorFeature],
-    ) -> None:
-        LOGGER.debug("Refresh all quality errors on map canvas")
-
-        layer = self._get_or_create_layer()
-        layer.reset()
-        self._all_error_features = all_error_features
-
-        for error_feature in self._all_error_features:
+    def add_new_errors(self, error_features: List[ErrorFeature]) -> None:
+        for error_feature in error_features:
             self._quality_error_layer.add_or_replace_annotation(
                 error_feature, use_highlighted_style=False
             )
 
-        if selected_error_feature is not None:
-            self.refresh_selected_error(selected_error_feature)
-        else:
-            self._remove_selected_error()
-
-        self.show_or_hide_errors()
+    def remove_errors(self, error_features: List[ErrorFeature]) -> None:
+        self._quality_error_layer.remove_annotations(error_features)
 
     def refresh_selected_error(
         self,
@@ -128,24 +100,15 @@ class QualityErrorVisualizer:
             id_prefix=self.ID_PREFIX_FOR_SELECTED,
         )
 
-    def _remove_selected_error(self) -> None:
-        if self._selected_error_feature is not None:
-            self._quality_error_layer.remove_annotations(
-                [self._selected_error_feature], id_prefix=self.ID_PREFIX_FOR_SELECTED
-            )
-            self._selected_error_feature = None
-
-    def show_all_errors(self) -> None:
+    def show_errors(self) -> None:
         layer = self._get_or_create_layer()
+        layer_utils.set_visibility_checked(layer, True)
+        self.errors_visible = True
 
-        if layer is not None:
-            layer_utils.set_visibility_checked(layer, True)
-
-    def hide_all_errors(self) -> None:
-        layer = self._quality_error_layer.find_layer_from_project()
-
-        if layer is not None:
-            layer_utils.set_visibility_checked(layer, False)
+    def hide_errors(self) -> None:
+        layer = self._get_or_create_layer()
+        layer_utils.set_visibility_checked(layer, False)
+        self.errors_visible = False
 
     def remove_quality_error_layer(self) -> None:
         layer = self._quality_error_layer.find_layer_from_project()
@@ -163,3 +126,20 @@ class QualityErrorVisualizer:
                 preserve_scale,
                 min_extent_height=20,
             )
+
+    def _get_or_create_layer(self) -> QgsAnnotationLayer:
+        layer = self._quality_error_layer.find_layer_from_project()
+
+        if layer is None:
+            layer = self._quality_error_layer.get_annotation_layer()
+            QgsProject.instance().addMapLayer(layer, False)
+            QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
+
+        return layer
+
+    def _remove_selected_error(self) -> None:
+        if self._selected_error_feature is not None:
+            self._quality_error_layer.remove_annotations(
+                [self._selected_error_feature], id_prefix=self.ID_PREFIX_FOR_SELECTED
+            )
+            self._selected_error_feature = None

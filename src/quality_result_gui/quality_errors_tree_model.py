@@ -20,7 +20,18 @@
 import enum
 import logging
 from abc import abstractmethod
-from typing import Any, Callable, List, NewType, Optional, Set, Tuple, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    NewType,
+    Optional,
+    Set,
+    Tuple,
+    cast,
+)
 
 from qgis.core import QgsRectangle
 from qgis.PyQt.QtCore import (
@@ -59,28 +70,6 @@ COLUMN_HEADERS = {
 }
 
 
-def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> int:
-    if not index.isValid():
-        return 0
-    num_rows = 0
-    row_count = model.rowCount(index)
-    if row_count == 0:
-        # Index is for quality error row, which has no children
-        return 1
-    for i in range(row_count):
-        child_index = index.child(i, 0)
-        num_rows += _count_quality_error_rows(model, child_index)
-    return num_rows
-
-
-def _count_all_rows(model: QAbstractItemModel) -> int:
-    num_rows = 0
-    for i in range(model.rowCount(QModelIndex())):
-        index = model.index(i, 0, QModelIndex())
-        num_rows += _count_quality_error_rows(model, index)
-    return num_rows
-
-
 def get_error_feature_types(
     errors_by_priority: List[QualityErrorsByPriority],
 ) -> Set[str]:
@@ -104,6 +93,50 @@ def get_error_feature_attributes(
     return feature_attributes
 
 
+def _get_quality_errors_indexes(
+    model: QAbstractItemModel, index: QModelIndex
+) -> Iterator[QModelIndex]:
+    """Get quality all error indexes from index."""
+    if not index.isValid():
+        return
+
+    row_count = model.rowCount(index)
+    if row_count == 0:
+        data = index.data(Qt.UserRole)
+        (item_type, _) = cast(ErrorDataType, data)
+        if item_type == QualityErrorTreeItemType.ERROR:
+            # Index is for quality error row, which has no children
+            yield index
+    else:
+        for i in range(row_count):
+            yield from _get_quality_errors_indexes(model, index.child(i, 0))
+
+
+def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> int:
+    if not index.isValid():
+        return 0
+    num_rows = 0
+    row_count = model.rowCount(index)
+    if row_count == 0:
+        data = index.data(Qt.UserRole)
+        (item_type, _) = cast(ErrorDataType, data)
+        if item_type == QualityErrorTreeItemType.ERROR:
+            # Index is for quality error row
+            return 1
+    for i in range(row_count):
+        child_index = index.child(i, 0)
+        num_rows += _count_quality_error_rows(model, child_index)
+    return num_rows
+
+
+def _count_all_rows(model: QAbstractItemModel) -> int:
+    num_rows = 0
+    for i in range(model.rowCount(QModelIndex())):
+        index = model.index(i, 0, QModelIndex())
+        num_rows += _count_quality_error_rows(model, index)
+    return num_rows
+
+
 class QualityErrorTreeItemType(enum.Enum):
     HEADER = enum.auto()
     PRIORITY = enum.auto()
@@ -122,17 +155,28 @@ class QualityErrorTreeItem:
     def __init__(
         self,
         data: List[Any],
+        key: str,
         item_type: QualityErrorTreeItemType,
         parent: Optional["QualityErrorTreeItem"] = None,
     ) -> None:
+        self.key = key
         self._item_parent = parent
         self._item_data = data
         self._child_items: List["QualityErrorTreeItem"] = []
+        self._child_item_map: Dict[str, int] = {}
 
         self.item_type = item_type
 
-    def _append_child_item(self, item: "QualityErrorTreeItem") -> None:
+    def append_child_item(self, item: "QualityErrorTreeItem") -> None:
+        self._child_item_map[item.key] = len(self._child_items)
         self._child_items.append(item)
+
+    def remove_child_item(self, item: "QualityErrorTreeItem") -> None:
+        self._child_items.remove(item)
+        self._child_item_map.pop(item.key)
+
+    def get_child_by_key(self, key: str) -> "QualityErrorTreeItem":
+        return self._child_items[self._child_item_map[key]]
 
     def child(self, row: int) -> Optional["QualityErrorTreeItem"]:
         if row >= 0 and row < self.child_count():
@@ -234,62 +278,18 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         self._root_item = QualityErrorTreeItem(
             len(COLUMN_HEADERS) * [None],
+            "header",
             QualityErrorTreeItemType.HEADER,
         )
-
-    def _setup_model_data(self, quality_errors: List[QualityErrorsByPriority]) -> None:
-        self._root_item = QualityErrorTreeItem(
-            len(COLUMN_HEADERS) * [None],
-            QualityErrorTreeItemType.HEADER,
-        )
-
-        for errors_by_priority in quality_errors:
-            priority_row = QualityErrorTreeItem(
-                [errors_by_priority.priority, None],
+        # Show error priority rows always
+        for priority in list(QualityErrorPriority):
+            priority_item = QualityErrorTreeItem(
+                [priority, None],
+                str(priority.value),
                 QualityErrorTreeItemType.PRIORITY,
                 self._root_item,
             )
-
-            for errors_by_feature_type in errors_by_priority.errors:
-                feature_type_row = QualityErrorTreeItem(
-                    [errors_by_feature_type.feature_type, None],
-                    QualityErrorTreeItemType.FEATURE_TYPE,
-                    priority_row,
-                )
-
-                for errors_by_feature_id in errors_by_feature_type.errors:
-                    feature_id_row = QualityErrorTreeItem(
-                        [
-                            (
-                                errors_by_feature_type.feature_type,
-                                errors_by_feature_id.feature_id,
-                            ),
-                            None,
-                        ],
-                        QualityErrorTreeItemType.FEATURE,
-                        feature_type_row,
-                    )
-
-                    for quality_error in errors_by_feature_id.errors:
-                        quality_error_row = QualityErrorTreeItem(
-                            [
-                                quality_error,
-                                {
-                                    "fi": quality_error["error_description_fi"],
-                                    "en": quality_error["error_description_en"],
-                                    "sv": quality_error["error_description_sv"],
-                                },
-                            ],
-                            QualityErrorTreeItemType.ERROR,
-                            feature_id_row,
-                        )
-                        feature_id_row._append_child_item(quality_error_row)
-
-                    feature_type_row._append_child_item(feature_id_row)
-
-                priority_row._append_child_item(feature_type_row)
-
-            self._root_item._append_child_item(priority_row)
+            self._add_item_to_model(priority_item, self._root_item)
 
     def index(self, row: int, column: int, parent: QModelIndex) -> QModelIndex:
         if not self.hasIndex(row, column, parent):
@@ -413,10 +413,172 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         return super().flags(index)
 
     def refresh_model(self, quality_errors: List[QualityErrorsByPriority]) -> None:
-        self.beginResetModel()
-        self._setup_model_data(quality_errors)
-        self.endResetModel()
+
+        updated_quality_error_ids = set()
+        for errors_by_priority in quality_errors:
+            updated_quality_error_ids.update(
+                [
+                    error.unique_identifier
+                    for error in errors_by_priority.get_all_errors()
+                ]
+            )
+
+        current_quality_error_ids = set()
+        for i in range(self.rowCount(QModelIndex())):
+            for index in _get_quality_errors_indexes(
+                self, self.index(i, 0, QModelIndex())
+            ):
+                _, item_data = index.data(Qt.UserRole)
+                current_quality_error_ids.add(
+                    cast(QualityError, item_data).unique_identifier
+                )
+
+        deleted_error_ids = current_quality_error_ids - updated_quality_error_ids
+        new_error_ids = updated_quality_error_ids - current_quality_error_ids
+
+        # Nothing changed
+        if not deleted_error_ids and not new_error_ids:
+            return
+
+        errors_to_be_added: List[QualityError] = []
+
+        for errors_by_priority in quality_errors:
+            errors_to_be_added += [
+                error
+                for error in errors_by_priority.get_all_errors()
+                if error.unique_identifier in new_error_ids
+            ]
+
+        errors_to_be_deleted: List[
+            Tuple[QualityErrorTreeItem, QualityErrorTreeItem]
+        ] = []
+
+        for i in range(self.rowCount(QModelIndex())):
+            for index in _get_quality_errors_indexes(
+                self, self.index(i, 0, QModelIndex())
+            ):
+                item: QualityErrorTreeItem = index.internalPointer()
+                if item.key in deleted_error_ids:
+                    errors_to_be_deleted.append((item, index))
+
+        self._update_model_data(errors_to_be_added, errors_to_be_deleted)
+
         self.filterable_data_changed.emit(quality_errors)
+
+    def _update_model_data(
+        self,
+        errors_to_be_added: List[QualityError],
+        errors_to_be_deleted: List[Tuple[QualityErrorTreeItem, QModelIndex]],
+    ) -> None:
+        """
+        Updates model data based on new and deleted quality errors.
+
+        Deletion of quality errors must be done in reversed order for model
+        indices to stay valid during the update process. New items are added
+        after deletion. Empty parents are left to the model as filter model
+        will leave them out eventually.
+        """
+        # Remove quality error items that are no longer found from errors
+        for item, item_index in reversed(errors_to_be_deleted):
+            self._remove_item_from_model(item, item_index)
+
+        # Add new quality error items and parent items for them if needed
+        for quality_error in errors_to_be_added:
+            priority_item = self._root_item.get_child_by_key(
+                str(quality_error.priority.value)
+            )
+
+            try:
+                feature_type_item = priority_item.get_child_by_key(
+                    quality_error.feature_type
+                )
+            except KeyError:
+                feature_type_item = QualityErrorTreeItem(
+                    [quality_error.feature_type, None],
+                    quality_error.feature_type,
+                    QualityErrorTreeItemType.FEATURE_TYPE,
+                    priority_item,
+                )
+                self._add_item_to_model(
+                    feature_type_item,
+                    priority_item,
+                )
+
+            try:
+                feature_item = feature_type_item.get_child_by_key(
+                    quality_error.feature_id
+                )
+            except KeyError:
+                feature_item = QualityErrorTreeItem(
+                    [
+                        (
+                            quality_error.feature_type,
+                            quality_error.feature_id,
+                        ),
+                        None,
+                    ],
+                    quality_error.feature_id,
+                    QualityErrorTreeItemType.FEATURE,
+                    feature_type_item,
+                )
+                self._add_item_to_model(
+                    feature_item,
+                    feature_type_item,
+                )
+
+            quality_error_item = QualityErrorTreeItem(
+                [
+                    quality_error,
+                    {
+                        "fi": quality_error["error_description_fi"],
+                        "en": quality_error["error_description_en"],
+                        "sv": quality_error["error_description_sv"],
+                    },
+                ],
+                quality_error.unique_identifier,
+                QualityErrorTreeItemType.ERROR,
+                feature_item,
+            )
+
+            self._add_item_to_model(
+                quality_error_item,
+                feature_item,
+            )
+
+    def _get_index_for_item(self, item: QualityErrorTreeItem) -> QModelIndex:
+
+        if item.item_type == QualityErrorTreeItemType.HEADER:
+            return QModelIndex()
+        else:
+            item_parent = item.parent()
+            if item_parent is None:
+                raise ValueError
+            return self.index(item.row(), 0, self._get_index_for_item(item_parent))
+
+    def _remove_item_from_model(
+        self,
+        item: QualityErrorTreeItem,
+        item_index: QModelIndex,
+    ) -> None:
+        item_parent = item.parent()
+        if item_parent is None:
+            return
+
+        self.beginRemoveRows(item_index.parent(), item.row(), item.row())
+        item_parent.remove_child_item(item)
+        self.endRemoveRows()
+
+    def _add_item_to_model(
+        self, item: QualityErrorTreeItem, item_parent: QualityErrorTreeItem
+    ) -> None:
+        parent_index = self._get_index_for_item(item_parent)
+        self.beginInsertRows(
+            parent_index,
+            item_parent.child_count(),
+            item_parent.child_count(),
+        )
+        item_parent.append_child_item(item)
+        self.endInsertRows()
 
 
 class QualityErrorIdentityProxyModel(QIdentityProxyModel):
@@ -607,7 +769,7 @@ class BaseFilterModel(QSortFilterProxyModel):
 class FilterByMenuModel(BaseFilterModel):
     _filter_by_error_type: Set[int]
     _filter_by_feature_types: Set[str]
-    _filter_by_feature_attributes: Set[str]
+    _filter_by_feature_attributes: Set[Optional[str]]
     _filter_by_feature_attributes_changed: bool
     _show_user_processed: bool
 
@@ -622,7 +784,7 @@ class FilterByMenuModel(BaseFilterModel):
         self,
         filtered_feature_types: Set[str],
         filtered_error_types: Set[int],
-        filtered_feature_attributes: Set[str],
+        filtered_feature_attributes: Set[Optional[str]],
         show_user_processed: bool,
     ) -> None:
         self._filter_by_feature_types = filtered_feature_types

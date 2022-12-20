@@ -109,6 +109,7 @@ def quality_errors_without_chimney_point():
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "building_part_area",
+                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                     1,
                                     "1",
                                     QualityErrorType.GEOMETRY,
@@ -122,6 +123,7 @@ def quality_errors_without_chimney_point():
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "building_part_area",
+                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                     2,
                                     "2",
                                     QualityErrorType.ATTRIBUTE,
@@ -159,6 +161,7 @@ def quality_errors_without_building_part_area():
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "chimney_point",
+                                    "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
                                     4,
                                     "4",
                                     QualityErrorType.ATTRIBUTE,

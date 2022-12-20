@@ -26,7 +26,7 @@ from typing import List, Optional
 from qgis.core import QgsCoordinateReferenceSystem, QgsProject
 from qgis.gui import QgsFileWidget
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QPushButton, QWidget
 from qgis.utils import iface
 from qgis_plugin_tools.tools.decorations import log_if_fails
@@ -68,6 +68,9 @@ class MockQualityResultClient(QualityResultClient):
         return QgsCoordinateReferenceSystem("EPSG:3067")
 
 
+API_CLIENT = MockQualityResultClient(Path(""))
+
+
 class DevToolsDialog(QDialog, FORM_CLASS):
 
     quality_errors_data_file_widget: QgsFileWidget
@@ -102,7 +105,10 @@ class DevToolsDialog(QDialog, FORM_CLASS):
         QgsProject.instance().setCrs(api_client.get_crs())
 
         quality_errors_dialog = QualityErrorsDockWidget(api_client, iface.mainWindow())
-        quality_errors_dialog.show()
         iface.addDockWidget(
             Qt.DockWidgetArea.RightDockWidgetArea, quality_errors_dialog
         )
+
+        # Wait a bit before showing dialog, this seems to help with the
+        # issue of data not showing initially on the tree view
+        QTimer.singleShot(1000, lambda: quality_errors_dialog.show())

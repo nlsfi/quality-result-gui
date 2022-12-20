@@ -76,78 +76,92 @@ def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> 
     return num_rows
 
 
-def _priority_1_index(model) -> QModelIndex:
+def _priority_1_index(model: QAbstractItemModel) -> QModelIndex:
     return model.index(0, 0, QModelIndex())
 
 
-def _priority_2_index(model) -> QModelIndex:
+def _priority_2_index(model: QAbstractItemModel) -> QModelIndex:
     return model.index(1, 0, QModelIndex())
 
 
-def _priority_1_feature_type_1_index(model) -> QModelIndex:
+def _priority_1_feature_type_1_index(model: QAbstractItemModel) -> QModelIndex:
     return model.index(0, 0, _priority_1_index(model))
 
 
-def _priority_1_feature_type_2_index(model) -> QModelIndex:
+def _priority_1_feature_type_2_index(model: QAbstractItemModel) -> QModelIndex:
     return model.index(1, 0, _priority_1_index(model))
 
 
-def _priority_1_feature_type_1_feature_1_index(model) -> QModelIndex:
+def _priority_1_feature_type_1_feature_1_index(
+    model: QAbstractItemModel,
+) -> QModelIndex:
     return model.index(0, 0, _priority_1_feature_type_1_index(model))
 
 
-def _priority_1_feature_type_1_feature_2_index(model) -> QModelIndex:
+def _priority_1_feature_type_1_feature_2_index(
+    model: QAbstractItemModel,
+) -> QModelIndex:
     return model.index(1, 0, _priority_1_feature_type_1_index(model))
 
 
-def _priority_1_feature_type_1_feature_1_error_1_index(model) -> QModelIndex:
+def _priority_1_feature_type_1_feature_1_error_1_index(
+    model: QAbstractItemModel,
+) -> QModelIndex:
     return model.index(0, 0, _priority_1_feature_type_1_feature_1_index(model))
 
 
-def _priority_1_feature_type_1_feature_1_error_2_index(model) -> QModelIndex:
+def _priority_1_feature_type_1_feature_1_error_2_index(
+    model: QAbstractItemModel,
+) -> QModelIndex:
     return model.index(1, 0, _priority_1_feature_type_1_feature_1_index(model))
 
 
 def _priority_1_feature_type_1_feature_1_error_1_description_index(
-    model,
+    model: QAbstractItemModel,
 ) -> QModelIndex:
     return model.index(0, 1, _priority_1_feature_type_1_feature_1_index(model))
 
 
 def _priority_1_feature_type_1_feature_1_error_2_description_index(
-    model,
+    model: QAbstractItemModel,
 ) -> QModelIndex:
     return model.index(1, 1, _priority_1_feature_type_1_feature_1_index(model))
 
 
 @pytest.fixture()
-def m_user_processed_callback():
+def m_user_processed_callback() -> MagicMock:
     return MagicMock()
 
 
 @pytest.fixture()
-def model(quality_errors, qtmodeltester, m_user_processed_callback):
-    base_model = QualityErrorsTreeBaseModel(None, m_user_processed_callback)
+def base_model(m_user_processed_callback: MagicMock) -> QualityErrorsTreeBaseModel:
+    return QualityErrorsTreeBaseModel(None, m_user_processed_callback)
+
+
+@pytest.fixture()
+def model(
+    quality_errors: List[QualityErrorsByPriority],
+    qtmodeltester,
+    base_model: QualityErrorsTreeBaseModel,
+) -> FilterByExtentModel:
     styled_model = QualityErrorIdentityProxyModel(None)
     styled_model.setSourceModel(base_model)
+
     menu_model = FilterByMenuModel(None)
     menu_model.setSourceModel(styled_model)
+    extent_model = FilterByExtentModel(None)
+    extent_model.setSourceModel(menu_model)
+    qtmodeltester.check(extent_model)
+
+    # Update data and mock signal from filter menu (update filters)
+    base_model.refresh_model(quality_errors)
     menu_model.update_filters(
         {"building_part_area", "chimney_point"},
         {1, 2, 3},
         _feature_attribute_filters(quality_errors),
         True,
     )
-    extent_model = FilterByExtentModel(None)
-    extent_model.setSourceModel(menu_model)
-    base_model.refresh_model(quality_errors)
     return extent_model
-    # TODO: skip for now, fix errors in MATI-1722 or split new issue
-    # if actual crashes on reload are not related to errors revealed by checker
-    # qtmodeltester.check(filter_model)
-    # model = filter_model.sourceModel()
-    # qtmodeltester.check(model)
-    # return model
 
 
 def test_model_index(model: FilterByExtentModel):
@@ -608,4 +622,49 @@ def test_model_data_count_changes_when_filter_is_applied(
             model, _priority_1_feature_type_1_feature_2_index(model)
         )
         == expected_counts["feature_2_count"]
+    )
+
+
+def test_refresh_model_updates_data_partially_when_data_is_refreshed(
+    base_model: QualityErrorsTreeBaseModel,
+    quality_errors: List[QualityErrorsByPriority],
+):
+    base_model.refresh_model(quality_errors)
+
+    assert base_model.index(0, 0, QModelIndex()).data() == "Fatal"
+    assert (
+        _count_quality_error_rows(base_model, base_model.index(0, 0, QModelIndex()))
+        == 4
+    )
+
+    # Remove fatal errors
+    quality_errors.remove(quality_errors[0])
+    base_model.refresh_model(quality_errors)
+
+    assert base_model.index(0, 0, QModelIndex()).data() == "Fatal"
+    assert base_model.index(1, 0, QModelIndex()).data() == "Warning"
+    assert (
+        _count_quality_error_rows(base_model, base_model.index(1, 0, QModelIndex()))
+        == 1
+    )
+
+
+def test_refresh_model_does_nothing_if_data_does_not_change(
+    base_model: QualityErrorsTreeBaseModel,
+    quality_errors: List[QualityErrorsByPriority],
+):
+    base_model.refresh_model(quality_errors)
+
+    assert base_model.index(0, 0, QModelIndex()).data() == "Fatal"
+    assert (
+        _count_quality_error_rows(base_model, base_model.index(0, 0, QModelIndex()))
+        == 4
+    )
+
+    base_model.refresh_model(quality_errors)
+
+    assert base_model.index(0, 0, QModelIndex()).data() == "Fatal"
+    assert (
+        _count_quality_error_rows(base_model, base_model.index(0, 0, QModelIndex()))
+        == 4
     )
