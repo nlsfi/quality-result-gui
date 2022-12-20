@@ -41,6 +41,7 @@ CRS = QgsCoordinateReferenceSystem("EPSG:3067")
 @pytest.fixture()
 def visualizer() -> Generator[QualityErrorVisualizer, None, None]:
     visualizer = QualityErrorVisualizer()
+    visualizer.toggle_visibility(True)
     yield visualizer
     visualizer.remove_quality_error_layer()
     assert visualizer._quality_error_layer.find_layer_from_project() is None
@@ -74,19 +75,18 @@ def get_num_visualized_features(visualizer: QualityErrorVisualizer) -> int:
     return 0
 
 
-def test_refresh_all_errors_add_geometries_to_annotation_layer(
+def test_add_new_errors_adds_geometries_to_annotation_layer(
     visualizer: QualityErrorVisualizer,
 ):
     geometry = QgsGeometry.fromWkt("Polygon((0 0, 0 1, 1 1, 1 0, 0 0))")
     assert not geometry.isNull(), "Input WKT was not valid"
 
     # Test
-    visualizer.refresh_all_errors(
+    visualizer.add_new_errors(
         [
             ErrorFeature("1", QualityErrorPriority.FATAL, geometry, CRS),
             ErrorFeature("2", QualityErrorPriority.WARNING, geometry, CRS),
-        ],
-        ErrorFeature("1", QualityErrorPriority.FATAL, geometry, CRS),
+        ]
     )
 
     layer = visualizer._quality_error_layer.find_layer_from_project()
@@ -97,39 +97,38 @@ def test_refresh_all_errors_add_geometries_to_annotation_layer(
         assert key in [
             "1",
             "2",
-            "selected-1",
         ]
 
-    assert len(layer.items()) == 3
+    assert len(layer.items()) == 2
 
     for key in layer.items().keys():
         assert key in sum(visualizer._quality_error_layer._annotation_ids.values(), [])
         assert layer.item(key).geometry().isEmpty() is False
 
 
-def test_refresh_all_errors_does_nothing_with_empty_input(
+def test_add_new_errors_does_nothing_with_empty_input(
     visualizer: QualityErrorVisualizer,
 ):
 
     # Test
-    visualizer.refresh_all_errors([], None)
+    visualizer.add_new_errors([])
 
     assert get_num_visualized_features(visualizer) == 0
 
 
-def test_refresh_all_errors_does_nothing_with_empty_input_geometry(
+def test_add_new_errors_does_nothing_with_empty_input_geometry(
     visualizer: QualityErrorVisualizer,
 ):
 
     # Test
-    visualizer.refresh_all_errors(
-        [ErrorFeature("1", QualityErrorPriority.FATAL, QgsGeometry(), CRS)], None
+    visualizer.add_new_errors(
+        [ErrorFeature("1", QualityErrorPriority.FATAL, QgsGeometry(), CRS)]
     )
 
     assert get_num_visualized_features(visualizer) == 0
 
 
-def test_refresh_all_errors_works_with_multiple_geoms_with_same_geometry_type(
+def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
     visualizer: QualityErrorVisualizer,
 ):
 
@@ -141,17 +140,43 @@ def test_refresh_all_errors_works_with_multiple_geoms_with_same_geometry_type(
     ]
 
     # Test
-    visualizer.refresh_all_errors(errors, None)
+    visualizer.add_new_errors(errors)
 
     assert get_num_visualized_features(visualizer) == len(errors)
 
 
-def test_hide_all_errors_changes_quality_layer_visibility(
+def test_remove_errors_removes_features_from_annotation_layer(
+    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+):
+    visualizer.add_new_errors(error_features)
+    assert get_num_visualized_features(visualizer) == len(error_features)
+
+    # Test
+    visualizer.remove_errors(error_features[:2])
+
+    assert get_num_visualized_features(visualizer) == len(error_features) - 2
+    for key in visualizer._quality_error_layer._annotation_ids.keys():
+        assert key == error_features[2].id
+
+
+def test_remove_errors_does_nothing_with_empty_input(
+    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+):
+    visualizer.add_new_errors(error_features)
+    assert get_num_visualized_features(visualizer) == len(error_features)
+
+    # Test
+    visualizer.remove_errors([])
+
+    assert get_num_visualized_features(visualizer) == len(error_features)
+
+
+def test_hide_errors_changes_quality_layer_visibility(
     visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
 ):
     root: QgsLayerTree = QgsProject.instance().layerTreeRoot()
 
-    visualizer.refresh_all_errors(error_features, error_features[0])
+    visualizer.add_new_errors(error_features)
 
     layer = visualizer._quality_error_layer.find_layer_from_project()
     assert layer is not None
@@ -161,18 +186,19 @@ def test_hide_all_errors_changes_quality_layer_visibility(
     assert tree_node.itemVisibilityChecked() is True
 
     # Test
-    visualizer.hide_all_errors()
+    visualizer.hide_errors()
 
-    assert get_num_visualized_features(visualizer) == len(error_features) + 1
+    assert get_num_visualized_features(visualizer) == len(error_features)
     assert tree_node.itemVisibilityChecked() is False
 
 
-def test_refresh_all_errors_replaces_annotation_features(
+def test_add_new_errors_replaces_annotation_features_if_same_id(
     visualizer: QualityErrorVisualizer,
     error_features: List[ErrorFeature],
 ):
 
-    visualizer.refresh_all_errors(error_features, error_features[0])
+    visualizer.add_new_errors(error_features)
+    assert get_num_visualized_features(visualizer) == len(error_features)
 
     new_errors = [
         ErrorFeature(
@@ -181,18 +207,18 @@ def test_refresh_all_errors_replaces_annotation_features(
     ]
 
     # Test
-    visualizer.refresh_all_errors(new_errors, None)
+    visualizer.add_new_errors(new_errors)
 
-    assert get_num_visualized_features(visualizer) == len(new_errors)
+    assert get_num_visualized_features(visualizer) == len(error_features)
 
 
 def test_refresh_selected_errors_replaces_selected_features_only(
     visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
 ):
 
-    visualizer.refresh_all_errors(
-        all_error_features=error_features, selected_error_feature=error_features[0]
-    )
+    visualizer.add_new_errors(error_features)
+    visualizer.refresh_selected_error(error_features[0])
+
     assert (
         f"selected-{error_features[0].id}"
         in visualizer._quality_error_layer._annotation_ids

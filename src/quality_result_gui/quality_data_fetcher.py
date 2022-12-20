@@ -29,7 +29,7 @@ from quality_result_gui.api.quality_api_client import (
     QualityResultServerError,
 )
 
-BACKGROUND_POLL_INTERVAL = 30 * 1000
+BACKGROUND_POLL_INTERVAL = 10 * 1000
 
 LOGGER = logging.getLogger(__name__)
 

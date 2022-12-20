@@ -17,6 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+from copy import copy
 from typing import Generator, List, Optional
 from unittest.mock import MagicMock
 
@@ -126,19 +127,26 @@ def quality_errors_dock_with_data(
 
 
 def assert_tree_view_is_populated(model: QAbstractItemModel) -> None:
-    root_index = model.index(0, 0, QModelIndex())
     # Count top level nodes (priority categories)
-    assert model.rowCount(root_index) == 2
+    assert model.rowCount(QModelIndex()) == 2
+
+    priority_1_index = model.index(0, 0, QModelIndex())
+    assert priority_1_index.data() == "Fatal"
+    priority_2_index = model.index(1, 0, QModelIndex())
+    assert priority_2_index.data() == "Warning"
+
     # priority: fatal -> feature types
-    assert model.rowCount(root_index.child(0, 0)) == 2
-    # priority: warning -> feature types
-    assert model.rowCount(root_index.child(1, 0)) == 1
+    assert model.rowCount(priority_1_index) == 2
     # priority: fatal -> feature type: building -> features
-    assert model.rowCount(root_index.child(0, 0).child(0, 0)) == 2
-    # priority: warning -> feature types: building -> features
-    assert model.rowCount(root_index.child(1, 0).child(0, 0)) == 1
+    assert model.rowCount(priority_1_index.child(0, 0)) == 2
+    # priority: fatal -> building feature 1 -> errors
+    assert model.rowCount(priority_1_index.child(0, 0).child(0, 0)) == 2
     # priority: fatal -> feature type: chimney -> features
-    assert model.rowCount(root_index.child(0, 0).child(1, 0)) == 1
+    assert model.rowCount(priority_1_index.child(1, 0)) == 1
+    # priority: warning -> feature types
+    assert model.rowCount(priority_2_index.child(0, 0)) == 1
+    # priority: warning -> feature types: building -> features
+    assert model.rowCount(priority_2_index.child(0, 0).child(0, 0)) == 1
 
 
 def _get_action_from_menu(menu: QMenu, action_title: str) -> Optional[QAction]:
@@ -165,6 +173,78 @@ def test_show_quality_errors_dock_should_have_rows_with_quality_errors(
     quality_errors_dock_with_data: QualityErrorsDockWidget,
 ):
     model = quality_errors_dock_with_data.error_tree_view.model()
+    assert_tree_view_is_populated(model)
+
+
+@pytest.mark.timeout(10)
+def test_show_quality_errors_dock_performance_with_big_dataset(
+    quality_errors_dock: QualityErrorsDockWidget,
+):
+    quality_errors = []
+    # Generate 1000+ errors
+    for priority in list(QualityErrorPriority):
+        feature_type = "test_feature_type"
+        feature_type_errors = []
+        for id in range(20):
+            feature_id = f"a-{id}"
+            feature_errors = []
+            for i in range(30):
+                feature_errors.append(
+                    QualityError(
+                        priority,
+                        feature_type,
+                        feature_id,
+                        priority.value * 100 + id * 10 + i,
+                        str(priority.value * 100 + id * 10 + i),
+                        QualityErrorType.ATTRIBUTE,
+                        "test_attribute",
+                        "desc1",
+                        "desc2",
+                        "desc3",
+                        QgsGeometry.fromWkt("LINESTRING(0 0, 5 5)"),
+                        False,
+                    )
+                )
+            feature_type_errors.append(
+                QualityErrorsByFeature(feature_type, feature_id, feature_errors)
+            )
+        quality_errors.append(
+            QualityErrorsByPriority(
+                priority,
+                [QualityErrorsByFeatureType(feature_type, feature_type_errors)],
+            )
+        )
+
+    quality_errors_dock._fetcher.results_received.emit(quality_errors)
+    # Remove all fatal errors
+    quality_errors.pop(0)
+    quality_errors_dock._fetcher.results_received.emit(quality_errors)
+
+
+def test_show_quality_errors_dock_updates_view_partially_when_data_is_refreshed(
+    quality_errors_dock_with_data: QualityErrorsDockWidget,
+    quality_errors: List[QualityErrorsByPriority],
+):
+    model = quality_errors_dock_with_data.error_tree_view.model()
+
+    original_quality_errors = copy(quality_errors)
+    quality_errors.remove(quality_errors[0])
+    quality_errors_dock_with_data._fetcher.results_received.emit(quality_errors)
+
+    first_priority_index = model.index(0, 0, QModelIndex())
+    # Count top level nodes (priority categories)
+    assert model.rowCount() == 1
+    assert first_priority_index.data() == "Warning"
+    # num feature types
+    assert model.rowCount(first_priority_index) == 1
+    # num features for feature types
+    assert model.rowCount(first_priority_index.child(0, 0)) == 1
+    # num errors for feature
+    assert model.rowCount(first_priority_index.child(0, 0).child(0, 0)) == 1
+
+    quality_errors_dock_with_data._fetcher.results_received.emit(
+        original_quality_errors
+    )
     assert_tree_view_is_populated(model)
 
 
@@ -316,11 +396,11 @@ def test_show_errors_on_map_check_box_toggles_quality_error_layer_visibility(
 ):
     show_errors_on_map_check_box = quality_errors_dock.show_errors_on_map_check_box
 
-    m_hide_all_errors = mocker.patch.object(
-        QualityErrorVisualizer, "hide_all_errors", autospec=True
+    m_hide_errors = mocker.patch.object(
+        QualityErrorVisualizer, "hide_errors", autospec=True
     )
-    m_show_all_errors = mocker.patch.object(
-        QualityErrorVisualizer, "show_all_errors", autospec=True
+    m_show_errors = mocker.patch.object(
+        QualityErrorVisualizer, "show_errors", autospec=True
     )
 
     assert show_errors_on_map_check_box.isChecked() is True
@@ -328,12 +408,12 @@ def test_show_errors_on_map_check_box_toggles_quality_error_layer_visibility(
     # Test hide errors
     show_errors_on_map_check_box.setChecked(False)
 
-    m_hide_all_errors.assert_called_once()
+    m_hide_errors.assert_called_once()
 
     # Test show errors
     show_errors_on_map_check_box.setChecked(True)
 
-    m_show_all_errors.assert_called_once()
+    m_show_errors.assert_called_once()
 
 
 def test_changing_model_data_sends_error_geometries_to_visualizer(
@@ -341,8 +421,8 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
     quality_errors_dock: QualityErrorsDockWidget,
 ):
     feature_type = "building_part_area"
-    m_refresh_all_errors = mocker.patch.object(
-        QualityErrorVisualizer, "refresh_all_errors", autospec=True
+    m_add_new_errors = mocker.patch.object(
+        QualityErrorVisualizer, "add_new_errors", autospec=True
     )
 
     quality_errors_dock._fetcher.results_received.emit(
@@ -360,6 +440,7 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
                                     QualityError(
                                         QualityErrorPriority.WARNING,
                                         feature_type,
+                                        "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                         1,
                                         "1",
                                         QualityErrorType.ATTRIBUTE,
@@ -373,6 +454,7 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
                                     QualityError(
                                         QualityErrorPriority.WARNING,
                                         feature_type,
+                                        "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                         2,
                                         "2",
                                         QualityErrorType.GEOMETRY,
@@ -392,15 +474,14 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
         ]
     )
 
-    assert m_refresh_all_errors.call_count == 2
-    error_features: List[ErrorFeature] = m_refresh_all_errors.call_args[0][1]
+    assert m_add_new_errors.call_count == 1
+    error_features: List[ErrorFeature] = m_add_new_errors.call_args[0][1]
     assert len(error_features) == 2
     assert error_features[0].priority == QualityErrorPriority.WARNING
     assert error_features[0].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(0 0)"))
 
 
 def test_updating_filter_refreshes_errors_on_tree_view_and_map(
-    mocker: MockerFixture,
     quality_errors_dock: QualityErrorsDockWidget,
     quality_errors: List[QualityErrorsByPriority],
 ):
@@ -508,8 +589,6 @@ def test_close_and_reopen_does_not_affect_error_visibility(
 def test_update_filter_menu_icon_state_disables_button_if_no_quality_errors(
     quality_errors_dock: QualityErrorsDockWidget,
 ):
-
-    quality_errors_dock.quality_errors = []
 
     quality_errors_dock._update_filter_menu_icon_state()
 

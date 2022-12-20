@@ -81,6 +81,7 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "building_part_area",
+                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                     1,
                                     "1",
                                     QualityErrorType.GEOMETRY,
@@ -94,6 +95,7 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "building_part_area",
+                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
                                     2,
                                     "2",
                                     QualityErrorType.ATTRIBUTE,
@@ -115,6 +117,7 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "building_part_area",
+                                    "604eb499-cff7-4d28-bb31-154106480eca",
                                     3,
                                     "3",
                                     QualityErrorType.ATTRIBUTE,
@@ -141,6 +144,7 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                 QualityError(
                                     QualityErrorPriority.FATAL,
                                     "chimney_point",
+                                    "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
                                     4,
                                     "4",
                                     QualityErrorType.ATTRIBUTE,
@@ -172,6 +176,7 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                 QualityError(
                                     QualityErrorPriority.WARNING,
                                     "building_part_area",
+                                    "2b89a0b0-33f8-4241-b169-70b4a8c0f941",
                                     102,
                                     "102",
                                     QualityErrorType.ATTRIBUTE,

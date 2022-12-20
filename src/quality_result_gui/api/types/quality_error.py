@@ -60,6 +60,7 @@ USER_PROCESSED_LABEL = tr("Show user processed")
 class QualityError:
     priority: QualityErrorPriority
     feature_type: str
+    feature_id: str
     error_id: int
     unique_identifier: str
     error_type: QualityErrorType
