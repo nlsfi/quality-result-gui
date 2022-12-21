@@ -18,8 +18,9 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+import logging
 from functools import partial
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 
 from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.PyQt.QtWidgets import QAction, QMenu
@@ -31,7 +32,12 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorsByPriority,
     QualityErrorType,
 )
-from quality_result_gui.quality_errors_tree_model import get_error_feature_types
+from quality_result_gui.quality_errors_tree_model import (
+    get_error_feature_attributes,
+    get_error_feature_types,
+)
+
+LOGGER = logging.getLogger(__name__)
 
 
 class QualityErrorsTreeFilterMenu(QMenu):
@@ -44,10 +50,13 @@ class QualityErrorsTreeFilterMenu(QMenu):
 
     ERROR_TYPE_MENU_NAME = "error_type_filter"
     FEATURE_TYPE_MENU_NAME = "feature_type_filter"
+    FEATURE_ATTRIBUTE_MENU_NAME = "feature_attribute_filter"
     USER_PROCESSED_MENU_NAME = "user_processed_filter"
-    filters_changed = pyqtSignal(set, set, bool)
+    filters_changed = pyqtSignal(set, set, set, bool)
     _available_feature_types: Set[str]
+    _available_feature_attributes: Set[Optional[str]]
     _filtered_feature_types: Set[str]
+    _filtered_feature_attributes: Set[Optional[str]]
     _filtered_error_types: Set[int]
     _show_user_processed: bool
 
@@ -63,6 +72,11 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.feature_type_filter_menu = self.addMenu(tr("Feature type"))
         self.feature_type_filter_menu.setObjectName(self.FEATURE_TYPE_MENU_NAME)
 
+        self.feature_attribute_filter_menu = self.addMenu(tr("Feature attribute"))
+        self.feature_attribute_filter_menu.setObjectName(
+            self.FEATURE_ATTRIBUTE_MENU_NAME
+        )
+
         self.user_processed_filter_menu = self.addMenu(tr("User processed"))
         self.user_processed_filter_menu.setObjectName(self.USER_PROCESSED_MENU_NAME)
 
@@ -70,20 +84,25 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.addAction(tr("Reset filters")).triggered.connect(self.reset_filters)
 
         self._filtered_feature_types = set()
+        self._filtered_feature_attributes = set()
         self._available_feature_types = set()
+        self._available_feature_attributes = set()
         self._filtered_error_types = {item.value for item in QualityErrorType}
         self._show_user_processed = True
         self.populate_feature_type_filter_menu()
+        self.populate_feature_attribute_filter_menu()
         self.populate_quality_error_type_filter_menu()
         self.populate_user_processed_filter_menu()
 
-    def refresh_feature_type_filters(
+    def refresh_feature_filters(
         self, quality_errors: List[QualityErrorsByPriority]
     ) -> None:
         self._refresh_feature_type_filter_menu(quality_errors)
+        self._refresh_feature_attribute_filter_menu(quality_errors)
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
@@ -100,6 +119,22 @@ class QualityErrorsTreeFilterMenu(QMenu):
             filtered_before_refresh
         ).union(added_feature_types)
         self.populate_feature_type_filter_menu()
+
+    def _refresh_feature_attribute_filter_menu(
+        self, quality_errors: List[QualityErrorsByPriority]
+    ) -> None:
+        filtered_before_refresh = copy.deepcopy(self._filtered_feature_attributes)
+        new_feature_attributes = get_error_feature_attributes(quality_errors)
+        added_feature_attributes = new_feature_attributes.difference(
+            self._available_feature_attributes
+        )
+        self._available_feature_attributes = new_feature_attributes
+        self._filtered_feature_attributes = (
+            self._available_feature_attributes.intersection(
+                filtered_before_refresh
+            ).union(added_feature_attributes)
+        )
+        self.populate_feature_attribute_filter_menu()
 
     def populate_quality_error_type_filter_menu(self) -> None:
         for label, error_type in [
@@ -123,18 +158,28 @@ class QualityErrorsTreeFilterMenu(QMenu):
             self.feature_type_filter_menu.removeAction(action)
 
         select_all_action = QAction(tr("Select all"), self.feature_type_filter_menu)
-        select_all_action.triggered.connect(partial(self._select_all_feature_types))
+        select_all_action.triggered.connect(
+            lambda: self._select_all(
+                self._filtered_feature_types,
+                self._available_feature_types,
+                self.feature_type_filter_menu,
+            )
+        )
 
         self.feature_type_filter_menu.addAction(select_all_action)
 
         deselect_all_action = QAction(tr("Deselect all"), self.feature_type_filter_menu)
-        deselect_all_action.triggered.connect(partial(self._deselect_all_feature_types))
+        deselect_all_action.triggered.connect(
+            lambda: self._deselect_all(
+                self._filtered_feature_types, self.feature_type_filter_menu
+            )
+        )
 
         self.feature_type_filter_menu.addAction(deselect_all_action)
 
         self.feature_type_filter_menu.addSeparator()
 
-        for feature_type in self._available_feature_types:
+        for feature_type in sorted(self._available_feature_types):
             # TODO: how to configurate custom data mapping
             # label = common.FEATURE_TYPE_NAMES[feature_type]
             label = feature_type
@@ -147,6 +192,56 @@ class QualityErrorsTreeFilterMenu(QMenu):
             )
 
             self.feature_type_filter_menu.addAction(action)
+
+    def populate_feature_attribute_filter_menu(self) -> None:
+        for action in self.feature_attribute_filter_menu.actions():
+            action.deleteLater()
+            self.feature_attribute_filter_menu.removeAction(action)
+
+        select_all_action = QAction(
+            tr("Select all"), self.feature_attribute_filter_menu
+        )
+        select_all_action.triggered.connect(
+            lambda: self._select_all(
+                self._filtered_feature_attributes,
+                self._available_feature_attributes,
+                self.feature_attribute_filter_menu,
+            )
+        )
+
+        self.feature_attribute_filter_menu.addAction(select_all_action)
+
+        deselect_all_action = QAction(
+            tr("Deselect all"), self.feature_attribute_filter_menu
+        )
+        deselect_all_action.triggered.connect(
+            lambda: self._deselect_all(
+                self._filtered_feature_attributes,
+                self.feature_attribute_filter_menu,
+            )
+        )
+
+        self.feature_attribute_filter_menu.addAction(deselect_all_action)
+        self.feature_attribute_filter_menu.addSeparator()
+
+        for feature_attribute in sorted(
+            self._available_feature_attributes,
+            key=lambda x: (bool(x), x),  # sort asc with Nones as first element
+        ):
+            # TODO: how to configurate custom data mapping
+            # label = common.FEATURE_TYPE_NAMES[feature_type]
+            if feature_attribute is None:
+                label = tr("Empty attribute values")
+            else:
+                label = feature_attribute
+
+            action = QAction(label, self.feature_attribute_filter_menu)
+            action.setCheckable(True)
+            action.setChecked(feature_attribute in self._filtered_feature_attributes)
+            action.triggered.connect(
+                partial(self._set_filtered_feature_attribute, feature_attribute)
+            )
+            self.feature_attribute_filter_menu.addAction(action)
 
     def populate_user_processed_filter_menu(self) -> None:
         action = QAction(USER_PROCESSED_LABEL, self.user_processed_filter_menu)
@@ -165,39 +260,59 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
-    def _select_all_feature_types(self) -> None:
-        filtered_feature_types = copy.deepcopy(self._filtered_feature_types)
-        self._filtered_error_types = {item.value for item in QualityErrorType}
-
-        for feature_type in self._available_feature_types:
-            if feature_type not in filtered_feature_types:
-                self._filtered_feature_types.add(feature_type)
+    def _set_filtered_feature_attribute(
+        self, feature_attribute: str, selected: bool
+    ) -> None:
+        if selected is True:
+            self._filtered_feature_attributes.add(feature_attribute)
+        else:
+            self._filtered_feature_attributes.remove(feature_attribute)
 
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
-        self.set_menu_items_checked(self.feature_type_filter_menu)
+    def _select_all(
+        self,
+        selected_properties: Set[Any],
+        available_properties: Set[Any],
+        menu: QMenu,
+    ) -> None:
+        copy_of_properties = copy.deepcopy(selected_properties)
 
-    def _deselect_all_feature_types(self) -> None:
-        filtered_feature_types = copy.deepcopy(self._filtered_feature_types)
-        self._filtered_error_types = {item.value for item in QualityErrorType}
-
-        for feature_type in filtered_feature_types:
-            self._filtered_feature_types.remove(feature_type)
+        for property in available_properties:
+            if property not in copy_of_properties:
+                selected_properties.add(property)
 
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
-        self.set_menu_items_unchecked(self.feature_type_filter_menu)
+        self.set_menu_items_checked(menu)
+
+    def _deselect_all(self, selected_properties: Set[Any], menu: QMenu) -> None:
+
+        for property in copy.deepcopy(selected_properties):
+            selected_properties.remove(property)
+
+        self.filters_changed.emit(
+            self._filtered_feature_types,
+            self._filtered_error_types,
+            self._filtered_feature_attributes,
+            self._show_user_processed,
+        )
+
+        self.set_menu_items_unchecked(menu)
 
     def _set_filtered_error_type(self, error_type: int, selected: bool) -> None:
         if selected is True:
@@ -208,6 +323,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
@@ -217,19 +333,25 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
     def reset_filters(self) -> None:
         self._filtered_feature_types = copy.deepcopy(self._available_feature_types)
+        self._filtered_feature_attributes = copy.deepcopy(
+            self._available_feature_attributes
+        )
         self._filtered_error_types = {item.value for item in QualityErrorType}
         self._show_user_processed = True
         self.set_menu_items_checked(self.error_type_filter_menu)
         self.set_menu_items_checked(self.feature_type_filter_menu)
+        self.set_menu_items_checked(self.feature_attribute_filter_menu)
         self.set_menu_items_checked(self.user_processed_filter_menu)
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
+            self._filtered_feature_attributes,
             self._show_user_processed,
         )
 
@@ -237,6 +359,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         return not (
             self.all_menu_items_checked(self.error_type_filter_menu)
             and self.all_menu_items_checked(self.feature_type_filter_menu)
+            and self.all_menu_items_checked(self.feature_attribute_filter_menu)
             and self.all_menu_items_checked(self.user_processed_filter_menu)
         )
 

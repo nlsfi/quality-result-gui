@@ -197,3 +197,15 @@ def quality_errors() -> List[QualityErrorsByPriority]:
 def error_feature_types() -> Set[str]:
     """Unique feature types in quality_errors fixture"""
     return {"building_part_area", "chimney_point"}
+
+
+@pytest.fixture()
+def error_feature_attributes() -> Set[Optional[str]]:
+    """Unique feature types in quality_errors fixture"""
+    return {
+        "floors_above_ground",
+        "height_relative",
+        "vtj_prt",
+        "height_absolute",
+        None,
+    }
