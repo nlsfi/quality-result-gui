@@ -242,7 +242,7 @@ class QualityErrorTreeView(QTreeView):
         )
         fetcher.results_received.connect(self.base_model.refresh_model)
         self.base_model.filterable_data_changed.connect(
-            filter_menu.refresh_feature_type_filters
+            filter_menu.refresh_feature_filters
         )
         self.base_model.filterable_data_changed.connect(self.on_visualized_data_changed)
 

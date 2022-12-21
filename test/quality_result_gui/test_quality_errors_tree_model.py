@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 from unittest.mock import MagicMock
 
 import pytest
@@ -32,12 +32,19 @@ from quality_result_gui.quality_errors_tree_model import (
     FilterByMenuModel,
     QualityErrorIdentityProxyModel,
     QualityErrorsTreeBaseModel,
+    get_error_feature_attributes,
     get_error_feature_types,
 )
 
 
 def _feature_type_filters(quality_errors: List[QualityErrorsByPriority]) -> Set[str]:
     return get_error_feature_types(quality_errors)
+
+
+def _feature_attribute_filters(
+    quality_errors: List[QualityErrorsByPriority],
+) -> Set[Optional[str]]:
+    return get_error_feature_attributes(quality_errors)
 
 
 def _error_type_filters() -> Set[int]:
@@ -48,7 +55,10 @@ def _reset_filters(
     model: FilterByExtentModel, quality_errors: List[QualityErrorsByPriority]
 ) -> None:
     model.sourceModel().update_filters(
-        _feature_type_filters(quality_errors), _error_type_filters(), True
+        _feature_type_filters(quality_errors),
+        _error_type_filters(),
+        _feature_attribute_filters(quality_errors),
+        True,
     )
 
 
@@ -122,7 +132,12 @@ def model(quality_errors, qtmodeltester, m_user_processed_callback):
     styled_model.setSourceModel(base_model)
     menu_model = FilterByMenuModel(None)
     menu_model.setSourceModel(styled_model)
-    menu_model.update_filters({"building_part_area", "chimney_point"}, {1, 2, 3}, True)
+    menu_model.update_filters(
+        {"building_part_area", "chimney_point"},
+        {1, 2, 3},
+        _feature_attribute_filters(quality_errors),
+        True,
+    )
     extent_model = FilterByExtentModel(None)
     extent_model.setSourceModel(menu_model)
     base_model.refresh_model(quality_errors)
@@ -247,7 +262,10 @@ def test_total_number_of_errors_is_shown_in_header(
     error_type_filters = _error_type_filters()
     error_type_filters.remove(2)
     model.sourceModel().update_filters(
-        _feature_type_filters(quality_errors), error_type_filters, True
+        _feature_type_filters(quality_errors),
+        error_type_filters,
+        _feature_attribute_filters(quality_errors),
+        True,
     )
     assert "4/5" in model.headerData(0, Qt.Horizontal).value()
 
@@ -255,7 +273,10 @@ def test_total_number_of_errors_is_shown_in_header(
     feature_type_filters = _feature_type_filters(quality_errors)
     feature_type_filters.remove("building_part_area")
     model.sourceModel().update_filters(
-        feature_type_filters, _error_type_filters(), True
+        feature_type_filters,
+        _error_type_filters(),
+        _feature_attribute_filters(quality_errors),
+        True,
     )
     assert "1/5" in model.headerData(0, Qt.Horizontal).value()
 
@@ -413,12 +434,14 @@ def test_model_set_data_user_processed(
     (
         "error_type_filter",
         "feature_type_filter",
+        "feature_attribute_filter",
         "user_processed_filter",
         "expected_counts",
     ),
     [
         (
             {1},
+            None,
             None,
             True,
             {
@@ -431,6 +454,7 @@ def test_model_set_data_user_processed(
         (
             {2},
             None,
+            None,
             True,
             {
                 "priority_count": 1,
@@ -441,6 +465,7 @@ def test_model_set_data_user_processed(
         ),
         (
             {1, 2},
+            None,
             None,
             True,
             {
@@ -453,6 +478,7 @@ def test_model_set_data_user_processed(
         (
             None,
             {"building_part_area"},
+            None,
             True,
             {
                 "priority_count": 3,
@@ -464,6 +490,7 @@ def test_model_set_data_user_processed(
         (
             None,
             {"chimney_point"},
+            None,
             True,
             {
                 "priority_count": 1,
@@ -473,6 +500,7 @@ def test_model_set_data_user_processed(
             },
         ),
         (
+            None,
             None,
             None,
             False,
@@ -486,6 +514,7 @@ def test_model_set_data_user_processed(
         (
             {1},
             {"building_part_area"},
+            None,
             True,
             {
                 "priority_count": 2,
@@ -497,11 +526,24 @@ def test_model_set_data_user_processed(
         (
             {},
             {},
+            {},
             True,
             {
                 "priority_count": 0,
                 "feature_type_count": 0,
                 "feature_1_count": 0,
+                "feature_2_count": 0,
+            },
+        ),
+        (
+            None,
+            None,
+            {"height_relative"},
+            True,
+            {
+                "priority_count": 1,
+                "feature_type_count": 1,
+                "feature_1_count": 1,
                 "feature_2_count": 0,
             },
         ),
@@ -515,6 +557,7 @@ def test_model_set_data_user_processed(
         "User processed filter",
         "Combined filters",
         "Empty filters",
+        "Relative height filters",
     ],
 )
 def test_model_data_count_changes_when_filter_is_applied(
@@ -522,20 +565,28 @@ def test_model_data_count_changes_when_filter_is_applied(
     quality_errors: List[QualityErrorsByPriority],
     error_type_filter: Set[int],
     feature_type_filter: Set[str],
+    feature_attribute_filter: Set[Optional[str]],
     user_processed_filter: bool,
     expected_counts: Dict[str, int],
 ):
     error_type_filters = _error_type_filters()
     feature_type_filters = _feature_type_filters(quality_errors)
+    feature_attribute_filters = _feature_attribute_filters(quality_errors)
 
     if feature_type_filter is not None:
         feature_type_filters = feature_type_filter
+
+    if feature_attribute_filter is not None:
+        feature_attribute_filters = feature_attribute_filter
 
     if error_type_filter is not None:
         error_type_filters = error_type_filter
 
     model.sourceModel().update_filters(
-        feature_type_filters, error_type_filters, user_processed_filter
+        feature_type_filters,
+        error_type_filters,
+        feature_attribute_filters,
+        user_processed_filter,
     )
 
     assert (

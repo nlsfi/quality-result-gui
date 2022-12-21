@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add: Emit mouse event signal for selected error feature
+- Add: New filter to filter quality errors by error attribute value
 
 ## [0.0.3] - 2022-12-15
 
