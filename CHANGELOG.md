@@ -4,6 +4,7 @@
 
 - Feat: Emit mouse event signal for selected error feature
 - Feat: New filter to filter quality errors by error attribute value
+- Feat: Add tooltip for quality error description
 
 ## [0.0.3] - 2022-12-15
 
