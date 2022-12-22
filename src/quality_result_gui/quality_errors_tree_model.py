@@ -193,6 +193,14 @@ class QualityErrorTreeItem:
             return item_data["fi"]
 
         if (
+            role == Qt.ToolTipRole
+            and column == ModelColumn.ERROR_DESCRIPTION
+            and self.item_type == QualityErrorTreeItemType.ERROR
+        ):
+            # lang = locale.get_qgis_locale().split("_")[0]
+            return item_data["fi"]
+
+        if (
             role == Qt.CheckStateRole
             and column == ModelColumn.TYPE_OR_ID
             and self.item_type == QualityErrorTreeItemType.ERROR
