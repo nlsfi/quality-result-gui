@@ -292,11 +292,11 @@ def test_reset_filters_action_restores_check_boxes(
 @pytest.mark.parametrize(
     ("filter_name", "error_types_fixture"),
     [
-        # ("Feature type", "error_feature_types"),
+        ("Feature type", "error_feature_types"),
         ("Feature attribute", "error_feature_attributes"),
     ],
     ids=[
-        # "Deselect all feature types",
+        "Deselect all feature types",
         "Deselect all feature attributes",
     ],
 )

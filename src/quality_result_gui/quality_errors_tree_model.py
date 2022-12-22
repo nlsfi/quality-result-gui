@@ -94,15 +94,13 @@ def get_error_feature_types(
 
 
 def get_error_feature_attributes(
-    errors_by_priority: List[QualityErrorsByPriority],
+    quality_errors: List[QualityErrorsByPriority],
 ) -> Set[Optional[str]]:
     feature_attributes = set()
 
-    for errors_by_feature_type in errors_by_priority:
-        for errors_by_feature in errors_by_feature_type.errors:
-            for feature in errors_by_feature.errors:
-                for error in feature.errors:
-                    feature_attributes.add(error.attribute_name)
+    for errors_by_priority in quality_errors:
+        for error in errors_by_priority.get_all_errors():
+            feature_attributes.add(error.attribute_name)
     return feature_attributes
 
 
@@ -638,24 +636,13 @@ class FilterByMenuModel(BaseFilterModel):
         tree_item_type: QualityErrorTreeItemType,
         tree_item_value: Any,
     ) -> bool:
-        LOGGER.info(self._filter_by_error_type)
-        LOGGER.info(self._filter_by_feature_types)
         if tree_item_type == tree_item_type.FEATURE_TYPE:
             return self._is_feature_type_visible(tree_item_value)
-        # if (
-        #     tree_item_type == tree_item_type.FEATURE_TYPE
-        #     and self._is_feature_type_visible(tree_item_value) is False
-        # ):
-        #     return False
+
         if tree_item_type == tree_item_type.ERROR:
             return self._is_quality_error_visible(tree_item_value)
 
         return True
-
-        # return not (
-        #     tree_item_type == tree_item_type.ERROR
-        #     and self._is_quality_error_visible(tree_item_value) is False
-        # )
 
     def _is_quality_error_visible(self, quality_error: QualityError) -> bool:
         return (
