@@ -99,6 +99,9 @@ class QualityErrorsTreeFilterMenu(QMenu):
     ) -> None:
         self._refresh_feature_type_filter_menu(quality_errors)
         self._refresh_feature_attribute_filter_menu(quality_errors)
+        self._emit_filters_changed()
+
+    def _emit_filters_changed(self) -> None:
         self.filters_changed.emit(
             self._filtered_feature_types,
             self._filtered_error_types,
@@ -229,7 +232,6 @@ class QualityErrorsTreeFilterMenu(QMenu):
             key=lambda x: (bool(x), x),  # sort asc with Nones as first element
         ):
             # TODO: how to configurate custom data mapping
-            # label = common.FEATURE_TYPE_NAMES[feature_type]
             if feature_attribute is None:
                 label = tr("Empty attribute values")
             else:
@@ -257,12 +259,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         else:
             self._filtered_feature_types.remove(feature_type)
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
     def _set_filtered_feature_attribute(
         self, feature_attribute: str, selected: bool
@@ -272,12 +269,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         else:
             self._filtered_feature_attributes.remove(feature_attribute)
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
     def _select_all(
         self,
@@ -291,12 +283,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
             if property not in copy_of_properties:
                 selected_properties.add(property)
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
         self.set_menu_items_checked(menu)
 
@@ -305,12 +292,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         for property in copy.deepcopy(selected_properties):
             selected_properties.remove(property)
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
         self.set_menu_items_unchecked(menu)
 
@@ -320,22 +302,12 @@ class QualityErrorsTreeFilterMenu(QMenu):
         else:
             self._filtered_error_types.remove(error_type)
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
     def _set_user_processed(self, selected: bool) -> None:
         self._show_user_processed = selected
 
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
     def reset_filters(self) -> None:
         self._filtered_feature_types = copy.deepcopy(self._available_feature_types)
@@ -348,12 +320,7 @@ class QualityErrorsTreeFilterMenu(QMenu):
         self.set_menu_items_checked(self.feature_type_filter_menu)
         self.set_menu_items_checked(self.feature_attribute_filter_menu)
         self.set_menu_items_checked(self.user_processed_filter_menu)
-        self.filters_changed.emit(
-            self._filtered_feature_types,
-            self._filtered_error_types,
-            self._filtered_feature_attributes,
-            self._show_user_processed,
-        )
+        self._emit_filters_changed()
 
     def is_any_filter_active(self) -> bool:
         return not (
