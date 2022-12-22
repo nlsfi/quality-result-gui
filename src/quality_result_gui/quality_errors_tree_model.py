@@ -185,15 +185,7 @@ class QualityErrorTreeItem:
             return QVariant(column_data)
 
         if (
-            role == Qt.DisplayRole
-            and column == ModelColumn.ERROR_DESCRIPTION
-            and self.item_type == QualityErrorTreeItemType.ERROR
-        ):
-            # lang = locale.get_qgis_locale().split("_")[0]
-            return item_data["fi"]
-
-        if (
-            role == Qt.ToolTipRole
+            role in [Qt.DisplayRole, Qt.ToolTipRole]
             and column == ModelColumn.ERROR_DESCRIPTION
             and self.item_type == QualityErrorTreeItemType.ERROR
         ):
