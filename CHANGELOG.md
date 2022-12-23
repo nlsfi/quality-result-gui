@@ -6,6 +6,7 @@
 - Feat: New filter to filter quality errors by error attribute value
 - Feat: Add tooltip for quality error description
 - Feat: Update data in tree view partially when data changes
+- Fix: Minor styling fixes of tree view
 
 ## [0.0.3] - 2022-12-15
 
