@@ -207,8 +207,16 @@ class QualityErrorTreeItem:
         if self.item_type == QualityErrorTreeItemType.HEADER:
             return QVariant()
 
-        if role == Qt.UserRole and column == ModelColumn.TYPE_OR_ID:
-            return (self.item_type, self._item_data[column_index])
+        if role == Qt.UserRole and column in [
+            ModelColumn.TYPE_OR_ID,
+            ModelColumn.ERROR_DESCRIPTION,
+        ]:
+            index = (
+                column_index - 1
+                if column == ModelColumn.ERROR_DESCRIPTION
+                else column_index
+            )
+            return (self.item_type, self._item_data[index])
 
         if role == Qt.DisplayRole and column == ModelColumn.TYPE_OR_ID:
             if self.item_type == QualityErrorTreeItemType.PRIORITY:

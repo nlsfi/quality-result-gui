@@ -7,6 +7,7 @@
 - Feat: Add tooltip for quality error description
 - Feat: Update data in tree view partially when data changes
 - Fix: Minor styling fixes of tree view
+- Fix: Visualize error when description is clicked
 
 ## [0.0.3] - 2022-12-15
 
