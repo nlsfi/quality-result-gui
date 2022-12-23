@@ -242,9 +242,6 @@ class QualityErrorTreeView(QTreeView):
 
         self.source_button_event = None
 
-        self.setColumnWidth(ModelColumn.TYPE_OR_ID.value, 250)
-        self.setIndentation(10)
-        self.setUniformRowHeights(True)
         self.setUpdatesEnabled(True)
 
         self.base_model = QualityErrorsTreeBaseModel(
@@ -277,6 +274,9 @@ class QualityErrorTreeView(QTreeView):
         self.model().rowsAboutToBeRemoved.connect(self._on_rows_about_to_be_removed)
 
         fetcher.results_received.connect(self._on_results_updated)
+        self.setColumnWidth(ModelColumn.TYPE_OR_ID.value, 150)
+        self.setIndentation(10)
+        self.setUniformRowHeights(True)
 
     def mousePressEvent(  # noqa: N802 (override qt method)
         self, event: QMouseEvent

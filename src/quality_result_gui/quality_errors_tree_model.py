@@ -39,7 +39,6 @@ from qgis.PyQt.QtCore import (
     QIdentityProxyModel,
     QModelIndex,
     QObject,
-    QSize,
     QSortFilterProxyModel,
     Qt,
     QVariant,
@@ -626,7 +625,7 @@ class QualityErrorIdentityProxyModel(QIdentityProxyModel):
         ):
             font = QFont()
             font.setBold(True)
-            font.setPixelSize(15)
+            font.setPointSize(10)
             return QVariant(font)
 
         if (
@@ -637,15 +636,6 @@ class QualityErrorIdentityProxyModel(QIdentityProxyModel):
             font = QFont()
             font.setBold(True)
             return QVariant(font)
-
-        if (
-            role == Qt.SizeHintRole
-            and column == ModelColumn.TYPE_OR_ID
-            and item_type == QualityErrorTreeItemType.PRIORITY
-        ):
-            size = QSize()
-            size.setHeight(26)
-            return QVariant(size)
 
         if (
             role == Qt.ForegroundRole
