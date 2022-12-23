@@ -176,7 +176,7 @@ def test_show_quality_errors_dock_should_have_rows_with_quality_errors(
     assert_tree_view_is_populated(model)
 
 
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(15)
 def test_show_quality_errors_dock_performance_with_big_dataset(
     quality_errors_dock: QualityErrorsDockWidget,
 ):

@@ -68,9 +68,6 @@ class MockQualityResultClient(QualityResultClient):
         return QgsCoordinateReferenceSystem("EPSG:3067")
 
 
-API_CLIENT = MockQualityResultClient(Path(""))
-
-
 class DevToolsDialog(QDialog, FORM_CLASS):
 
     quality_errors_data_file_widget: QgsFileWidget

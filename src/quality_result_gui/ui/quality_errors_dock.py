@@ -225,7 +225,7 @@ class ShowErrorsOnMapCheckBox(QCheckBox):
 
 class QualityErrorTreeView(QTreeView):
     quality_error_checked = pyqtSignal(str, bool)
-    quality_error_selected = pyqtSignal(QualityError, QMouseEvent)
+    quality_error_selected = pyqtSignal(QualityError)
 
     def __init__(
         self,
@@ -353,7 +353,7 @@ class QualityErrorTreeView(QTreeView):
                 [error_feature], preserve_scale=False
             )
 
-        self.quality_error_selected.emit(quality_error, self.source_button_event)
+        self.quality_error_selected.emit(quality_error)
         self.visualizer.refresh_selected_error(error_feature)
 
     def _quality_error_checked_callback(
@@ -389,6 +389,7 @@ class QualityErrorTreeView(QTreeView):
             error = self._get_quality_error_from_row(index)
             if error is not None:
                 yield error
+            return
         else:
             for i in range(row_count):
                 yield from self._get_quality_errors_from_index(index.child(i, 0))
