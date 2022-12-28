@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [0.0.4] - 2022-12-28
 
 - Feat: Emit mouse event signal for selected error feature
