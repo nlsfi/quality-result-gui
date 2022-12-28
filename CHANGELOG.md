@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [0.0.4] - 2022-12-28
 
 - Feat: Emit mouse event signal for selected error feature
 - Feat: New filter to filter quality errors by error attribute value
@@ -24,3 +24,4 @@
 [0.0.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.1
 [0.0.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.2
 [0.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.3
+[0.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.4
