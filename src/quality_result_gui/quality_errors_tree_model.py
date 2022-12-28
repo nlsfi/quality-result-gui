@@ -397,6 +397,11 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                     quality_error.unique_identifier, checked
                 )
                 self.dataChanged.emit(index, index)
+
+                parent_index = index
+                while parent_index.isValid():
+                    parent_index = parent_index.parent()
+                    self.dataChanged.emit(parent_index, parent_index)
                 return True
 
         return False

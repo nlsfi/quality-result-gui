@@ -668,3 +668,26 @@ def test_refresh_model_does_nothing_if_data_does_not_change(
         _count_quality_error_rows(base_model, base_model.index(0, 0, QModelIndex()))
         == 4
     )
+
+
+def test_no_rows_visible_when_all_user_processed(
+    model: FilterByExtentModel,
+):
+    model.sourceModel().update_filters(
+        {"chimney_point"},
+        {1},
+        {"height_relative"},
+        False,
+    )
+
+    assert _count_quality_error_rows(model, _priority_1_index(model)) == 1
+    assert _count_quality_error_rows(model, _priority_2_index(model)) == 0
+
+    model.setData(
+        _priority_1_feature_type_1_feature_1_error_1_index(model),
+        Qt.Checked,
+        Qt.CheckStateRole,
+    )
+
+    assert _count_quality_error_rows(model, _priority_1_index(model)) == 0
+    assert _count_quality_error_rows(model, _priority_2_index(model)) == 0
