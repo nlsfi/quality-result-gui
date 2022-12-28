@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Hide empty branches from quality error list when user processed errors are hidden and user processes all errors for a feature
+
 ## [0.0.4] - 2022-12-28
 
 - Feat: Emit mouse event signal for selected error feature
