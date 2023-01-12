@@ -35,6 +35,8 @@ from qgis.PyQt.QtWidgets import (
     QTreeView,
     QVBoxLayout,
     QWidget,
+    QMenu,
+    QAction,
 )
 from qgis.utils import iface as utils_iface
 from qgis_plugin_tools.tools.decorations import log_if_fails
@@ -78,6 +80,21 @@ DOCK_UI, _ = uic.loadUiType(
 )
 
 
+def generate_dummy_menu(p, aa=False, o=None):
+    m = QMenu(p)
+    a1 = QAction("Select all", parent=m)
+    a2 = QAction("Deselect all", parent=m)
+    m.addAction(a1)
+    m.addAction(a2)
+    s = [f"Action {i}" for i in range(5)] if o is None else o
+    for b in s:
+        a = QAction(b, parent=m)
+        a.setCheckable(True)
+        a.setChecked(aa)
+        m.addAction(a)
+    return m
+
+
 class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     """
     Graphical user interface for quality errors dock widget.
@@ -86,6 +103,9 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     # type necessary widgets that are provided from the .ui
     error_tree_layout: QVBoxLayout
     filter_button: QToolButton
+    feature_type_filter: QToolButton
+    feature_attribute_filter: QToolButton
+    error_type_filter: QToolButton
     info_label: QLabel
     close_button: QPushButton
     map_actions_layout: QVBoxLayout
@@ -106,6 +126,82 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
         self.quality_errors_tree_filter_menu.filters_changed.connect(
             lambda *args: self._update_filter_menu_icon_state()
         )
+
+        self.feature_type_filter_2.setMenu(
+            generate_dummy_menu(self.feature_type_filter_2)
+        )
+        self.feature_type_filter_2.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+        self.feature_type_filter_2.setDown(True)
+        self.error_type_filter_2.setMenu(generate_dummy_menu(self.error_type_filter_2))
+        self.error_type_filter_2.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+        self.feature_attribute_filter_2.setMenu(
+            generate_dummy_menu(self.feature_attribute_filter_2, True)
+        )
+        self.feature_attribute_filter_2.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+
+        self.feature_type_filter.setMenu(
+            generate_dummy_menu(
+                self.feature_type_filter,
+                True,
+                o=["building_part_area", "chimney_point", "road_link"],
+            )
+        )
+        self.feature_type_filter.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+        self.feature_type_filter.setDown(True)
+        self.error_type_filter.setMenu(
+            generate_dummy_menu(
+                self.error_type_filter,
+                o=[
+                    "Attribute error",
+                    "Geometry error",
+                    "Topology error",
+                    "Continity error",
+                ],
+            )
+        )
+        self.error_type_filter.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+        self.feature_attribute_filter.setMenu(
+            generate_dummy_menu(
+                self.feature_attribute_filter,
+                o=[
+                    "Empty attribute values",
+                    "floors_above_ground",
+                    "height_relative",
+                    "road_number",
+                    "road_link_road_class_id",
+                ],
+            )
+        )
+        self.feature_attribute_filter.setIcon(
+            QgsApplication.getThemeIcon("/mActionFilter2.svg")
+        )
+
+        # # test_cb = QComboBox()
+        # self.mComboBox_4.addItems(
+        #     ["Attribute error", "Geometry error", "Topology error", "Continity error"]
+        # )
+        # self.mComboBox_3.addItems(["building_part_area", "chimney_point", "road_link"])
+        # self.mComboBox_2.addItems(
+        # [
+        #     "Empty attribute values",
+        #     "floors_above_ground",
+        #     "height_relative",
+        #     "road_number",
+        #     "road_link_road_class_id",
+        # ]
+        # )
+
+        # # self.addWidget(test_cb)
 
         # Remove placeholder map extent check box, replace with custom check box
         map_extent_check_box_placeholder = self.map_actions_layout.takeAt(0)
