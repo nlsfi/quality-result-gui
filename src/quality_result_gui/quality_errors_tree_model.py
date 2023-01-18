@@ -678,51 +678,29 @@ class BaseFilterModel(QSortFilterProxyModel):
     def filterAcceptsRow(  # noqa: N802 (qt override)
         self, source_row: int, source_parent: QModelIndex
     ) -> bool:
-
         source_index = self.sourceModel().index(source_row, 0, source_parent)
 
-        if source_index.isValid():
-            is_visible = True
-            # Check the current index
-            data = self.sourceModel().data(source_index, self.filterRole())
+        if not source_index.isValid():
+            return True
 
+        data = self.sourceModel().data(source_index, self.filterRole())
+        if not QVariant(data).isValid():
             # Always accept anything that did not return valid data
-            if not QVariant(data).isValid():
-                return True
+            return True
 
-            (item_type, item_value) = cast(ErrorDataType, data)
+        (item_type, item_value) = cast(ErrorDataType, data)
 
-            if item_type in (
-                QualityErrorTreeItemType.FEATURE_TYPE,
-                QualityErrorTreeItemType.FEATURE,
-                QualityErrorTreeItemType.ERROR,
-            ):
-                is_visible = self.accept_row(item_type, item_value)
+        is_visible = self.accept_row(item_type, item_value)
 
-            # Check child indexes if index is visible:
-            #  -> if they match, match current index also
-            if is_visible is True:
-                children_visible = False
-                for i in range(  # noqa: SIM110
-                    self.sourceModel().rowCount(source_index)
-                ):
-                    if self.filterAcceptsRow(i, source_index):
-                        return True
+        children_visible = self.is_any_children_visible(source_index)
+        is_error = item_type == QualityErrorTreeItemType.ERROR
+        return is_visible and (is_error or children_visible)
 
-                # Hide row if all children rows are hidden
-                if (
-                    item_type
-                    in (
-                        QualityErrorTreeItemType.PRIORITY,
-                        QualityErrorTreeItemType.FEATURE_TYPE,
-                        QualityErrorTreeItemType.FEATURE,
-                    )
-                    and children_visible is False
-                ):
-                    return False
-
-            return is_visible
-        return True
+    def is_any_children_visible(self, source_index: QModelIndex) -> bool:
+        return any(
+            self.filterAcceptsRow(child_row_num, source_index)
+            for child_row_num in range(self.sourceModel().rowCount(source_index))
+        )
 
     @abstractmethod
     def accept_row(
