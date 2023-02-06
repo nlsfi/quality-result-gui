@@ -19,3 +19,11 @@
 
 
 __version__ = "0.0.4.post0"
+
+
+from enum import Enum
+
+
+class SelectionType(Enum):
+    RightClick = 1
+    Other = 2

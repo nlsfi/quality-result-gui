@@ -21,6 +21,7 @@ from typing import Dict, List, Optional, Set
 from unittest.mock import MagicMock
 
 import pytest
+from pytestqt.modeltest import ModelTester
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
 
 from quality_result_gui.api.types.quality_error import (
@@ -28,10 +29,10 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorType,
 )
 from quality_result_gui.quality_errors_tree_model import (
-    FilterByExtentModel,
-    FilterByMenuModel,
-    QualityErrorIdentityProxyModel,
+    FilterByExtentProxyModel,
+    FilterProxyModel,
     QualityErrorsTreeBaseModel,
+    StyleProxyModel,
     get_error_feature_attributes,
     get_error_feature_types,
 )
@@ -52,7 +53,7 @@ def _error_type_filters() -> Set[int]:
 
 
 def _reset_filters(
-    model: FilterByExtentModel, quality_errors: List[QualityErrorsByPriority]
+    model: FilterByExtentProxyModel, quality_errors: List[QualityErrorsByPriority]
 ) -> None:
     model.sourceModel().update_filters(
         _feature_type_filters(quality_errors),
@@ -141,15 +142,15 @@ def base_model(m_user_processed_callback: MagicMock) -> QualityErrorsTreeBaseMod
 @pytest.fixture()
 def model(
     quality_errors: List[QualityErrorsByPriority],
-    qtmodeltester,
+    qtmodeltester: ModelTester,
     base_model: QualityErrorsTreeBaseModel,
-) -> FilterByExtentModel:
-    styled_model = QualityErrorIdentityProxyModel(None)
+) -> FilterByExtentProxyModel:
+    styled_model = StyleProxyModel(None)
     styled_model.setSourceModel(base_model)
 
-    menu_model = FilterByMenuModel(None)
+    menu_model = FilterProxyModel(None)
     menu_model.setSourceModel(styled_model)
-    extent_model = FilterByExtentModel(None)
+    extent_model = FilterByExtentProxyModel(None)
     extent_model.setSourceModel(menu_model)
     qtmodeltester.check(extent_model)
 
@@ -164,7 +165,7 @@ def model(
     return extent_model
 
 
-def test_model_index(model: FilterByExtentModel):
+def test_model_index(model: FilterByExtentProxyModel):
     priority_1_index = _priority_1_index(model)
     assert priority_1_index.isValid()
 
@@ -203,7 +204,7 @@ def test_model_index(model: FilterByExtentModel):
     assert not nonexistent_error_index.isValid()
 
 
-def test_model_parent(model: FilterByExtentModel):
+def test_model_parent(model: FilterByExtentProxyModel):
     assert not model.parent(QModelIndex()).isValid()
 
     priority_1_index = _priority_1_index(model)
@@ -232,7 +233,7 @@ def test_model_parent(model: FilterByExtentModel):
     )
 
 
-def test_model_row_count(model: FilterByExtentModel):
+def test_model_row_count(model: FilterByExtentProxyModel):
     assert model.rowCount(QModelIndex()) == 2
     assert model.rowCount(_priority_1_index(model)) == 2
     assert model.rowCount(_priority_1_feature_type_1_index(model)) == 2
@@ -245,7 +246,7 @@ def test_model_row_count(model: FilterByExtentModel):
     )
 
 
-def test_model_column_count(model: FilterByExtentModel):
+def test_model_column_count(model: FilterByExtentProxyModel):
     assert model.columnCount(QModelIndex()) == 2
     assert (
         model.columnCount(
@@ -255,7 +256,7 @@ def test_model_column_count(model: FilterByExtentModel):
     )
 
 
-def test_model_header_data(model: FilterByExtentModel):
+def test_model_header_data(model: FilterByExtentProxyModel):
     assert not QVariant(model.headerData(0, Qt.Vertical)).isValid()
     assert QVariant(model.headerData(0, Qt.Horizontal)).isValid()
 
@@ -269,12 +270,13 @@ def test_model_header_data(model: FilterByExtentModel):
 
 
 def test_total_number_of_errors_is_shown_in_header(
-    model: FilterByExtentModel, quality_errors: List[QualityErrorsByPriority]
+    model: FilterByExtentProxyModel, quality_errors: List[QualityErrorsByPriority]
 ):
     assert "5/5" in model.headerData(0, Qt.Horizontal).value()
 
     error_type_filters = _error_type_filters()
-    error_type_filters.remove(2)
+
+    error_type_filters.remove(QualityErrorType.GEOMETRY)
     model.sourceModel().update_filters(
         _feature_type_filters(quality_errors),
         error_type_filters,
@@ -295,11 +297,11 @@ def test_total_number_of_errors_is_shown_in_header(
     assert "1/5" in model.headerData(0, Qt.Horizontal).value()
 
 
-def test_model_data_invalid_index(model: FilterByExtentModel):
+def test_model_data_invalid_index(model: FilterByExtentProxyModel):
     assert not QVariant(model.data(QModelIndex())).isValid()
 
 
-def test_model_data_priority(model: FilterByExtentModel):
+def test_model_data_priority(model: FilterByExtentProxyModel):
     assert model.data(_priority_1_index(model)) == "Fatal"
     assert _count_quality_error_rows(model, _priority_1_index(model)) == 4
     assert not QVariant(model.data(model.index(0, 2, QModelIndex()))).isValid()
@@ -308,7 +310,7 @@ def test_model_data_priority(model: FilterByExtentModel):
     assert _count_quality_error_rows(model, _priority_2_index(model)) == 1
 
 
-def test_model_data_feature_type(model: FilterByExtentModel):
+def test_model_data_feature_type(model: FilterByExtentProxyModel):
     assert model.data(_priority_1_feature_type_1_index(model)) == "building_part_area"
     assert (
         _count_quality_error_rows(model, _priority_1_feature_type_1_index(model)) == 3
@@ -321,7 +323,7 @@ def test_model_data_feature_type(model: FilterByExtentModel):
     )
 
 
-def test_model_data_feature(model: FilterByExtentModel):
+def test_model_data_feature(model: FilterByExtentProxyModel):
     assert model.data(_priority_1_feature_type_1_feature_1_index(model)) == "123c1e9b"
     assert (
         _count_quality_error_rows(
@@ -341,7 +343,7 @@ def test_model_data_feature(model: FilterByExtentModel):
 
 
 def test_model_data_error(
-    model: FilterByExtentModel,
+    model: FilterByExtentProxyModel,
 ):
     assert (
         model.data(_priority_1_feature_type_1_feature_1_error_1_index(model))
@@ -366,7 +368,7 @@ def test_model_data_error(
     )
 
 
-def test_model_data_user_processed(model: FilterByExtentModel):
+def test_model_data_user_processed(model: FilterByExtentProxyModel):
     assert (
         model.data(
             _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.CheckStateRole
@@ -381,7 +383,7 @@ def test_model_data_user_processed(model: FilterByExtentModel):
     )
 
 
-def test_model_data_error_text_color(model: FilterByExtentModel):
+def test_model_data_error_text_color(model: FilterByExtentProxyModel):
     assert (
         model.data(
             _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.ForegroundRole
@@ -396,7 +398,7 @@ def test_model_data_error_text_color(model: FilterByExtentModel):
     )
 
 
-def test_model_checkable_flags(model: FilterByExtentModel):
+def test_model_checkable_flags(model: FilterByExtentProxyModel):
     invalid_index_flags = model.flags(QModelIndex())
     assert int(invalid_index_flags) == Qt.NoItemFlags
 
@@ -422,14 +424,14 @@ def test_model_checkable_flags(model: FilterByExtentModel):
     ],
 )
 def test_model_set_data_user_processed(
-    model: FilterByExtentModel,
+    model: FilterByExtentProxyModel,
     m_user_processed_callback: MagicMock,
     value: int,
     role: Qt.ItemDataRole,
     expected_check_state: int,
     expected_callback_value: bool,
     callback_called: bool,
-):
+) -> None:
     model.setData(
         _priority_1_feature_type_1_feature_1_error_1_index(model), value, role
     )
@@ -575,7 +577,7 @@ def test_model_set_data_user_processed(
     ],
 )
 def test_model_data_count_changes_when_filter_is_applied(
-    model: FilterByExtentModel,
+    model: FilterByExtentProxyModel,
     quality_errors: List[QualityErrorsByPriority],
     error_type_filter: Set[int],
     feature_type_filter: Set[str],
@@ -671,7 +673,7 @@ def test_refresh_model_does_nothing_if_data_does_not_change(
 
 
 def test_no_rows_visible_when_all_user_processed(
-    model: FilterByExtentModel,
+    model: FilterByExtentProxyModel,
 ):
     model.sourceModel().update_filters(
         {"chimney_point"},

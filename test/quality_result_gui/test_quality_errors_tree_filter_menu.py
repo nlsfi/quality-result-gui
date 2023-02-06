@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import List, Optional, Set
+from typing import TYPE_CHECKING, List, Optional, Set
 from unittest.mock import MagicMock
 
 import pytest
@@ -33,10 +33,13 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorsByPriority,
     QualityErrorType,
 )
-from quality_result_gui.quality_errors_tree_filter_menu import (
+from quality_result_gui.quality_errors_tree_model import FilterByExtentProxyModel
+from quality_result_gui.ui.quality_errors_tree_filter_menu import (
     QualityErrorsTreeFilterMenu,
 )
-from quality_result_gui.quality_errors_tree_model import FilterByExtentModel
+
+if TYPE_CHECKING:
+    from pytestqt.modeltest import ModelTester
 
 
 def _get_submenu_from_menu(menu: QMenu, submenu_title: str) -> Optional[QMenu]:
@@ -465,10 +468,10 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     expected_feature_attributes: Set[str],
     expected_error_types: Set[int],
     expected_user_processed: bool,
-    qtmodeltester,
+    qtmodeltester: "ModelTester",
 ):
     # Setup:
-    model = FilterByExtentModel(None)
+    model = FilterByExtentProxyModel(None)
     qtmodeltester.check(model)
 
     filter_menu = QualityErrorsTreeFilterMenu()

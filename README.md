@@ -23,8 +23,8 @@ from qgis.utils import iface
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
-from quality_result_gui.ui.quality_errors_dock import QualityErrorsDockWidget
 from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResponse
+from quality_result_gui.quality_error_manager import QualityResultManager
 
 
 class ExampleQualityResultClient(QualityResultClient):
@@ -52,8 +52,8 @@ class ExampleQualityResultClient(QualityResultClient):
 
 
 api_client = ExampleQualityResultClient()
-quality_errors_dialog = QualityErrorsDockWidget(api_client, iface.mainWindow())
-quality_errors_dialog.show()
+quality_manager = QualityResultManager(api_client, iface.mainWindow())
+quality_manager.show_dock_widget()
 
 ```
 

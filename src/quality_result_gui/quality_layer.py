@@ -19,7 +19,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
 
 from qgis.core import (
     QgsAnnotationLayer,
@@ -147,12 +147,7 @@ class QualityErrorLayer:
 
     @property
     def annotation_layer(self) -> QgsAnnotationLayer:
-        layer = self.find_layer_from_project()
-
-        if layer is None:
-            raise LayerException(tr("Quality layer not found from map"))
-
-        return layer
+        return self.get_annotation_layer()
 
     def find_layer_from_project(self) -> Optional[QgsAnnotationLayer]:
         """
@@ -174,18 +169,22 @@ class QualityErrorLayer:
         return layers[0] if len(layers) > 0 else None
 
     def _create_annotation_layer(self) -> QgsAnnotationLayer:
-        return QgsAnnotationLayer(
+        layer = QgsAnnotationLayer(
             tr("Quality errors"),
             QgsAnnotationLayer.LayerOptions(QgsProject.instance().transformContext()),
         )
 
-    def get_annotation_layer(self) -> QgsAnnotationLayer:
-        """Creates an annotation layer from the layer configuration."""
-        layer = self._create_annotation_layer()
+        layer.setCustomProperty(self.LAYER_ID_PROPERTY, self.LAYER_ID)
 
         LOGGER.debug(f"Created a layer: {layer.name()}")
 
-        layer.setCustomProperty(self.LAYER_ID_PROPERTY, self.LAYER_ID)
+        return layer
+
+    def get_annotation_layer(self) -> QgsAnnotationLayer:
+        """Creates an annotation layer from the layer configuration."""
+        layer = self.find_layer_from_project()
+        if layer is None:
+            layer = self._create_annotation_layer()
 
         return layer
 
@@ -230,7 +229,7 @@ class QualityErrorLayer:
             self._annotation_ids[internal_id] = new_ids
 
     def remove_annotations(
-        self, error_features: List["ErrorFeature"], id_prefix: str = ""
+        self, error_features: Iterable["ErrorFeature"], id_prefix: str = ""
     ) -> None:
         annotation_layer = self.annotation_layer
 
@@ -252,7 +251,11 @@ class QualityErrorLayer:
     ) -> List[
         Union[QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem]
     ]:
-        annotations = []
+        annotations: List[
+            Union[
+                QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem
+            ]
+        ] = []
         geom_type = geometry.type()
 
         original_abstract_geometry = geometry.get()
