@@ -140,7 +140,7 @@ class BackgroundQualityResultsFetcher(QObject):
 
     @pyqtSlot()
     def stop(self) -> None:
-        if self._thread is not None:
-            if self._thread.isRunning():
-                self._thread.quit()
-            self._thread = None
+        if self._thread and self._thread.isRunning():
+            self._thread.quit()
+            self._thread.wait()
+        self._thread = None
