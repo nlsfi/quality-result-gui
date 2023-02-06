@@ -47,7 +47,6 @@ class PollingWorker(QObject):
 
     _timer: Optional[QTimer]
     _poll_interval: int
-    _last_ready_run_id: Optional[int]
 
     def __init__(
         self,
@@ -58,7 +57,6 @@ class PollingWorker(QObject):
         super().__init__(parent)
         self._timer = None
         self._poll_interval = poll_interval
-        self._last_ready_run_id = None
         self._api_client = api_client
 
     @pyqtSlot()
