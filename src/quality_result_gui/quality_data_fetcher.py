@@ -45,9 +45,6 @@ class PollingWorker(QObject):
     status_changed = pyqtSignal(CheckStatus)
     results_received = pyqtSignal(list)
 
-    _timer: Optional[QTimer]
-    _poll_interval: int
-
     def __init__(
         self,
         api_client: QualityResultClient,
@@ -55,7 +52,7 @@ class PollingWorker(QObject):
         poll_interval: int = BACKGROUND_POLL_INTERVAL,
     ) -> None:
         super().__init__(parent)
-        self._timer = None
+        self._timer: Optional[QTimer] = None
         self._poll_interval = poll_interval
         self._api_client = api_client
 
@@ -88,10 +85,6 @@ class PollingWorker(QObject):
 
 
 class BackgroundQualityResultsFetcher(QObject):
-    _thread: Optional[QThread]
-    _worker: Optional[PollingWorker]
-    _poll_interval: int
-
     _check_requested = pyqtSignal()
     status_changed = pyqtSignal(CheckStatus)
     results_received = pyqtSignal(list)
@@ -103,8 +96,8 @@ class BackgroundQualityResultsFetcher(QObject):
         poll_interval: int = BACKGROUND_POLL_INTERVAL,
     ) -> None:
         super().__init__(parent)
-        self._thread = None
-        self._worker = None
+        self._thread: Optional[QThread] = None
+        self._worker: Optional[PollingWorker] = None
         self._poll_interval = poll_interval
         self._api_client = api_client
 
