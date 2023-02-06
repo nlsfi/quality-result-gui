@@ -2,7 +2,9 @@
 
 ## Unreleased
 
+- Feat: Added an API to add custom filters for errors.
 - Fix: Hide empty branches from quality error list when user processed errors are hidden and user processes all errors for a feature
+- Fix: Error layer stays visible after minimizing QGIS.
 
 ## [0.0.4] - 2022-12-28
 

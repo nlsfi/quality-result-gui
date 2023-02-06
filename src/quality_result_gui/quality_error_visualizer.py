@@ -19,7 +19,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 from qgis.core import (
     QgsAnnotationLayer,
@@ -33,6 +33,7 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorPriority,
 )
 from quality_result_gui.quality_layer import QualityErrorLayer
+from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
 
 LOGGER = logging.getLogger(__name__)
@@ -64,9 +65,8 @@ class QualityErrorVisualizer:
 
     ID_PREFIX_FOR_SELECTED = "selected-"
 
-    def __init__(self) -> None:
-        self.errors_visible = True
-
+    def __init__(self, crs: QgsCoordinateReferenceSystem) -> None:
+        self._crs = crs
         self._all_error_features: List[ErrorFeature] = []
         self._selected_error_feature: Optional[ErrorFeature] = None
 
@@ -78,14 +78,27 @@ class QualityErrorVisualizer:
         else:
             self.hide_errors()
 
-    def add_new_errors(self, error_features: List[ErrorFeature]) -> None:
+    def add_new_errors(self, error_features: Iterable[ErrorFeature]) -> None:
         for error_feature in error_features:
             self._quality_error_layer.add_or_replace_annotation(
                 error_feature, use_highlighted_style=False
             )
 
-    def remove_errors(self, error_features: List[ErrorFeature]) -> None:
+    def remove_errors(self, error_features: Iterable[ErrorFeature]) -> None:
         self._quality_error_layer.remove_annotations(error_features)
+
+    def on_error_selected(
+        self, quality_error: QualityError, selection_type: SelectionType
+    ) -> None:
+        error_feature = ErrorFeature.from_quality_error(quality_error, self._crs)
+
+        preserve_scale = selection_type == SelectionType.RightClick
+
+        self.zoom_to_geometries_and_flash(
+            [error_feature], preserve_scale=preserve_scale
+        )
+
+        self.refresh_selected_error(error_feature)
 
     def refresh_selected_error(
         self,
@@ -103,12 +116,10 @@ class QualityErrorVisualizer:
     def show_errors(self) -> None:
         layer = self._get_or_create_layer()
         layer_utils.set_visibility_checked(layer, True)
-        self.errors_visible = True
 
     def hide_errors(self) -> None:
         layer = self._get_or_create_layer()
         layer_utils.set_visibility_checked(layer, False)
-        self.errors_visible = False
 
     def remove_quality_error_layer(self) -> None:
         layer = self._quality_error_layer.find_layer_from_project()

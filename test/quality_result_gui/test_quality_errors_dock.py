@@ -46,22 +46,20 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorsByPriority,
     QualityErrorType,
 )
+from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui.quality_error_visualizer import (
     ErrorFeature,
     QualityErrorVisualizer,
 )
-from quality_result_gui.quality_errors_tree_filter_menu import (
+from quality_result_gui.quality_errors_tree_model import FilterByExtentProxyModel
+from quality_result_gui.ui.quality_errors_dock import QualityErrorsDockWidget
+from quality_result_gui.ui.quality_errors_tree_filter_menu import (
     QualityErrorsTreeFilterMenu,
-)
-from quality_result_gui.quality_errors_tree_model import FilterByExtentModel
-from quality_result_gui.ui.quality_errors_dock import (
-    MapExtentCheckBox,
-    QualityErrorsDockWidget,
 )
 
 
 # index of fatal errors in quality error tree model
-def _count_num_fatal_rows(model: FilterByExtentModel) -> int:
+def _count_num_fatal_rows(model: QAbstractItemModel) -> int:
     first_index = model.index(0, 0, QModelIndex())
     if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]:
         return _count_children_rows(model, model.index(0, 0, QModelIndex()))
@@ -70,7 +68,7 @@ def _count_num_fatal_rows(model: FilterByExtentModel) -> int:
 
 
 # index of warnings in quality error tree model
-def _count_num_warning_rows(model: FilterByExtentModel) -> int:
+def _count_num_warning_rows(model: QAbstractItemModel) -> int:
     first_index = model.index(0, 0, QModelIndex())
     if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]:
         return _count_children_rows(model, model.index(1, 0, QModelIndex()))
@@ -80,9 +78,7 @@ def _count_num_warning_rows(model: FilterByExtentModel) -> int:
         return 0
 
 
-def _count_children_rows(
-    model: FilterByExtentModel, priority_index: QModelIndex
-) -> int:
+def _count_children_rows(model: QAbstractItemModel, priority_index: QModelIndex) -> int:
     if not priority_index.isValid():
         return 0
     num_rows = 0
@@ -95,8 +91,8 @@ def _count_children_rows(
 
 @pytest.fixture()
 def quality_errors_dock(
-    qgis_new_project,
-    bypass_log_if_fails,
+    qgis_new_project: None,
+    bypass_log_if_fails: None,
     qtbot: QtBot,
     quality_errors: List[QualityErrorsByPriority],
 ) -> Generator[QualityErrorsDockWidget, None, None]:
@@ -107,7 +103,7 @@ def quality_errors_dock(
         "EPSG:3903"
     )
 
-    quality_errors_dock = QualityErrorsDockWidget(m_quality_result_client, None)
+    quality_errors_dock = QualityErrorsDockWidget(None)
     qtbot.addWidget(quality_errors_dock)
 
     quality_errors_dock.show()
@@ -115,6 +111,31 @@ def quality_errors_dock(
 
     yield quality_errors_dock
     quality_errors_dock.close()
+
+
+@pytest.fixture()
+def quality_errors_manager(
+    qgis_new_project: None,
+    bypass_log_if_fails: None,
+    qtbot: QtBot,
+    quality_errors: List[QualityErrorsByPriority],
+) -> Generator[QualityResultManager, None, None]:
+
+    m_quality_result_client = MagicMock()
+    m_quality_result_client.get_results.return_value = quality_errors
+    m_quality_result_client.get_crs.return_value = QgsCoordinateReferenceSystem(
+        "EPSG:3903"
+    )
+
+    manager = QualityResultManager(m_quality_result_client, None)
+    qtbot.addWidget(manager.dock_widget)
+
+    # manager.show_dock_widget()
+
+    manager._fetcher.set_checks_enabled(False)
+
+    yield manager
+    manager.unload()
 
 
 @pytest.fixture()
@@ -162,16 +183,16 @@ def _get_action_from_menu(menu: QMenu, action_title: str) -> Optional[QAction]:
 
 
 def test_show_quality_errors_dock_should_have_no_information_if_no_quality_errors_present(
-    quality_errors_dock: QualityErrorsDockWidget,
-):
-    model = quality_errors_dock.error_tree_view.model()
+    quality_errors_manager: QualityResultManager,
+) -> None:
+    model = quality_errors_manager.dock_widget.error_tree_view.model()
     root_index = QModelIndex()
     assert model.rowCount(root_index) == 0
 
 
 def test_show_quality_errors_dock_should_have_rows_with_quality_errors(
     quality_errors_dock_with_data: QualityErrorsDockWidget,
-):
+) -> None:
     model = quality_errors_dock_with_data.error_tree_view.model()
     assert_tree_view_is_populated(model)
 
@@ -179,7 +200,7 @@ def test_show_quality_errors_dock_should_have_rows_with_quality_errors(
 @pytest.mark.timeout(15)
 def test_show_quality_errors_dock_performance_with_big_dataset(
     quality_errors_dock: QualityErrorsDockWidget,
-):
+) -> None:
     quality_errors = []
     # Generate 1000+ errors
     for priority in list(QualityErrorPriority):
@@ -224,7 +245,7 @@ def test_show_quality_errors_dock_performance_with_big_dataset(
 def test_show_quality_errors_dock_updates_view_partially_when_data_is_refreshed(
     quality_errors_dock_with_data: QualityErrorsDockWidget,
     quality_errors: List[QualityErrorsByPriority],
-):
+) -> None:
     model = quality_errors_dock_with_data.error_tree_view.model()
 
     original_quality_errors = copy(quality_errors)
@@ -295,7 +316,7 @@ def test_clicking_tree_view_row_zooms_to_feature_if_feature_or_quality_error_sel
     should_zoom_to_feature: bool,
     expected_annotation_feature_count: int,
     should_trigger_selected_signal: bool,
-):
+) -> None:
     qgis_iface.mapCanvas().setExtent(QgsRectangle(100, 100, 200, 200))
     original_extent = qgis_iface.mapCanvas().extent()
     tree = quality_errors_dock_with_data.error_tree_view
@@ -365,7 +386,7 @@ def test_filter_with_map_extent_check_box(  # noqa: QGS105
     extent: QgsRectangle,
     expected_fatal_count: int,
     expected_warning_count: int,
-):
+) -> None:
     qgis_iface.mapCanvas().setExtent(QgsRectangle(-1000, -1000, 1000, 1000))
     filter_with_map_extent_check_box = (
         quality_errors_dock_with_data.filter_with_map_extent_check_box
@@ -381,7 +402,8 @@ def test_filter_with_map_extent_check_box(  # noqa: QGS105
     assert _count_num_warning_rows(model) == 1
 
     # Mock canvas extent to return exact extent needed in test (as setExtent depends on window size)
-    mocker.patch.object(MapExtentCheckBox, "_canvas_extent", return_value=extent)
+
+    mocker.patch.object(FilterByExtentProxyModel, "_extent", return_value=extent)
 
     # Test by changing map extent
     qgis_iface.mapCanvas().setExtent(extent)
@@ -393,7 +415,7 @@ def test_filter_with_map_extent_check_box(  # noqa: QGS105
 def test_show_errors_on_map_check_box_toggles_quality_error_layer_visibility(
     mocker: MockerFixture,
     quality_errors_dock: QualityErrorsDockWidget,
-):
+) -> None:
     show_errors_on_map_check_box = quality_errors_dock.show_errors_on_map_check_box
 
     m_hide_errors = mocker.patch.object(
@@ -419,7 +441,7 @@ def test_show_errors_on_map_check_box_toggles_quality_error_layer_visibility(
 def test_changing_model_data_sends_error_geometries_to_visualizer(
     mocker: MockerFixture,
     quality_errors_dock: QualityErrorsDockWidget,
-):
+) -> None:
     feature_type = "building_part_area"
     m_add_new_errors = mocker.patch.object(
         QualityErrorVisualizer, "add_new_errors", autospec=True
@@ -482,16 +504,17 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
 
 
 def test_updating_filter_refreshes_errors_on_tree_view_and_map(
+    quality_manager: QualityResultManager,
     quality_errors_dock: QualityErrorsDockWidget,
     quality_errors: List[QualityErrorsByPriority],
-):
+) -> None:
     mock_feature = QgsFeature()
     mock_feature.setGeometry(QgsGeometry.fromWkt("Point(1 3)"))
 
     # Load all quality rules before test -> quality_rules fixture should contain 4 unique mttj_id
     quality_errors_dock._fetcher.results_received.emit(quality_errors)
     quality_layer = (
-        quality_errors_dock.error_tree_view.visualizer._quality_error_layer.find_layer_from_project()
+        quality_errors_dock.visualizer._quality_error_layer.find_layer_from_project()
     )
     assert quality_layer is not None
     assert len(quality_layer.items()) == 5
@@ -500,7 +523,7 @@ def test_updating_filter_refreshes_errors_on_tree_view_and_map(
     assert quality_errors_dock.filter_button.isDown() is False
 
     # Get filter menu action
-    filter_menu = quality_errors_dock.quality_errors_tree_filter_menu
+    filter_menu = quality_errors_dock.filter_menu
     error_type_filter_menu = filter_menu.findChild(
         QMenu, QualityErrorsTreeFilterMenu.ERROR_TYPE_MENU_NAME
     )
@@ -543,7 +566,7 @@ def test_updating_filter_refreshes_errors_on_tree_view_and_map(
 
 def test_close_event_hides_errors(
     quality_errors_dock: QualityErrorsDockWidget, mocker: MockerFixture
-):
+) -> None:
     m_remove_quality_error_layer = mocker.patch.object(
         QualityErrorVisualizer, "remove_quality_error_layer", autospec=True
     )
@@ -555,7 +578,7 @@ def test_close_event_hides_errors(
 
 def test_close_and_reopen_does_not_affect_error_visibility(
     quality_errors_dock_with_data: QualityErrorsDockWidget,
-):
+) -> None:
     def _check_quality_layer_visibility(expected_visibility: bool) -> None:
         root: QgsLayerTree = QgsProject.instance().layerTreeRoot()
         quality_layer = (
@@ -588,7 +611,7 @@ def test_close_and_reopen_does_not_affect_error_visibility(
 
 def test_update_filter_menu_icon_state_disables_button_if_no_quality_errors(
     quality_errors_dock: QualityErrorsDockWidget,
-):
+) -> None:
 
     quality_errors_dock._update_filter_menu_icon_state()
 
@@ -615,7 +638,7 @@ def test_update_filter_menu_icon_state_sets_button_up_or_down(
     mocker: MockerFixture,
     filters_active: bool,
     button_is_down: bool,
-):
+) -> None:
 
     mocker.patch.object(
         QualityErrorsTreeFilterMenu,
@@ -633,7 +656,7 @@ def test_update_filter_menu_icon_state_sets_button_up_or_down(
 def test_model_reset_expands_error_rows_recursively(
     quality_errors_dock: QualityErrorsDockWidget,
     quality_errors: List[QualityErrorsByPriority],
-):
+) -> None:
 
     quality_errors_dock._fetcher.results_received.emit(quality_errors)
 

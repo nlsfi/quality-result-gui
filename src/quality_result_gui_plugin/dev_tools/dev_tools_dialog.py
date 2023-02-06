@@ -17,55 +17,21 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-import json
 import logging
-from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject
 from qgis.gui import QgsFileWidget
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QPushButton, QWidget
-from qgis.utils import iface
-from qgis_plugin_tools.tools.decorations import log_if_fails
-
-from quality_result_gui.api.quality_api_client import QualityResultClient
-from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
-from quality_result_gui.ui.quality_errors_dock import QualityErrorsDockWidget
-from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResponse
 
 FORM_CLASS: QWidget
 FORM_CLASS, _ = uic.loadUiType(
     str(Path(__file__).parent.joinpath("dev_tools_dialog.ui"))
 )
 
+
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class MockQualityResultClient(QualityResultClient):
-    json_file_path: Path
-
-    def get_results(self) -> Optional[List[QualityErrorsByPriority]]:
-        """
-        Retrieve latest quality errors from API
-
-        Returns:
-            None: if no results available
-            List[QualityErrorsByPriority]: if results available
-
-        Raises:
-            QualityResultClientError: if request fails
-            QualityResultServerError: if check failed in backend
-        """
-        return QualityErrorResponse(
-            json.loads(self.json_file_path.read_text())
-        ).errors_by_priority
-
-    def get_crs(self) -> QgsCoordinateReferenceSystem:
-        return QgsCoordinateReferenceSystem("EPSG:3067")
 
 
 class DevToolsDialog(QDialog, FORM_CLASS):
@@ -88,24 +54,7 @@ class DevToolsDialog(QDialog, FORM_CLASS):
             self._enable_open_quality_errors_dialog_button
         )
         self.btn_open_quality_errors_dialog.setEnabled(False)
-        self.btn_open_quality_errors_dialog.clicked.connect(
-            self._load_quality_errors_data
-        )
+        self.btn_open_quality_errors_dialog.clicked.connect(self.accept)
 
     def _enable_open_quality_errors_dialog_button(self) -> None:
         self.btn_open_quality_errors_dialog.setEnabled(True)
-
-    @log_if_fails
-    def _load_quality_errors_data(self) -> None:
-        quality_errors_json = self.quality_errors_data_file_widget.filePath()
-        api_client = MockQualityResultClient(Path(quality_errors_json))
-        QgsProject.instance().setCrs(api_client.get_crs())
-
-        quality_errors_dialog = QualityErrorsDockWidget(api_client, iface.mainWindow())
-        iface.addDockWidget(
-            Qt.DockWidgetArea.RightDockWidgetArea, quality_errors_dialog
-        )
-
-        # Wait a bit before showing dialog, this seems to help with the
-        # issue of data not showing initially on the tree view
-        QTimer.singleShot(1000, lambda: quality_errors_dialog.show())

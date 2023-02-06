@@ -17,23 +17,27 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+import contextlib
 import enum
 import logging
 from abc import abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
+    Iterable,
     Iterator,
     List,
     NewType,
     Optional,
     Set,
     Tuple,
+    Union,
     cast,
+    overload,
 )
 
-from qgis.core import QgsRectangle
+from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import (
     QAbstractItemModel,
     QIdentityProxyModel,
@@ -45,6 +49,7 @@ from qgis.PyQt.QtCore import (
     pyqtSignal,
 )
 from qgis.PyQt.QtGui import QColor, QFont
+from qgis.utils import iface as utils_iface
 from qgis_plugin_tools.tools.i18n import tr
 
 from quality_result_gui.api.types.quality_error import (
@@ -55,7 +60,14 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorsByPriority,
 )
 
+if TYPE_CHECKING:
+    from qgis.core import QgsRectangle
+
+    from quality_result_gui.quality_errors_filters import AbstractQualityErrorFilter
+
 LOGGER = logging.getLogger(__name__)
+
+iface = cast(QgisInterface, utils_iface)
 
 
 class ModelColumn(enum.Enum):
@@ -72,24 +84,22 @@ COLUMN_HEADERS = {
 def get_error_feature_types(
     errors_by_priority: List[QualityErrorsByPriority],
 ) -> Set[str]:
-    feature_types = set()
-
-    for errors_by_feature_type in errors_by_priority:
-        for errors in errors_by_feature_type.errors:
-            feature_types.add(errors.feature_type)
-
-    return feature_types
+    return {
+        errors.feature_type
+        for errors_by_feature_type in errors_by_priority
+        for errors in errors_by_feature_type.errors
+    }
 
 
 def get_error_feature_attributes(
     quality_errors: List[QualityErrorsByPriority],
-) -> Set[Optional[str]]:
-    feature_attributes = set()
-
-    for errors_by_priority in quality_errors:
-        for error in errors_by_priority.get_all_errors():
-            feature_attributes.add(error.attribute_name)
-    return feature_attributes
+) -> Set[str]:
+    return {
+        error.attribute_name
+        for errors_by_priority in quality_errors
+        for error in errors_by_priority.get_all_errors()
+        if error.attribute_name
+    }
 
 
 def _get_quality_errors_indexes(
@@ -267,21 +277,11 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
     https://doc.qt.io/qt-5/qtwidgets-itemviews-simpletreemodel-example.html
     """
 
-    filterable_data_changed = pyqtSignal(list)
-    _quality_error_checked_callback: Callable
+    filterable_data_changed = pyqtSignal()
+    error_checked = pyqtSignal(str, bool)
 
-    def __init__(
-        self,
-        parent: Optional[QObject],
-        quality_error_checked_callback: Callable,
-    ) -> None:
+    def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
-
-        setattr(  # noqa: B010
-            self,
-            "_quality_error_checked_callback",
-            quality_error_checked_callback,
-        )
 
         self._root_item = QualityErrorTreeItem(
             len(COLUMN_HEADERS) * [None],
@@ -314,11 +314,24 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return QModelIndex()
 
-    def parent(self, index: QModelIndex) -> QModelIndex:
-        if not index.isValid():
+    @overload
+    def parent(self, child: QModelIndex) -> QModelIndex:
+        ...
+
+    @overload
+    def parent(self) -> QObject:
+        ...
+
+    def parent(
+        self, child: Optional[QModelIndex] = None
+    ) -> Union[QModelIndex, QObject]:
+        if child is None:
+            return super().parent()
+
+        if not child.isValid():
             return QModelIndex()
 
-        child_item: QualityErrorTreeItem = index.internalPointer()
+        child_item: QualityErrorTreeItem = child.internalPointer()
         parent_item = child_item.parent()
 
         if parent_item == self._root_item or parent_item is None:
@@ -393,9 +406,8 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             if role == Qt.CheckStateRole:
                 checked = value == Qt.Checked
                 quality_error.is_user_processed = checked
-                self._quality_error_checked_callback(
-                    quality_error.unique_identifier, checked
-                )
+
+                self.error_checked.emit(quality_error.unique_identifier, checked)
                 self.dataChanged.emit(index, index)
 
                 parent_index = index
@@ -426,14 +438,11 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
     def refresh_model(self, quality_errors: List[QualityErrorsByPriority]) -> None:
 
-        updated_quality_error_ids = set()
-        for errors_by_priority in quality_errors:
-            updated_quality_error_ids.update(
-                [
-                    error.unique_identifier
-                    for error in errors_by_priority.get_all_errors()
-                ]
-            )
+        updated_quality_error_ids = {
+            error.unique_identifier
+            for errors_by_priority in quality_errors
+            for error in errors_by_priority.get_all_errors()
+        }
 
         current_quality_error_ids = set()
         for i in range(self.rowCount(QModelIndex())):
@@ -452,18 +461,14 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         if not deleted_error_ids and not new_error_ids:
             return
 
-        errors_to_be_added: List[QualityError] = []
+        errors_to_be_added = (
+            error
+            for errors_by_priority in quality_errors
+            for error in errors_by_priority.get_all_errors()
+            if error.unique_identifier in new_error_ids
+        )
 
-        for errors_by_priority in quality_errors:
-            errors_to_be_added += [
-                error
-                for error in errors_by_priority.get_all_errors()
-                if error.unique_identifier in new_error_ids
-            ]
-
-        errors_to_be_deleted: List[
-            Tuple[QualityErrorTreeItem, QualityErrorTreeItem]
-        ] = []
+        errors_to_be_deleted: List[Tuple[QualityErrorTreeItem, QModelIndex]] = []
 
         for i in range(self.rowCount(QModelIndex())):
             for index in _get_quality_errors_indexes(
@@ -475,11 +480,11 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         self._update_model_data(errors_to_be_added, errors_to_be_deleted)
 
-        self.filterable_data_changed.emit(quality_errors)
+        self.filterable_data_changed.emit()
 
     def _update_model_data(
         self,
-        errors_to_be_added: List[QualityError],
+        errors_to_be_added: Iterable[QualityError],
         errors_to_be_deleted: List[Tuple[QualityErrorTreeItem, QModelIndex]],
     ) -> None:
         """
@@ -593,32 +598,9 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         self.endInsertRows()
 
 
-class QualityErrorIdentityProxyModel(QIdentityProxyModel):
-    def __init__(self, parent: Optional[QObject]) -> None:
+class StyleProxyModel(QIdentityProxyModel):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
-        styles = """
-        QTreeView::item:hover, QTreeView::item:selected:active,
-        QTreeView::item:selected, QTreeView::branch:selected:active,
-        QTreeView::branch:hover {
-            background: #f5f5f5;
-            border-bottom: 1px solid #f5f5f5;
-            color: black;
-        }
-        QTreeView::item {
-            border-bottom: 1px solid #f5f5f5;
-            background: white;
-        }
-        """
-        if parent:
-            parent.setStyleSheet(styles)
-
-    def headerData(  # noqa: N802 (qt override)
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
-    ) -> QVariant:
-        return self.sourceModel().headerData(section, orientation, role)
 
     def data(
         self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
@@ -670,8 +652,8 @@ class QualityErrorIdentityProxyModel(QIdentityProxyModel):
         return self.sourceModel().data(source_index, role)
 
 
-class BaseFilterModel(QSortFilterProxyModel):
-    def __init__(self, parent: Optional[QObject]) -> None:
+class AbstractFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
         self.setFilterRole(Qt.UserRole)
 
@@ -690,23 +672,48 @@ class BaseFilterModel(QSortFilterProxyModel):
 
         (item_type, item_value) = cast(ErrorDataType, data)
 
-        is_visible = self.accept_row(item_type, item_value)
+        row_accepted = self.accept_row(item_type, item_value)
+        if not row_accepted:
+            return False
 
-        children_visible = self.is_any_children_visible(source_index)
-        is_error = item_type == QualityErrorTreeItemType.ERROR
-        return is_visible and (is_error or children_visible)
-
-    def is_any_children_visible(self, source_index: QModelIndex) -> bool:
-        return any(
-            self.filterAcceptsRow(child_row_num, source_index)
-            for child_row_num in range(self.sourceModel().rowCount(source_index))
-        )
+        if item_type == QualityErrorTreeItemType.ERROR:
+            return True
+        else:
+            return self._is_any_children_visible(source_index)
 
     @abstractmethod
     def accept_row(
         self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
     ) -> bool:
         raise NotImplementedError()
+
+    def _is_any_children_visible(self, source_index: QModelIndex) -> bool:
+        child_count = self.sourceModel().rowCount(source_index)
+        return any(
+            self.filterAcceptsRow(child_row_num, source_index)
+            for child_row_num in range(child_count)
+        )
+
+
+class FilterProxyModel(AbstractFilterProxyModel):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+
+        self._filters: List["AbstractQualityErrorFilter"] = []
+
+    def add_filter(self, filter: "AbstractQualityErrorFilter") -> None:
+        filter.filters_changed.connect(self.invalidateFilter)
+        self._filters.append(filter)
+
+        self.invalidateFilter()
+
+    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+        # TODO: Check only the changed filters.
+        # Now this checks all the filters when one changes
+        return all(
+            quality_filter.accept_row(item_type, item_value)
+            for quality_filter in self._filters
+        )
 
     def headerData(  # noqa: N802 (qt override)
         self,
@@ -736,97 +743,38 @@ class BaseFilterModel(QSortFilterProxyModel):
                 return QVariant()
         return QVariant()
 
-    def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
-    ) -> QVariant:
 
-        if not index.isValid():
-            return QVariant()
-
-        source_index = self.mapToSource(index)
-        return self.sourceModel().data(source_index, role)
-
-
-class FilterByMenuModel(BaseFilterModel):
-    _filter_by_error_type: Set[int]
-    _filter_by_feature_types: Set[str]
-    _filter_by_feature_attributes: Set[Optional[str]]
-    _filter_by_feature_attributes_changed: bool
-    _show_user_processed: bool
-
-    def __init__(self, parent: Optional[QObject]) -> None:
+class FilterByExtentProxyModel(AbstractFilterProxyModel):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
-        self._filter_by_error_type = set()
-        self._filter_by_feature_types = set()
-        self._filter_by_feature_attributes = set()
-        self._show_user_processed = True
 
-    def update_filters(
-        self,
-        filtered_feature_types: Set[str],
-        filtered_error_types: Set[int],
-        filtered_feature_attributes: Set[Optional[str]],
-        show_user_processed: bool,
-    ) -> None:
-        self._filter_by_feature_types = filtered_feature_types
-        self._filter_by_error_type = filtered_error_types
-        self._filter_by_feature_attributes = filtered_feature_attributes
-        self._show_user_processed = show_user_processed
-        self.invalidateFilter()
+        self._extent: Union["QgsRectangle", None] = None
 
-    def accept_row(
-        self,
-        tree_item_type: QualityErrorTreeItemType,
-        tree_item_value: Any,
-    ) -> bool:
-        if tree_item_type == tree_item_type.FEATURE_TYPE:
-            return self._is_feature_type_visible(tree_item_value)
-
-        if tree_item_type == tree_item_type.ERROR:
-            return self._is_quality_error_visible(tree_item_value)
-
-        return True
-
-    def _is_quality_error_visible(self, quality_error: QualityError) -> bool:
-        return (
-            quality_error.error_type.value in self._filter_by_error_type
-            and quality_error.feature_type in self._filter_by_feature_types
-            and quality_error.attribute_name in self._filter_by_feature_attributes
-            and (
-                self._show_user_processed is True
-                or quality_error.is_user_processed is False
-            )
-        )
-
-    def _is_feature_type_visible(self, feature_type: str) -> bool:
-        return feature_type in self._filter_by_feature_types
-
-
-class FilterByExtentModel(BaseFilterModel):
-    _filter_by_extent: bool
-    _extent: QgsRectangle
-
-    def __init__(self, parent: Optional[QObject]) -> None:
-        super().__init__(parent)
-        self._filter_by_extent = False
-
-    def update_filters(self, filter_by_extent: bool, extent: QgsRectangle) -> None:
-        self._filter_by_extent = filter_by_extent
+    def set_extent(self, extent: Union["QgsRectangle", None]) -> None:
         self._extent = extent
         self.invalidateFilter()
 
+    def _on_map_extent_changed(self) -> None:
+        self.set_extent(iface.mapCanvas().extent())
+
+    def set_enabled(self, enabled: bool) -> None:
+        if enabled:
+            iface.mapCanvas().extentsChanged.connect(self._on_map_extent_changed)
+            self.set_extent(iface.mapCanvas().extent())
+        else:
+            with contextlib.suppress(TypeError):  # Ignore case when not connected
+                iface.mapCanvas().extentsChanged.disconnect(self._on_map_extent_changed)
+
+            self.set_extent(None)
+
     def accept_row(
-        self,
-        tree_item_type: QualityErrorTreeItemType,
-        tree_item_value: Any,
+        self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
     ) -> bool:
-        if self._filter_by_extent is False:
+        if not self._extent:
+            return True
+        if tree_item_type != tree_item_type.ERROR:
             return True
 
-        return not (
-            tree_item_type == tree_item_type.ERROR
-            and self._is_error_visible(tree_item_value) is False
-        )
+        quality_error = cast(QualityError, tree_item_value)
 
-    def _is_error_visible(self, quality_error: QualityError) -> bool:
         return quality_error.geometry.intersects(self._extent)

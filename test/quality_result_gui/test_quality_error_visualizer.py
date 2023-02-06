@@ -40,7 +40,7 @@ CRS = QgsCoordinateReferenceSystem("EPSG:3067")
 
 @pytest.fixture()
 def visualizer() -> Generator[QualityErrorVisualizer, None, None]:
-    visualizer = QualityErrorVisualizer()
+    visualizer = QualityErrorVisualizer(CRS)
     visualizer.toggle_visibility(True)
     yield visualizer
     visualizer.remove_quality_error_layer()

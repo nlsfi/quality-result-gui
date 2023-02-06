@@ -19,15 +19,19 @@
 
 import logging
 from enum import Enum, auto
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from qgis.PyQt.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
+from qgis_plugin_tools.tools.i18n import tr
 
 from quality_result_gui.api.quality_api_client import (
     QualityResultClient,
     QualityResultClientError,
     QualityResultServerError,
 )
+
+if TYPE_CHECKING:
+    from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
 
 BACKGROUND_POLL_INTERVAL = 10 * 1000
 
@@ -39,6 +43,14 @@ class CheckStatus(Enum):
     RESULT_ONGOING = auto()
     RESULT_UPDATED = auto()
     RESULT_FAILED = auto()
+
+
+CHECK_STATUS_LABELS = {
+    CheckStatus.CHECKING: tr("Checking for quality result updates"),
+    CheckStatus.RESULT_ONGOING: tr("Quality check is in progress"),
+    CheckStatus.RESULT_FAILED: tr("Quality result update failed"),
+    CheckStatus.RESULT_UPDATED: tr("Quality results are up to date"),
+}
 
 
 class PollingWorker(QObject):
@@ -117,7 +129,9 @@ class BackgroundQualityResultsFetcher(QObject):
         self.status_changed.emit(status)
 
     @pyqtSlot(list)
-    def _worker_results_received(self, results: List) -> None:
+    def _worker_results_received(
+        self, results: List["QualityErrorsByPriority"]
+    ) -> None:
         self.results_received.emit(results)
 
     @pyqtSlot()
