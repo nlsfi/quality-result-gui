@@ -60,9 +60,14 @@ class PollingWorker(QObject):
     def start(self) -> None:
         if self._timer is not None:
             self._timer.stop()
+
+        # Run every x seconds
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._check_api)
         self._timer.start(self._poll_interval)
+
+        # For the first time run right now since timer triggers it after x seconds
+        self._check_api()
 
     @pyqtSlot()
     def _check_api(self) -> None:
@@ -85,7 +90,6 @@ class PollingWorker(QObject):
 
 
 class BackgroundQualityResultsFetcher(QObject):
-    _check_requested = pyqtSignal()
     status_changed = pyqtSignal(CheckStatus)
     results_received = pyqtSignal(list)
 
@@ -105,7 +109,6 @@ class BackgroundQualityResultsFetcher(QObject):
     def set_checks_enabled(self, enabled: bool) -> None:
         if enabled:
             self.start()
-            self._check_requested.emit()
         else:
             self.stop()
 
@@ -123,12 +126,13 @@ class BackgroundQualityResultsFetcher(QObject):
         self._thread = QThread(self)
         self._worker = PollingWorker(self._api_client, None, self._poll_interval)
         self._worker.moveToThread(self._thread)
+
+        self._thread.finished.connect(self._worker.deleteLater)
+        self._thread.started.connect(self._worker.start)
+
         self._worker.status_changed.connect(self._worker_status_changed)
         self._worker.results_received.connect(self._worker_results_received)
-        self._check_requested.connect(self._worker._check_api)
-        self._thread.started.connect(self._worker.start)
-        self._thread.finished.connect(self._worker.deleteLater)
-        self._thread.finished.connect(self._thread.deleteLater)
+
         self._thread.start()
 
     @pyqtSlot()
