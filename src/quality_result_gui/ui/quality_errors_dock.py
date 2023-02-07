@@ -18,36 +18,38 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Type
 
 from qgis.core import QgsApplication
 from qgis.gui import QgsGui
-from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QDockWidget, QShortcut
+from qgis.PyQt.QtGui import QCloseEvent
+from qgis.PyQt.QtWidgets import (
+    QCheckBox,
+    QDockWidget,
+    QLabel,
+    QShortcut,
+    QToolButton,
+    QWidget,
+)
 from qgis_plugin_tools.tools.i18n import tr
+from qgis_plugin_tools.tools.ui import load_ui_file
 
 from quality_result_gui.ui.quality_errors_tree_filter_menu import (
     QualityErrorsTreeFilterMenu,
 )
 
 if TYPE_CHECKING:
-    from qgis.PyQt.QtGui import QCloseEvent
-    from qgis.PyQt.QtWidgets import QCheckBox, QLabel, QToolButton, QWidget
-
     from quality_result_gui.ui.quality_error_tree_view import QualityErrorTreeView
 
 
 LOGGER = logging.getLogger(__name__)
 
-DOCK_UI: "QWidget"
-DOCK_UI, _ = uic.loadUiType(
-    str(Path(__file__).parent.joinpath("quality_errors_dock.ui"))
-)
+
+DockWidgetUi: Type[QDockWidget] = load_ui_file(__package__, "quality_errors_dock.ui")
 
 
-class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
+class QualityErrorsDockWidget(DockWidgetUi):  # type: ignore
     """
     Graphical user interface for quality errors dock widget.
     """
@@ -64,9 +66,8 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     show_errors_on_map_check_box: "QCheckBox"
     show_user_processed_errors_check_box: "QCheckBox"
 
-    def __init__(self, parent: Optional["QWidget"] = None) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent=parent)
 
         self.shortcut_for_toggle_errors = QShortcut(self)
         self.shortcut_for_toggle_errors.setObjectName(
@@ -101,7 +102,7 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
         self._register_shortcut()
         return super().show()
 
-    def closeEvent(self, event: "QCloseEvent") -> None:  # noqa: N802 (qt override)
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (qt override)
         QgsGui.shortcutsManager().unregisterShortcut(self.shortcut_for_toggle_errors)
 
         self.closed.emit()
