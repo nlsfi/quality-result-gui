@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, Iterator, Optional
+from typing import Any, Generator, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -38,13 +38,12 @@ from quality_result_gui.quality_data_fetcher import (
 @pytest.fixture()
 def quality_result_fetcher(
     mock_api_client: QualityResultClient,
-) -> Iterator[BackgroundQualityResultsFetcher]:
+) -> Generator[BackgroundQualityResultsFetcher, None, None]:
     quality_result_fetcher = BackgroundQualityResultsFetcher(
         mock_api_client, poll_interval=10
     )
     yield quality_result_fetcher
     quality_result_fetcher.stop()
-    quality_result_fetcher.deleteLater()
 
 
 @pytest.mark.parametrize(
