@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.0.0] - 2023-02-14
 
 - Feat: Added an API to add custom filters for errors.
 - Fix: Hide empty branches from quality error list when user processed errors are hidden and user processes all errors for a feature
@@ -31,3 +31,4 @@
 [0.0.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.2
 [0.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.3
 [0.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.4
+[1.0.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.0.0
