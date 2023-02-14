@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [1.0.0] - 2023-02-14
 
 - Feat: Added an API to add custom filters for errors.
