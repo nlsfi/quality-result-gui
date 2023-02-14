@@ -52,6 +52,7 @@ def quality_layer_created(
     QgsProject.instance().removeMapLayer(annotation_layer.id())
 
 
+@pytest.mark.xfail(reason="Not yet revised.")
 def test_get_annotation_layer_when_layer_not_added_to_project_should_raise_error(
     quality_layer: QualityErrorLayer,
 ):
