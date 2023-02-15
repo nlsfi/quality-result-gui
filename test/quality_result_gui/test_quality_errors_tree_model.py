@@ -420,8 +420,14 @@ def test_model_data_error(
         model.data(
             _priority_1_feature_type_1_feature_1_error_1_description_index(model)
         )
-        == "Virheellinen geometria"
+        == "Invalid geometry"
     )
+    extra_info = model.data(
+        _priority_1_feature_type_1_feature_1_error_1_description_index(model),
+        Qt.ToolTipRole,
+    )
+    assert "Invalid geometry" in extra_info
+    assert "Extra info" in extra_info
 
     assert (
         model.data(_priority_1_feature_type_1_feature_1_error_2_index(model))
@@ -431,7 +437,7 @@ def test_model_data_error(
         model.data(
             _priority_1_feature_type_1_feature_1_error_2_description_index(model)
         )
-        == "Virheellinen arvo"
+        == "Invalid value"
     )
 
 

@@ -117,9 +117,8 @@ def quality_errors_without_chimney_point():
                                     "1",
                                     QualityErrorType.GEOMETRY,
                                     None,
-                                    "Virheellinen geometria",
-                                    "",
                                     "Invalid geometry",
+                                    "Extra info",
                                     QgsGeometry.fromWkt("POINT ((5 5))"),
                                     False,
                                 ),
@@ -131,9 +130,8 @@ def quality_errors_without_chimney_point():
                                     "2",
                                     QualityErrorType.ATTRIBUTE,
                                     "vtj_prt",
-                                    "Virheellinen arvo",
-                                    "",
                                     "Invalid value",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"
                                     ),
@@ -169,9 +167,8 @@ def quality_errors_without_building_part_area():
                                     "4",
                                     QualityErrorType.ATTRIBUTE,
                                     "height_relative",
-                                    "Virheellinen arvo",
-                                    "",
                                     "Invalid value",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"
                                     ),

@@ -65,9 +65,8 @@ class QualityError:
     unique_identifier: str
     error_type: QualityErrorType
     attribute_name: Optional[str]
-    error_description_fi: str
-    error_description_sv: str
-    error_description_en: str
+    error_description: str
+    error_extra_info: str
     geometry: QgsGeometry
     is_user_processed: bool
 
