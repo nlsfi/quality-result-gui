@@ -99,9 +99,8 @@ class QualityErrorResponse:
                 error_obj["unique_identifier"],
                 QualityErrorType(error_obj["error_type"]),
                 error_obj["attribute_name"],
-                error_obj["error_description_fi"],
-                error_obj["error_description_sv"],
-                error_obj["error_description_en"],
+                error_obj["error_description"],
+                error_obj.get("extra_info", None),
                 QgsGeometry.fromWkt(error_obj["wkt_geom"]),
                 error_obj["is_user_processed"],
             )

@@ -86,9 +86,8 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                     "1",
                                     QualityErrorType.GEOMETRY,
                                     None,
-                                    "Virheellinen geometria",
-                                    "",
                                     "Invalid geometry",
+                                    "Extra info",
                                     QgsGeometry.fromWkt("POINT ((5 5))"),
                                     False,
                                 ),
@@ -100,9 +99,8 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                     "2",
                                     QualityErrorType.ATTRIBUTE,
                                     "vtj_prt",
-                                    "Virheellinen arvo",
-                                    "",
                                     "Invalid value",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"
                                     ),
@@ -122,9 +120,8 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                     "3",
                                     QualityErrorType.ATTRIBUTE,
                                     "height_absolute",
-                                    "Virheellinen arvo",
-                                    "",
                                     "Invalidvalue",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((10 10, 10 15, 15 15, 15 10, 10 10))"
                                     ),
@@ -149,9 +146,8 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                     "4",
                                     QualityErrorType.ATTRIBUTE,
                                     "height_relative",
-                                    "Virheellinen arvo",
-                                    "",
                                     "Invalid value",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"
                                     ),
@@ -181,9 +177,8 @@ def quality_errors() -> List[QualityErrorsByPriority]:
                                     "102",
                                     QualityErrorType.ATTRIBUTE,
                                     "floors_above_ground",
-                                    "Puuttuva arvo",
-                                    "",
                                     "Missing value",
+                                    "Extra info",
                                     QgsGeometry.fromWkt(
                                         "POLYGON((30 30, 30 35, 35 35, 35 30, 30 30))"
                                     ),

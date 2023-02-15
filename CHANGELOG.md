@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Feat: Add optional extra info field to quality error. Extra info is displayed in the tooltip of error description and may contain html formatted text.
+- Refactor: Remove language specific description fields from quality error and include only a single field for description.
+
 ## [1.0.0] - 2023-02-14
 
 - Feat: Added an API to add custom filters for errors.

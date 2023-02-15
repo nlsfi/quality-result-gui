@@ -246,12 +246,21 @@ class QualityErrorTreeItem:
             return QVariant(column_data)
 
         if (
-            role in [Qt.DisplayRole, Qt.ToolTipRole]
+            role == Qt.DisplayRole
             and column == ModelColumn.ERROR_DESCRIPTION
             and self.item_type == QualityErrorTreeItemType.ERROR
         ):
-            # lang = locale.get_qgis_locale().split("_")[0]
-            return item_data["fi"]
+            return item_data["error_description"]
+
+        if (
+            role == Qt.ToolTipRole
+            and column == ModelColumn.ERROR_DESCRIPTION
+            and self.item_type == QualityErrorTreeItemType.ERROR
+        ):
+            extra_info = item_data.get("error_extra_info", None)
+            if extra_info is None:
+                return item_data["error_description"]
+            return f"<p>{item_data['error_description']}</p><p>{extra_info}</p>"
 
         if (
             role == Qt.CheckStateRole
@@ -547,9 +556,8 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                 [
                     quality_error,
                     {
-                        "fi": quality_error["error_description_fi"],
-                        "en": quality_error["error_description_en"],
-                        "sv": quality_error["error_description_sv"],
+                        "error_description": quality_error["error_description"],
+                        "error_extra_info": quality_error["error_extra_info"],
                     },
                 ],
                 quality_error.unique_identifier,
