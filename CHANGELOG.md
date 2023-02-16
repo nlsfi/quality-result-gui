@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.0] - 2023-02-16
 
 - Feat: Add optional extra info field to quality error. Extra info is displayed in the tooltip of error description and may contain html formatted text.
 - Refactor: Remove language specific description fields from quality error and include only a single field for description.
@@ -37,3 +37,4 @@
 [0.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.3
 [0.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.4
 [1.0.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.0.0
+[1.1.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.0
