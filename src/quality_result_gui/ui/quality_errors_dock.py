@@ -58,6 +58,7 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     info_label: "QLabel"
     filter_with_map_extent_check_box: "QCheckBox"
     show_errors_on_map_check_box: "QCheckBox"
+    show_user_processed_errors_check_box: "QCheckBox"
 
     def __init__(self, parent: Optional["QWidget"] = None) -> None:
         super().__init__(parent)

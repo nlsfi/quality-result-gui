@@ -41,10 +41,10 @@ from quality_result_gui.quality_errors_filters import (
     AttributeFilter,
     ErrorTypeFilter,
     FeatureTypeFilter,
-    UserProcessedFilter,
 )
 from quality_result_gui.quality_errors_tree_model import (
     FilterByExtentProxyModel,
+    FilterByShowUserProcessedProxyModel,
     FilterProxyModel,
     QualityErrorsTreeBaseModel,
     StyleProxyModel,
@@ -103,14 +103,20 @@ class QualityResultManager(QObject):
             self._filter_model.invalidateFilter
         )
 
+        self._filter_user_processed_model = FilterByShowUserProcessedProxyModel()
+        self._filter_user_processed_model.setSourceModel(self._filter_model)
+
         self._filter_map_extent_model = FilterByExtentProxyModel()
-        self._filter_map_extent_model.setSourceModel(self._filter_model)
+        self._filter_map_extent_model.setSourceModel(self._filter_user_processed_model)
 
         self._styled_model = StyleProxyModel()
         self._styled_model.setSourceModel(self._filter_map_extent_model)
 
         self.dock_widget.error_tree_view.setModel(self._styled_model)
 
+        self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
+            self._filter_user_processed_model.set_enabled
+        )
         self.dock_widget.filter_with_map_extent_check_box.toggled.connect(
             self._filter_map_extent_model.set_enabled
         )
@@ -151,12 +157,10 @@ class QualityResultManager(QObject):
             self._attribute_filter.update_filter_from_errors
         )
 
-        self._user_processed_filter = UserProcessedFilter()
-        self.add_filter(self._user_processed_filter)
-
     def unload(self) -> None:
         self._fetcher.stop()
         self._filter_map_extent_model.set_enabled(False)
+        self._filter_user_processed_model.set_enabled(None)
         self.dock_widget.deleteLater()
         self.visualizer.remove_quality_error_layer()
 

@@ -53,9 +53,6 @@ ERROR_PRIORITY_LABEL = {
 }
 
 
-USER_PROCESSED_LABEL = tr("Show user processed")
-
-
 @dataclass
 class QualityError:
     priority: QualityErrorPriority
