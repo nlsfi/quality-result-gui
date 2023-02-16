@@ -786,3 +786,31 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
         quality_error = cast(QualityError, tree_item_value)
 
         return quality_error.geometry.intersects(self._extent)
+
+
+class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+
+        self._show_processed_errors: Union[bool, None] = None
+
+    def set_show_processed_errors(
+        self, show_processed_errors: Union[bool, None]
+    ) -> None:
+        self._show_processed_errors = show_processed_errors
+        self.invalidateFilter()
+
+    def set_enabled(self, enabled: Optional[bool]) -> None:
+        if not enabled:
+            self.set_show_processed_errors(False)
+        else:
+            self.set_show_processed_errors(enabled)
+
+    def accept_row(
+        self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
+    ) -> bool:
+        return not (
+            self._show_processed_errors is False
+            and tree_item_type == QualityErrorTreeItemType.ERROR
+            and cast(QualityError, tree_item_value).is_user_processed is True
+        )

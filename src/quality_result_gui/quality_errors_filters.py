@@ -38,7 +38,6 @@ if TYPE_CHECKING:
 FEATURE_TYPE_FILTER_MENU_LABEL = tr("Feature type")
 ERROR_TYPE_FILTER_MENU_LABEL = tr("Error type")
 ATTRIBUTE_NAME_FILTER_MENU_LABEL = tr("Attribute Filter")
-USER_PROCESSED_FILTER_MENU_LABEL = tr("User Processed")
 
 
 class FilterMenu(QMenu):
@@ -415,19 +414,3 @@ class AttributeFilter(AbstractQualityErrorFilter):
         }
 
         self._refresh_filters(attribute_names_in_errors)
-
-
-class UserProcessedFilter(AbstractQualityErrorFilter):
-    def __init__(self) -> None:
-        super().__init__(USER_PROCESSED_FILTER_MENU_LABEL)
-
-        self._add_filter_item(True, tr("Show user prosessed"))
-
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
-        if (
-            item_type == QualityErrorTreeItemType.ERROR
-            and cast(QualityError, item_value).is_user_processed
-        ):
-            return True in self._accepted_values
-
-        return True
