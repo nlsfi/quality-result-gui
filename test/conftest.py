@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,11 +17,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, List, Optional, Set
+from typing import Any, Callable, List, Optional, Set
 
 import pytest
 from pytest_mock import MockerFixture
 from qgis.core import QgsCoordinateReferenceSystem, QgsGeometry
+from qgis.PyQt.QtWidgets import QAction, QMenu
 from qgis_plugin_tools.tools.messages import MsgBar
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
@@ -209,3 +210,39 @@ def error_feature_attributes() -> Set[Optional[str]]:
         "height_absolute",
         None,
     }
+
+
+@pytest.fixture()
+def get_action_from_menu() -> Callable[[QMenu, str], Optional[QAction]]:
+    def _get_action_from_menu(menu: QMenu, action_title: str) -> Optional[QAction]:
+        action_items = [item for item in menu.actions() if action_title == item.text()]
+
+        if len(action_items) == 1:
+            return action_items[0]
+        return None
+
+    return _get_action_from_menu
+
+
+@pytest.fixture()
+def is_action_present(
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]]
+) -> Callable[[QMenu, str], bool]:
+    def _is_action_present(menu: QMenu, action_title: str) -> bool:
+        return bool(get_action_from_menu(menu, action_title))
+
+    return _is_action_present
+
+
+@pytest.fixture()
+def trigger_action(
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]]
+) -> Callable[[QMenu, str], None]:
+    def _trigger_action(menu: QMenu, action_title: str) -> None:
+        action = get_action_from_menu(menu, action_title)
+        assert (
+            action is not None
+        ), f"Could not find action for menu title: {action_title}"
+        action.trigger()
+
+    return _trigger_action

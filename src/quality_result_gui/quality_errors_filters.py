@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -73,7 +73,7 @@ class FilterMenu(QMenu):
             self._sorted = False
 
     def set_select_all_section_enabled(self, enabled: bool) -> None:
-        """Add or removes the (de)select all secion
+        """Add or removes the (de)select all section
 
         Args:
             enabled (bool): If True then the section is added if not present already.
@@ -138,8 +138,8 @@ class FilterMenu(QMenu):
 
     def remove_user_actions(self) -> None:
         """Removes all the user added actions"""
-        for action in self._filter_actions:
-            self.remove_filter_action(action)
+        while self._filter_actions:
+            self.remove_filter_action(self._filter_actions[0])
 
     def add_checkable_action(self, label: str) -> QAction:
         """Adds a checkable action with a label in to the menu
