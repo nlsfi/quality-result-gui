@@ -422,6 +422,25 @@ def test_filter_with_map_extent_check_box(  # noqa: QGS105
     assert _count_num_warning_rows(model) == expected_warning_count
 
 
+def test_filter_with_user_processed_check_box(
+    quality_errors_manager_with_data: QualityResultManager,
+) -> None:
+    show_user_processed_errors_check_box = (
+        quality_errors_manager_with_data.dock_widget.show_user_processed_errors_check_box
+    )
+    assert show_user_processed_errors_check_box.isChecked() is True
+
+    model = quality_errors_manager_with_data.dock_widget.error_tree_view.model()
+
+    assert _count_num_fatal_rows(model) == 4
+    assert _count_num_warning_rows(model) == 1
+
+    show_user_processed_errors_check_box.setChecked(False)
+
+    assert _count_num_fatal_rows(model) == 3
+    assert _count_num_warning_rows(model) == 1
+
+
 def test_show_errors_on_map_check_box_toggles_quality_error_layer_visibility(
     mocker: MockerFixture,
     quality_errors_manager: QualityResultManager,
