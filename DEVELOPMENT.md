@@ -12,7 +12,7 @@
 
 ## Requirements changes
 
-This project uses `pip-tools`. To update requirements, do `pip install pip-tools`, change `requirements.in` and use `pip-compile requirements.in` to generate new `requirements.txt` with fixed versions.
+This project uses `pip-tools`. To update requirements, do `python -m pip install pip-tools`, change `requirements.in` and use `pip-compile requirements.in` to generate new `requirements.txt` with fixed versions.
 
 ## Code style
 
