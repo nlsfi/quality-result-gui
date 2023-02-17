@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Feat: Change Show user processed filter into checkbox selection
+
 ## [1.1.0] - 2023-02-16
 
 - Feat: Add optional extra info field to quality error. Extra info is displayed in the tooltip of error description and may contain html formatted text.
