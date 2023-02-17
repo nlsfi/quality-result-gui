@@ -32,10 +32,10 @@ from quality_result_gui.quality_errors_filters import (
     AttributeFilter,
     ErrorTypeFilter,
     FeatureTypeFilter,
-    UserProcessedFilter,
 )
 from quality_result_gui.quality_errors_tree_model import (
     FilterByExtentProxyModel,
+    FilterByShowUserProcessedProxyModel,
     FilterProxyModel,
     QualityErrorsTreeBaseModel,
     StyleProxyModel,
@@ -166,8 +166,11 @@ def model(
     filter_model = FilterProxyModel(None)
     filter_model.setSourceModel(styled_model)
 
+    user_processed_model = FilterByShowUserProcessedProxyModel(None)
+    user_processed_model.setSourceModel(filter_model)
+
     extent_model = FilterByExtentProxyModel(None)
-    extent_model.setSourceModel(filter_model)
+    extent_model.setSourceModel(user_processed_model)
 
     base_model.refresh_model(quality_errors)
     filter_model.invalidateFilter()
@@ -181,7 +184,6 @@ class ModelAndFilters(NamedTuple):
     feature_type_filter: FeatureTypeFilter
     error_type_filter: ErrorTypeFilter
     attribute_name_filter: AttributeFilter
-    user_processed_filter: UserProcessedFilter
 
 
 @pytest.fixture()
@@ -204,9 +206,6 @@ def filter_proxy_model_and_filters(
     attribute_name_filter.update_filter_from_errors(quality_errors)
     filter_model.add_filter(attribute_name_filter)
 
-    user_processed_filter = UserProcessedFilter()
-    filter_model.add_filter(user_processed_filter)
-
     base_model.refresh_model(quality_errors)
     filter_model.invalidateFilter()
 
@@ -216,7 +215,6 @@ def filter_proxy_model_and_filters(
         feature_type_filter,
         error_type_filter,
         attribute_name_filter,
-        user_processed_filter,
     )
 
 
@@ -525,7 +523,6 @@ def test_model_set_data_user_processed(
         "accepted_error_types",
         "accepted_feature_types",
         "accetepted_attribute_names",
-        "accept_user_processed",
         "expected_counts",
     ),
     [
@@ -533,7 +530,6 @@ def test_model_set_data_user_processed(
             {QualityErrorType.ATTRIBUTE},
             None,
             None,
-            True,
             {
                 "priority_count": 3,
                 "feature_type_count": 2,
@@ -545,7 +541,6 @@ def test_model_set_data_user_processed(
             {QualityErrorType.GEOMETRY},
             None,
             None,
-            True,
             {
                 "priority_count": 1,
                 "feature_type_count": 1,
@@ -557,7 +552,6 @@ def test_model_set_data_user_processed(
             {QualityErrorType.ATTRIBUTE, QualityErrorType.GEOMETRY},
             None,
             None,
-            True,
             {
                 "priority_count": 4,
                 "feature_type_count": 3,
@@ -569,7 +563,6 @@ def test_model_set_data_user_processed(
             None,
             {"building_part_area"},
             None,
-            True,
             {
                 "priority_count": 3,
                 "feature_type_count": 3,
@@ -581,7 +574,6 @@ def test_model_set_data_user_processed(
             None,
             {"chimney_point"},
             None,
-            True,
             {
                 "priority_count": 1,
                 "feature_type_count": 1,
@@ -590,22 +582,9 @@ def test_model_set_data_user_processed(
             },
         ),
         (
-            None,
-            None,
-            None,
-            False,
-            {
-                "priority_count": 3,
-                "feature_type_count": 2,
-                "feature_1_count": 1,
-                "feature_2_count": 1,
-            },
-        ),
-        (
             {QualityErrorType.ATTRIBUTE},
             {"building_part_area"},
             None,
-            True,
             {
                 "priority_count": 2,
                 "feature_type_count": 2,
@@ -617,7 +596,6 @@ def test_model_set_data_user_processed(
             {},
             {},
             {},
-            True,
             {
                 "priority_count": 0,
                 "feature_type_count": 0,
@@ -629,7 +607,6 @@ def test_model_set_data_user_processed(
             None,
             None,
             {"height_relative"},
-            True,
             {
                 "priority_count": 1,
                 "feature_type_count": 1,
@@ -645,7 +622,6 @@ def test_model_set_data_user_processed(
         "Attribute and geometry filter",
         "Building part filter",
         "Chimney point filter",
-        "User processed filter",
         "Combined filters",
         "Empty filters",
         "Relative height filters",
@@ -657,7 +633,6 @@ def test_model_data_count_changes_when_filter_is_applied(
     accepted_error_types: Optional[Set[QualityErrorType]],
     accepted_feature_types: Optional[Set[str]],
     accetepted_attribute_names: Optional[Set[str]],
-    accept_user_processed: Optional[bool],
     expected_counts: Dict[str, int],
 ):
     accepted_feature_types = (
@@ -701,13 +676,6 @@ def test_model_data_count_changes_when_filter_is_applied(
         filter_proxy_model_and_filters.error_type_filter._sync_filtered(
             filter_value, filter_value in accepted_error_types
         )
-
-    accept_user_processed = (
-        accept_user_processed if accept_user_processed is not None else True
-    )
-    filter_proxy_model_and_filters.user_processed_filter._sync_filtered(
-        True, accept_user_processed
-    )
 
     model = filter_proxy_model_and_filters.filter_proxy_model
     assert (
