@@ -798,12 +798,6 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
         self._show_processed_errors = show_processed_errors
         self.invalidateFilter()
 
-    def set_enabled(self, enabled: bool) -> None:
-        if not enabled:
-            self.set_show_processed_errors(False)
-        else:
-            self.set_show_processed_errors(enabled)
-
     def accept_row(
         self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
     ) -> bool:
