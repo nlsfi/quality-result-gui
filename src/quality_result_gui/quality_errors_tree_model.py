@@ -733,7 +733,7 @@ class FilterProxyModel(AbstractFilterProxyModel):
             try:
                 model_column = ModelColumn(section)
                 if model_column == ModelColumn.TYPE_OR_ID:
-                    total_count = str(
+                    total_count = (
                         self.sourceModel()
                         .headerData(section, orientation, role)
                         .value()

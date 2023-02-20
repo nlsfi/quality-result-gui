@@ -179,9 +179,9 @@ class FilterMenu(QMenu):
             action (QAction): Action to be removed
         """
 
-        action.deleteLater()
         self.removeAction(action)
         self._filter_actions.remove(action)
+        action.deleteLater()
 
 
 class AbstractQualityErrorFilter(QObject):
@@ -312,8 +312,10 @@ class AbstractQualityErrorFilter(QObject):
 
         action = self._filter_value_action_map.pop(filter_value)
         action.deleteLater()
-        self.menu.removeAction(action)
-        self._accepted_values.remove(filter_value)
+        self.menu.remove_filter_action(action)
+
+        if filter_value in self._accepted_values:
+            self._accepted_values.remove(filter_value)
 
         self.filters_changed.emit()
 

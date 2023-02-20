@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, Callable, List, Optional, Set
+from typing import Any, Callable, List, Optional
 
 import pytest
 from pytest_mock import MockerFixture
@@ -195,27 +195,56 @@ def quality_errors() -> List[QualityErrorsByPriority]:
 
 
 @pytest.fixture()
-def error_feature_types() -> Set[str]:
+def error_feature_types() -> list[str]:
     """Unique feature types in quality_errors fixture"""
-    return {"building_part_area", "chimney_point"}
+    return ["building_part_area", "chimney_point"]
 
 
 @pytest.fixture()
-def error_feature_attributes() -> Set[Optional[str]]:
+def error_feature_attributes() -> list[str]:
     """Unique feature types in quality_errors fixture"""
-    return {
+    return [
         "floors_above_ground",
+        "height_absolute",
         "height_relative",
         "vtj_prt",
-        "height_absolute",
-        None,
-    }
+    ]
+
+
+@pytest.fixture()
+def get_submenu_from_menu() -> Callable[[QMenu, str], Optional[QMenu]]:
+    def _get_submenu_from_menu(menu: QMenu, menu_title: str) -> Optional[QMenu]:
+        menu_items = [
+            action.menu()
+            for action in menu.actions()
+            if action.menu() is not None and action.menu().title() == menu_title
+        ]
+
+        if len(menu_items) == 1:
+            return menu_items[0]
+        return None
+
+    return _get_submenu_from_menu
+
+
+@pytest.fixture()
+def get_checked_menu_items() -> Callable[[QMenu], List[str]]:
+    def _get_checked_menu_items(menu: QMenu) -> List[str]:
+        return [
+            action.text()
+            for action in menu.actions()
+            if action.isCheckable() and action.isChecked()
+        ]
+
+    return _get_checked_menu_items
 
 
 @pytest.fixture()
 def get_action_from_menu() -> Callable[[QMenu, str], Optional[QAction]]:
     def _get_action_from_menu(menu: QMenu, action_title: str) -> Optional[QAction]:
-        action_items = [item for item in menu.actions() if action_title == item.text()]
+        action_items = [
+            action for action in menu.actions() if action_title == action.text()
+        ]
 
         if len(action_items) == 1:
             return action_items[0]

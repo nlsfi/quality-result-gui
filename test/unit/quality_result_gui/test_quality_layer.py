@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -29,7 +29,7 @@ from qgis.core import (
 
 from quality_result_gui.api.types.quality_error import QualityErrorPriority
 from quality_result_gui.quality_error_visualizer import ErrorFeature
-from quality_result_gui.quality_layer import LayerException, QualityErrorLayer
+from quality_result_gui.quality_layer import QualityErrorLayer
 
 CRS = QgsCoordinateReferenceSystem("EPSG:3067")
 
@@ -50,14 +50,6 @@ def quality_layer_created(
     yield quality_layer
 
     QgsProject.instance().removeMapLayer(annotation_layer.id())
-
-
-@pytest.mark.xfail(reason="Not yet revised.")
-def test_get_annotation_layer_when_layer_not_added_to_project_should_raise_error(
-    quality_layer: QualityErrorLayer,
-):
-    with pytest.raises(LayerException):
-        quality_layer.annotation_layer
 
 
 def test_find_layer_from_project_when_not_added_to_project_should_do_nothing(
