@@ -17,11 +17,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Callable, Optional
 from unittest.mock import ANY
 
 import pytest
+from qgis.PyQt.QtWidgets import QAction, QMenu
 
-from quality_result_gui.quality_errors_filters import FilterMenu
+from quality_result_gui.api.types.quality_error import ERROR_TYPE_LABEL
+from quality_result_gui.quality_errors_filters import ErrorTypeFilter, FilterMenu
 
 
 @pytest.fixture()
@@ -125,3 +128,65 @@ def test_filter_menu_set_sorted_works_with_select_all_option(
         "b",
         "c",
     ]
+
+
+def test_filter_menu_set_sorted_works_when_action_added(
+    simple_menu: FilterMenu,
+):
+    simple_menu.set_sorted(True)
+    assert [action.text() for action in simple_menu.actions()] == [
+        "a",
+        "b",
+        "c",
+    ]
+
+    simple_menu.remove_filter_action(simple_menu.actions()[0])
+    simple_menu.add_checkable_action("a")
+
+    assert [action.text() for action in simple_menu.actions()] == [
+        "a",
+        "b",
+        "c",
+    ]
+
+
+def test_deselect_action_unchecks_all(
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]],
+    trigger_action: Callable[[QMenu, str], None],
+):
+
+    error_type_filter_menu = ErrorTypeFilter()
+    error_type_filter_menu._refresh_filters(ERROR_TYPE_LABEL)
+
+    # As a default, boolean value for all feature types is True
+    for error_type in ERROR_TYPE_LABEL.values():
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        assert filter_action is not None
+        assert filter_action.isChecked() is True
+
+    # Test that clicking Deselect all button unchecks all checkboxes
+    trigger_action(error_type_filter_menu.menu, "Deselect all")
+
+    for error_type in ERROR_TYPE_LABEL.values():
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        assert filter_action is not None
+        assert filter_action.isChecked() is False
+
+
+def test_select_action_checks_all(
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]],
+    trigger_action: Callable[[QMenu, str], None],
+):
+    error_type_filter_menu = ErrorTypeFilter()
+    error_type_filter_menu._refresh_filters(ERROR_TYPE_LABEL)
+
+    # Setup using Deselect all button -> unchecks all checkboxes
+    trigger_action(error_type_filter_menu.menu, "Deselect all")
+
+    # Test that clicking Select all button checks all checkboxes
+    trigger_action(error_type_filter_menu.menu, "Select all")
+
+    for error_type in ERROR_TYPE_LABEL.values():
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        assert filter_action is not None
+        assert filter_action.isChecked() is True

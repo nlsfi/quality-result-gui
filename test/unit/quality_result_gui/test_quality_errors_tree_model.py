@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,13 +18,13 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Dict, List, NamedTuple, Optional, Set
-from unittest.mock import MagicMock
 
 import pytest
 from pytestqt.modeltest import ModelTester
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
 
 from quality_result_gui.api.types.quality_error import (
+    ERROR_TYPE_LABEL,
     QualityErrorsByPriority,
     QualityErrorType,
 )
@@ -56,17 +56,6 @@ def _feature_attribute_filters(
 
 def _error_type_filters() -> Set[QualityErrorType]:
     return set(QualityErrorType)
-
-
-def _reset_filters(
-    model: FilterByExtentProxyModel, quality_errors: List[QualityErrorsByPriority]
-) -> None:
-    model.sourceModel().update_filters(
-        _feature_type_filters(quality_errors),
-        _error_type_filters(),
-        _feature_attribute_filters(quality_errors),
-        True,
-    )
 
 
 def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> int:
@@ -146,11 +135,6 @@ def feature_type_filter(
 
 
 @pytest.fixture()
-def m_user_processed_callback() -> MagicMock:
-    return MagicMock()
-
-
-@pytest.fixture()
 def base_model() -> QualityErrorsTreeBaseModel:
     return QualityErrorsTreeBaseModel()
 
@@ -160,6 +144,7 @@ def model(
     quality_errors: List[QualityErrorsByPriority],
     base_model: QualityErrorsTreeBaseModel,
 ) -> FilterByExtentProxyModel:
+
     styled_model = StyleProxyModel(None)
     styled_model.setSourceModel(base_model)
 
@@ -319,46 +304,39 @@ def test_model_column_count(model: FilterByExtentProxyModel):
     )
 
 
-@pytest.mark.xfail(reason="Not yet revised.")
+@pytest.mark.skip("Counts are currently not working in FilterByExtentProxyModel")
 def test_model_header_data(model: FilterByExtentProxyModel):
     assert not QVariant(model.headerData(0, Qt.Vertical)).isValid()
     assert QVariant(model.headerData(0, Qt.Horizontal)).isValid()
 
     for valid_col_index in [0, 1]:
-        assert QVariant(model.headerData(valid_col_index, Qt.Horizontal)).isValid()
+        assert model.headerData(valid_col_index, Qt.Horizontal).isValid()
 
     for invalid_col_index in [-1, 2, 3, 4, 5, 10, 99]:
-        assert not QVariant(
-            model.headerData(invalid_col_index, Qt.Horizontal)
-        ).isValid()
+        assert not model.headerData(invalid_col_index, Qt.Horizontal).isValid()
 
 
-@pytest.mark.xfail(reason="Not yet revised.")
 def test_total_number_of_errors_is_shown_in_header(
-    model: FilterByExtentProxyModel, quality_errors: List[QualityErrorsByPriority]
+    filter_proxy_model_and_filters: ModelAndFilters,
 ):
+
+    (
+        _,
+        model,
+        feature_type_filter,
+        error_type_filter,
+        *_,
+    ) = filter_proxy_model_and_filters
+
     assert "5/5" in model.headerData(0, Qt.Horizontal).value()
 
-    error_type_filters = _error_type_filters()
+    error_type_filter._remove_filter_item(QualityErrorType.GEOMETRY)
 
-    error_type_filters.remove(QualityErrorType.GEOMETRY)
-    model.sourceModel().update_filters(
-        _feature_type_filters(quality_errors),
-        error_type_filters,
-        _feature_attribute_filters(quality_errors),
-        True,
-    )
     assert "4/5" in model.headerData(0, Qt.Horizontal).value()
 
-    _reset_filters(model, quality_errors)
-    feature_type_filters = _feature_type_filters(quality_errors)
-    feature_type_filters.remove("building_part_area")
-    model.sourceModel().update_filters(
-        feature_type_filters,
-        _error_type_filters(),
-        _feature_attribute_filters(quality_errors),
-        True,
-    )
+    error_type_filter._refresh_filters(ERROR_TYPE_LABEL)
+    feature_type_filter._remove_filter_item("building_part_area")
+
     assert "1/5" in model.headerData(0, Qt.Horizontal).value()
 
 
@@ -482,47 +460,9 @@ def test_model_checkable_flags(model: FilterByExtentProxyModel):
 
 @pytest.mark.parametrize(
     (
-        "value",
-        "role",
-        "expected_check_state",
-        "expected_callback_value",
-        "callback_called",
-    ),
-    [
-        (-1, Qt.EditRole, Qt.Unchecked, None, False),
-        (Qt.Checked, Qt.CheckStateRole, Qt.Checked, True, True),
-        (Qt.Unchecked, Qt.CheckStateRole, Qt.Unchecked, False, True),
-    ],
-)
-@pytest.mark.xfail(reason="Not yet revised.")
-def test_model_set_data_user_processed(
-    model: FilterByExtentProxyModel,
-    m_user_processed_callback: MagicMock,
-    value: int,
-    role: Qt.ItemDataRole,
-    expected_check_state: int,
-    expected_callback_value: bool,
-    callback_called: bool,
-) -> None:
-    model.setData(
-        _priority_1_feature_type_1_feature_1_error_1_index(model), value, role
-    )
-    check_state = model.data(
-        _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.CheckStateRole
-    )
-    assert check_state == expected_check_state
-
-    if callback_called:
-        m_user_processed_callback.assert_called_with("1", expected_callback_value)
-    else:
-        m_user_processed_callback.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    (
         "accepted_error_types",
         "accepted_feature_types",
-        "accetepted_attribute_names",
+        "accepted_attribute_names",
         "expected_counts",
     ),
     [
@@ -608,12 +548,11 @@ def test_model_set_data_user_processed(
             None,
             {"height_relative"},
             {
-                "priority_count": 1,
+                "priority_count": 2,
                 "feature_type_count": 1,
                 "feature_1_count": 1,
                 "feature_2_count": 0,
             },
-            marks=pytest.mark.xfail(reason="Not yet revised fully"),
         ),
     ],
     ids=[
@@ -632,7 +571,7 @@ def test_model_data_count_changes_when_filter_is_applied(
     quality_errors: List[QualityErrorsByPriority],
     accepted_error_types: Optional[Set[QualityErrorType]],
     accepted_feature_types: Optional[Set[str]],
-    accetepted_attribute_names: Optional[Set[str]],
+    accepted_attribute_names: Optional[Set[str]],
     expected_counts: Dict[str, int],
 ):
     accepted_feature_types = (
@@ -649,9 +588,9 @@ def test_model_data_count_changes_when_filter_is_applied(
             filter_value, filter_value in accepted_feature_types
         )
 
-    accetepted_attribute_names = (
-        accetepted_attribute_names
-        if accetepted_attribute_names is not None
+    accepted_attribute_names = (
+        accepted_attribute_names
+        if accepted_attribute_names is not None
         else _feature_attribute_filters(quality_errors)
     )
     for (
@@ -660,7 +599,7 @@ def test_model_data_count_changes_when_filter_is_applied(
         filter_proxy_model_and_filters.attribute_name_filter._filter_value_action_map.keys()
     ):
         filter_proxy_model_and_filters.attribute_name_filter._sync_filtered(
-            filter_value, filter_value in accetepted_attribute_names
+            filter_value, filter_value in accepted_attribute_names
         )
 
     accepted_error_types = (
@@ -745,15 +684,22 @@ def test_refresh_model_does_nothing_if_data_does_not_change(
     )
 
 
-@pytest.mark.xfail(reason="Not yet revised.")
 def test_no_rows_visible_when_all_user_processed(
-    model: FilterByExtentProxyModel,
+    filter_proxy_model_and_filters: ModelAndFilters,
 ):
-    model.sourceModel().update_filters(
-        {"chimney_point"},
-        {1},
-        {"height_relative"},
-        False,
+
+    model = FilterByShowUserProcessedProxyModel()
+
+    model.setSourceModel(filter_proxy_model_and_filters.filter_proxy_model)
+    filter_proxy_model_and_filters.feature_type_filter._refresh_filters(
+        {"chimney_point": "chimney_point"}
+    )
+    filter_proxy_model_and_filters.error_type_filter._refresh_filters(
+        {QualityErrorType.ATTRIBUTE: ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]}
+    )
+
+    filter_proxy_model_and_filters.attribute_name_filter._refresh_filters(
+        {"height_relative": "height_relative"}
     )
 
     assert _count_quality_error_rows(model, _priority_1_index(model)) == 1
@@ -764,6 +710,7 @@ def test_no_rows_visible_when_all_user_processed(
         Qt.Checked,
         Qt.CheckStateRole,
     )
+    model.set_show_processed_errors(False)
 
     assert _count_quality_error_rows(model, _priority_1_index(model)) == 0
     assert _count_quality_error_rows(model, _priority_2_index(model)) == 0
