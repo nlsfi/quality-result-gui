@@ -792,15 +792,13 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
 
-        self._show_processed_errors: Union[bool, None] = None
+        self._show_processed_errors: bool = True
 
-    def set_show_processed_errors(
-        self, show_processed_errors: Union[bool, None]
-    ) -> None:
+    def set_show_processed_errors(self, show_processed_errors: bool) -> None:
         self._show_processed_errors = show_processed_errors
         self.invalidateFilter()
 
-    def set_enabled(self, enabled: Optional[bool]) -> None:
+    def set_enabled(self, enabled: bool) -> None:
         if not enabled:
             self.set_show_processed_errors(False)
         else:
