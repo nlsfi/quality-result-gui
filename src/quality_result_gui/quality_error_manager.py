@@ -160,7 +160,6 @@ class QualityResultManager(QObject):
     def unload(self) -> None:
         self._fetcher.stop()
         self._filter_map_extent_model.set_enabled(False)
-        self._filter_user_processed_model.set_enabled(None)
         self.dock_widget.deleteLater()
         self.visualizer.remove_quality_error_layer()
 
