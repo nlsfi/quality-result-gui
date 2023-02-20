@@ -115,7 +115,7 @@ class QualityResultManager(QObject):
         self.dock_widget.error_tree_view.setModel(self._styled_model)
 
         self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
-            self._filter_user_processed_model.set_enabled
+            self._filter_user_processed_model.set_show_processed_errors
         )
         self.dock_widget.filter_with_map_extent_check_box.toggled.connect(
             self._filter_map_extent_model.set_enabled
