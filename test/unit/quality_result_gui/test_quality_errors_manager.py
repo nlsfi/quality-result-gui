@@ -235,3 +235,26 @@ def test_override_quality_layer_style_changes_annotation_style(
     assert annotation_item.symbol().size() == 500
 
     manager.dock_widget.deleteLater()
+
+
+def test_toggle_show_errors_on_map_checkbox(
+    quality_result_manager_with_data: QualityResultManager,
+) -> None:
+    check_state = (
+        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
+    )
+    assert check_state == Qt.CheckState.Checked
+
+    quality_result_manager_with_data.toggle_show_errors_on_map_action.trigger()
+
+    check_state = (
+        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
+    )
+    assert check_state == Qt.CheckState.Unchecked
+
+    quality_result_manager_with_data.toggle_show_errors_on_map_action.trigger()
+
+    check_state = (
+        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
+    )
+    assert check_state == Qt.CheckState.Checked
