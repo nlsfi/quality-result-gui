@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.1] - 2023-02-23
 
 - Feat: Change Show user processed filter into checkbox selection
 
@@ -42,3 +42,4 @@
 [0.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v0.0.4
 [1.0.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.0.0
 [1.1.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.0
+[1.1.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.1
