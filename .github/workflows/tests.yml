@@ -22,9 +22,28 @@ jobs:
       - run: |
           pip3 install virtualenv && virtualenv .venv --system-site-packages
       - run: |
-          .venv/bin/pip3 install -r requirements.txt --no-deps --only-binary=:all:
+          .venv/bin/pip3 install -q -r requirements.txt --no-deps --only-binary=:all:
           .venv/bin/pip3 install . --no-deps
       - run: |
           .venv/bin/pytest
         env:
           QT_QPA_PLATFORM: offscreen
+
+  plugin_zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+      # Use extra pip install . to do a non-editable install,
+      # so that .dist-info will go the package instead of .egg-info
+      - run: |
+          pip install -r requirements.txt --no-deps --only-binary=:all:
+          pip install . --no-deps
+      - run: |
+          qgis-plugin-dev-tools build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: plugin-zip
+          path: dist/*.zip
