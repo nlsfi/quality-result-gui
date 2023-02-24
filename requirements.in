@@ -31,7 +31,7 @@ flake8-pie==0.14.0
 flake8-no-pep420==1.1.1
 
 # tools
-qgis-plugin-dev-tools==0.5.0
+qgis-plugin-dev-tools==0.6.0
 
 # typing
 PyQt5-stubs==5.15.6.0
