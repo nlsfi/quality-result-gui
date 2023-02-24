@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Do not hide filter menu when a filter is selected
+
 ## [1.1.1] - 2023-02-23
 
 - Feat: Change Show user processed filter into checkbox selection
