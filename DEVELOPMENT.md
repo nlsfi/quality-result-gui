@@ -24,6 +24,21 @@ Verify code style with `pre-commit run --all-files`, or use `pre-commit install`
 
 Commit messages should follow [Conventional Commits notation](https://www.conventionalcommits.org/en/v1.0.0/#summary). Use `pre-commit install --hook-type commit-msg` to generate a git hook for checking commit messages.
 
+## Tests
+
+Run all tests against containerized QGIS environment by:
+
+```bash
+docker build . -t qgis-quality-result-gui
+docker run --rm -it qgis-quality-result-gui
+```
+
+Or run specific tests with:
+
+```bash
+docker run --rm -it qgis-quality-result-gui pytest test/unit/quality_result_gui/test_quality_data_fetcher.py
+```
+
 ## Release steps
 
 When the branch is in a releasable state, trigger the `Create draft release` workflow from GitHub Actions. Pass the to-be-released version number as an input to the workflow.
