@@ -23,7 +23,8 @@ from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set, cast
 
-from qgis.PyQt.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QObject, QSignalBlocker, pyqtSignal
+from qgis.PyQt.QtGui import QMouseEvent
 from qgis.PyQt.QtWidgets import QAction, QMenu
 from qgis_plugin_tools.tools.i18n import tr
 
@@ -51,6 +52,16 @@ class FilterMenu(QMenu):
         self._sorted = False
 
         self._filter_actions: List[QAction] = []
+
+    def mouseReleaseEvent(self, e: QMouseEvent) -> None:  # noqa: N802 (qt override)
+        if not self.activeAction() or not self.activeAction().isEnabled():
+            super().mouseReleaseEvent(e)
+        else:
+            with QSignalBlocker(self.activeAction()):
+                self.activeAction().setEnabled(False)
+                super().mouseReleaseEvent(e)
+                self.activeAction().setEnabled(True)
+            self.activeAction().trigger()
 
     def set_sorted(self, sorted: bool) -> None:
         """Sets the menu actions in sorted or not sorted order
