@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,7 +18,6 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
 
 from qgis.core import (
@@ -33,121 +32,46 @@ from qgis.core import (
     QgsProject,
     QgsWkbTypes,
 )
-from qgis.PyQt.QtGui import QColor
 from qgis_plugin_tools.tools.exceptions import QgsPluginException
 from qgis_plugin_tools.tools.i18n import tr
 
-from quality_result_gui import quality_layer_styles
 from quality_result_gui.api.types.quality_error import QualityErrorPriority
-from quality_result_gui.quality_layer_styles import ErrorSymbol
+from quality_result_gui.configuration import QualityLayerStyleConfig
+from quality_result_gui.style.default_style import DefaultErrorSymbol
 
 if TYPE_CHECKING:
     from quality_result_gui.quality_error_visualizer import ErrorFeature
+    from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class QualityLayerColors:
-    stroke_color: Union[QColor, str]
-    secondary_color: Union[QColor, str]
-    fill_color: Optional[Union[QColor, str]] = None
-
-
-@dataclass
-class QualityLayerStyle:
-    colors_by_priority: Dict[QualityErrorPriority, QualityLayerColors]
-    line_width: float
-    polygon_border_width: float
-    marker_border_width: float
-    marker_size: float
-
-
-COLORS_FOR_ERRORS = {
-    QualityErrorPriority.FATAL: QualityLayerColors(
-        stroke_color=quality_layer_styles.FATAL_PRIMARY_COLOR,
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.FATAL_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-    QualityErrorPriority.WARNING: QualityLayerColors(
-        stroke_color=quality_layer_styles.WARNING_PRIMARY_COLOR,
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.WARNING_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-    QualityErrorPriority.INFO: QualityLayerColors(
-        stroke_color=quality_layer_styles.INFO_PRIMARY_COLOR,
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.INFO_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-}
-
-
-COLORS_FOR_HIGHLIGHTED_ERRORS = {
-    QualityErrorPriority.FATAL: QualityLayerColors(
-        stroke_color=quality_layer_styles.HIGHLIGHTED_FATAL_PRIMARY_COLOR,
-        fill_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_FATAL_PRIMARY_COLOR, opacity=40
-        ),
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_FATAL_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-    QualityErrorPriority.WARNING: QualityLayerColors(
-        stroke_color=quality_layer_styles.HIGHLIGHTED_WARNING_PRIMARY_COLOR,
-        fill_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_WARNING_PRIMARY_COLOR, opacity=40
-        ),
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_WARNING_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-    QualityErrorPriority.INFO: QualityLayerColors(
-        stroke_color=quality_layer_styles.HIGHLIGHTED_INFO_PRIMARY_COLOR,
-        fill_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_INFO_PRIMARY_COLOR, opacity=40
-        ),
-        secondary_color=quality_layer_styles.get_color(
-            quality_layer_styles.HIGHLIGHTED_INFO_SECONDARY_COLOR, opacity=30
-        ),
-    ),
-}
-
-
-STYLE_FOR_ERRORS = QualityLayerStyle(
-    COLORS_FOR_ERRORS,
-    line_width=1.2,
-    polygon_border_width=0.4,
-    marker_border_width=0.4,
-    marker_size=5,
-)
-
-STYLE_FOR_HIGHLIGHTED_ERRORS = QualityLayerStyle(
-    COLORS_FOR_HIGHLIGHTED_ERRORS,
-    line_width=1.6,
-    polygon_border_width=0.8,
-    marker_border_width=0.4,
-    marker_size=5,
-)
 
 
 class LayerException(QgsPluginException):
     pass
 
 
+class DefaultStyleConfig(QualityLayerStyleConfig):
+    def create_error_symbol(self, priority: QualityErrorPriority) -> "ErrorSymbol":
+        return DefaultErrorSymbol(priority)
+
+
 class QualityErrorLayer:
     LAYER_ID = "quality-errors"
     LAYER_ID_PROPERTY = "quality-result-gui-layer"
-    SYMBOL_MAP_SCALE = 10000
 
     def __init__(self) -> None:
         self._annotation_ids: Dict[str, List[str]] = {}
+        self.style: "QualityLayerStyleConfig" = DefaultStyleConfig()
 
     @property
     def annotation_layer(self) -> QgsAnnotationLayer:
         return self.get_annotation_layer()
+
+    def override_style(
+        self,
+        style: "QualityLayerStyleConfig",
+    ) -> None:
+        self.style = style
 
     def find_layer_from_project(self) -> Optional[QgsAnnotationLayer]:
         """
@@ -262,19 +186,9 @@ class QualityErrorLayer:
         cloned_original_abstract_geometry = original_abstract_geometry.clone()
         cloned_geom = QgsGeometry(cloned_original_abstract_geometry)
 
-        style = STYLE_FOR_ERRORS
-        if use_highlighted_style is True:
-            style = STYLE_FOR_HIGHLIGHTED_ERRORS
-
-        colors = style.colors_by_priority[priority]
-
         annotation = None
-        symbol = ErrorSymbol(
-            colors.stroke_color,
-            colors.secondary_color,
-            priority,
-            symbol_map_scale=QualityErrorLayer.SYMBOL_MAP_SCALE,
-        )
+
+        symbol = self.style.create_error_symbol(priority)
 
         if geom_type == QgsWkbTypes.PointGeometry:
             points = []
@@ -290,9 +204,9 @@ class QualityErrorLayer:
 
             for point in points:
                 annotation = QgsAnnotationMarkerItem(point)
-                symbol.line_or_border_width = style.marker_border_width
-                symbol.marker_size = style.marker_size
-                annotation.setSymbol(symbol._to_qgs_symbol(geom_type))
+                annotation.setSymbol(
+                    symbol.to_qgs_symbol(geom_type, use_highlighted_style)
+                )
                 annotations.append(annotation)
 
         elif geom_type == QgsWkbTypes.PolygonGeometry:
@@ -310,9 +224,9 @@ class QualityErrorLayer:
 
             for polygon in polygons:
                 annotation = QgsAnnotationPolygonItem(polygon)
-                symbol.line_or_border_width = style.polygon_border_width
-                symbol.fill_color = colors.fill_color
-                annotation.setSymbol(symbol._to_qgs_symbol(geom_type))
+                annotation.setSymbol(
+                    symbol.to_qgs_symbol(geom_type, use_highlighted_style)
+                )
                 annotations.append(annotation)
 
         elif geom_type == QgsWkbTypes.LineGeometry:
@@ -329,12 +243,9 @@ class QualityErrorLayer:
 
             for line in lines:
                 annotation = QgsAnnotationLineItem(line)
-
-                modified_stroke_color = QColor(colors.stroke_color)
-                modified_stroke_color.setAlpha(170)
-                symbol.primary_color = modified_stroke_color
-                symbol.line_or_border_width = style.line_width
-                annotation.setSymbol(symbol._to_qgs_symbol(geom_type))
+                annotation.setSymbol(
+                    symbol.to_qgs_symbol(geom_type, use_highlighted_style)
+                )
                 annotations.append(annotation)
 
         else:

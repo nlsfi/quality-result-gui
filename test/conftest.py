@@ -212,6 +212,41 @@ def error_feature_attributes() -> list[str]:
 
 
 @pytest.fixture()
+def single_quality_error() -> list[QualityErrorsByPriority]:
+    return [
+        QualityErrorsByPriority(
+            QualityErrorPriority.FATAL,
+            [
+                QualityErrorsByFeatureType(
+                    "building_part_area",
+                    [
+                        QualityErrorsByFeature(
+                            "building_part_area",
+                            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+                            [
+                                QualityError(
+                                    QualityErrorPriority.FATAL,
+                                    "building_part_area",
+                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
+                                    1,
+                                    "1",
+                                    QualityErrorType.GEOMETRY,
+                                    None,
+                                    "Invalid geometry",
+                                    "Extra info",
+                                    QgsGeometry.fromWkt("POINT ((5 5))"),
+                                    False,
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        )
+    ]
+
+
+@pytest.fixture()
 def get_submenu_from_menu() -> Callable[[QMenu, str], Optional[QMenu]]:
     def _get_submenu_from_menu(menu: QMenu, menu_title: str) -> Optional[QMenu]:
         menu_items = [

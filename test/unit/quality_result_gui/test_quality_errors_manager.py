@@ -28,13 +28,19 @@ from qgis.PyQt.QtCore import QModelIndex, Qt
 from qgis.PyQt.QtWidgets import QMenu
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
-from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+from quality_result_gui.api.types.quality_error import (
+    QualityErrorPriority,
+    QualityErrorsByPriority,
+)
+from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui.quality_errors_filters import (
     ATTRIBUTE_NAME_FILTER_MENU_LABEL,
     ERROR_TYPE_FILTER_MENU_LABEL,
     FEATURE_TYPE_FILTER_MENU_LABEL,
 )
+from quality_result_gui.style.default_style import DefaultErrorSymbol
+from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
 
 
 @pytest.fixture()
@@ -198,3 +204,34 @@ def test_model_set_data_user_processed(
         m_user_processed_callback.assert_called_with("1", expected_callback_value)
     else:
         m_user_processed_callback.assert_not_called()
+
+
+def test_override_quality_layer_style_changes_annotation_style(
+    qtbot: QtBot,
+    mock_api_client: QualityResultClient,
+    single_quality_error: list[QualityErrorsByPriority],
+):
+    class MockStyle(QualityLayerStyleConfig):
+        def create_error_symbol(self, priority: QualityErrorPriority) -> ErrorSymbol:
+            symbol = DefaultErrorSymbol(priority)
+            symbol.style.marker_size = 500
+            return symbol
+
+    manager = QualityResultManager(mock_api_client, None, MockStyle())
+    qtbot.addWidget(manager.dock_widget)
+
+    with qtbot.waitSignal(
+        manager._base_model.filterable_data_changed,
+        timeout=200,
+    ) as _:
+        manager._fetcher.results_received.emit(single_quality_error)
+
+    quality_layer = manager.visualizer._quality_error_layer
+    annotation_layer = quality_layer.find_layer_from_project()
+    assert annotation_layer is not None
+
+    annotation_item = annotation_layer.items()[quality_layer._annotation_ids["1"][0]]
+
+    assert annotation_item.symbol().size() == 500
+
+    manager.dock_widget.deleteLater()

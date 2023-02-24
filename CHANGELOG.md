@@ -4,6 +4,7 @@
 
 - Fix: Do not hide filter menu when a filter is selected
 - Fix: Fix missing marker symbol from line type annotations
+- Feat: Allow configuring quality layer styles
 
 ## [1.1.1] - 2023-02-23
 

@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,59 +17,17 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from abc import ABC, abstractmethod
 from typing import Dict, Tuple, Union
 
 from qgis.core import (
     QgsDrawSourceEffect,
     QgsEffectStack,
-    QgsFillSymbol,
-    QgsLineSymbol,
-    QgsMarkerSymbol,
     QgsOuterGlowEffect,
     QgsProperty,
     QgsPropertyCollection,
-    QgsSymbol,
     QgsSymbolLayer,
-    QgsWkbTypes,
 )
 from qgis.PyQt.QtGui import QColor
-
-
-class BaseSymbol(ABC):
-    @abstractmethod
-    def _to_qgs_symbol(self, geometry_type: QgsWkbTypes.GeometryType) -> QgsSymbol:
-        """
-        Implement logic to generate the relevant symbol for the given geometry type.
-        """
-        raise NotImplementedError()
-
-    @staticmethod
-    def color_to_rgba_string(color: Union[str, QColor]) -> str:
-        return ",".join(map(str, QColor(color).getRgb()))
-
-
-class BaseSymbolByType(BaseSymbol, ABC):
-    def _to_qgs_symbol(self, geometry_type: QgsWkbTypes.GeometryType) -> QgsSymbol:
-        if geometry_type == QgsWkbTypes.PolygonGeometry:
-            return self.get_polygon_symbol()
-        if geometry_type == QgsWkbTypes.LineGeometry:
-            return self.get_line_symbol()
-        if geometry_type == QgsWkbTypes.PointGeometry:
-            return self.get_point_symbol()
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_polygon_symbol(self) -> QgsFillSymbol:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_line_symbol(self) -> QgsLineSymbol:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_point_symbol(self) -> QgsMarkerSymbol:
-        raise NotImplementedError()
 
 
 def set_symbol_layer_data_defined_property_expressions(
@@ -128,3 +86,11 @@ def set_symbol_layer_simple_outer_glow_effect(
     paint_effect_stack.appendEffect(glow_effect_layer)
 
     symbol_layer.setPaintEffect(paint_effect_stack)
+
+
+def get_color(
+    hex_or_rgb: Union[str, Tuple[int, int, int]], opacity: int = 100
+) -> QColor:
+    color = QColor(hex_or_rgb)
+    color.setAlpha(int(opacity / 100 * 255))
+    return color
