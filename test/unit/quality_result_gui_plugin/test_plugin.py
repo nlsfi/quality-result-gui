@@ -40,7 +40,7 @@ def plugin(mocker: MockerFixture) -> Iterator[QualityResultGuiPlugin]:
 
     plugin = classFactory(iface)
 
-    assert plugin.dev_tools_action is None
+    assert plugin.show_dev_tools_dialog_action is None
     assert plugin.dev_tools_dialog is None
 
     plugin.initGui()
@@ -55,9 +55,9 @@ def test_dev_tool_action_shows_dialog(
     mocker: MockerFixture, plugin: "QualityResultGuiPlugin"
 ):
     m_show = mocker.patch.object(DevToolsDialog, "show")
-    assert plugin.dev_tools_action is not None
+    assert plugin.show_dev_tools_dialog_action is not None
 
-    plugin.dev_tools_action.trigger()
+    plugin.show_dev_tools_dialog_action.trigger()
 
     assert isinstance(plugin.dev_tools_dialog, DevToolsDialog)
     m_show.assert_called_once()

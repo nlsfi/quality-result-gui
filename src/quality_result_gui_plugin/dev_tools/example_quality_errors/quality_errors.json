@@ -86,7 +86,7 @@
                 "error_description": "Invalid value",
                 "extra_info": null,
                 "is_user_processed": false,
-                "wkt_geom": "PointZ (232621.0456 6711904,7397 0)"
+                "wkt_geom": "PointZ (232621.0456 6711904.7397 0)"
               }
             ]
           }
@@ -141,7 +141,7 @@
                 "error_description": "Self-intersection",
                 "extra_info": null,
                 "is_user_processed": false,
-                "wkt_geom": "PointZ (232621.0456 6711904,7397 0)"
+                "wkt_geom": "PointZ (232621.0456 6711904.7397 0)"
               }
             ]
           },
