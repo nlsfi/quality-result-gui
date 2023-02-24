@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -53,6 +53,7 @@ from quality_result_gui.ui.quality_errors_dock import QualityErrorsDockWidget
 
 if TYPE_CHECKING:
     from quality_result_gui.api.quality_api_client import QualityResultClient
+    from quality_result_gui.configuration import QualityLayerStyleConfig
 
 iface = cast(QgisInterface, utils_iface)
 
@@ -63,15 +64,23 @@ class QualityResultManager(QObject):
     quality_error_selected = pyqtSignal(QualityError, SelectionType)
 
     def __init__(
-        self, api_client: "QualityResultClient", parent: Optional[QObject] = None
+        self,
+        api_client: "QualityResultClient",
+        parent: Optional[QObject] = None,
+        style_config: Optional["QualityLayerStyleConfig"] = None,
     ) -> None:
         super().__init__(parent=parent)
 
         self._api_client = api_client
 
         self.visualizer = QualityErrorVisualizer(self._api_client.get_crs())
+
+        # TODO: Move show_errors to show_widget method to be cleaner.
+        # Styles must be set here because currently there's no easy way to reset
+        # error visualizations
+        if style_config:
+            self.visualizer.override_quality_layer_style(style_config)
         # This also creates the layer
-        # TODO: Move to show_widget method to be cleaner.
         # Layer creation should probably be done separately.
         self.visualizer.show_errors()
 

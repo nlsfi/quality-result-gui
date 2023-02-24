@@ -1,4 +1,4 @@
-#  Copyright (C) 2022-2023 National Land Survey of Finland
+#  Copyright (C) 2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,9 +17,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-import logging
+from dataclasses import dataclass
 from importlib.resources import as_file, files
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from qgis.core import (
     QgsCentroidFillSymbolLayer,
@@ -37,14 +37,12 @@ from qgis.PyQt.QtGui import QColor
 
 from quality_result_gui import resources
 from quality_result_gui.api.types.quality_error import QualityErrorPriority
+from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
+from quality_result_gui.utils import styling_utils
 from quality_result_gui.utils.styling_utils import (
-    BaseSymbolByType,
     set_symbol_layer_data_defined_property_expressions,
     set_symbol_layer_simple_outer_glow_effect,
 )
-
-LOGGER = logging.getLogger(__name__)
-
 
 # Colors for error features
 FATAL_PRIMARY_COLOR = "#C31266"
@@ -63,45 +61,107 @@ HIGHLIGHTED_INFO_PRIMARY_COLOR = "#FBD00E"
 HIGHLIGHTED_INFO_SECONDARY_COLOR = "#FFFF00"
 
 
-def get_color(
-    hex_or_rgb: Union[str, Tuple[int, int, int]], opacity: int = 100
-) -> QColor:
-    color = QColor(hex_or_rgb)
-    color.setAlpha(int(opacity / 100 * 255))
-    return color
+@dataclass
+class QualityLayerColors:
+    stroke_color: Union[QColor, str]
+    secondary_color: Union[QColor, str]
+    fill_color: Optional[Union[QColor, str]] = None
 
 
-class ErrorSymbol(BaseSymbolByType):
+@dataclass
+class QualityLayerStyle:
+    colors_by_priority: dict[QualityErrorPriority, QualityLayerColors]
+    line_width: float
+    polygon_border_width: float
+    marker_border_width: float
+    marker_size: float
+
+
+COLORS_FOR_ERRORS = {
+    QualityErrorPriority.FATAL: QualityLayerColors(
+        stroke_color=FATAL_PRIMARY_COLOR,
+        secondary_color=styling_utils.get_color(FATAL_SECONDARY_COLOR, opacity=30),
+    ),
+    QualityErrorPriority.WARNING: QualityLayerColors(
+        stroke_color=WARNING_PRIMARY_COLOR,
+        secondary_color=styling_utils.get_color(WARNING_SECONDARY_COLOR, opacity=30),
+    ),
+    QualityErrorPriority.INFO: QualityLayerColors(
+        stroke_color=INFO_PRIMARY_COLOR,
+        secondary_color=styling_utils.get_color(INFO_SECONDARY_COLOR, opacity=30),
+    ),
+}
+
+
+COLORS_FOR_HIGHLIGHTED_ERRORS = {
+    QualityErrorPriority.FATAL: QualityLayerColors(
+        stroke_color=HIGHLIGHTED_FATAL_PRIMARY_COLOR,
+        fill_color=styling_utils.get_color(HIGHLIGHTED_FATAL_PRIMARY_COLOR, opacity=40),
+        secondary_color=styling_utils.get_color(
+            HIGHLIGHTED_FATAL_SECONDARY_COLOR, opacity=30
+        ),
+    ),
+    QualityErrorPriority.WARNING: QualityLayerColors(
+        stroke_color=HIGHLIGHTED_WARNING_PRIMARY_COLOR,
+        fill_color=styling_utils.get_color(
+            HIGHLIGHTED_WARNING_PRIMARY_COLOR, opacity=40
+        ),
+        secondary_color=styling_utils.get_color(
+            HIGHLIGHTED_WARNING_SECONDARY_COLOR, opacity=30
+        ),
+    ),
+    QualityErrorPriority.INFO: QualityLayerColors(
+        stroke_color=HIGHLIGHTED_INFO_PRIMARY_COLOR,
+        fill_color=styling_utils.get_color(HIGHLIGHTED_INFO_PRIMARY_COLOR, opacity=40),
+        secondary_color=styling_utils.get_color(
+            HIGHLIGHTED_INFO_SECONDARY_COLOR, opacity=30
+        ),
+    ),
+}
+
+
+class DefaultErrorSymbol(ErrorSymbol):
+    SYMBOL_MAP_SCALE = 10000
+
     def __init__(
         self,
-        primary_color: QColor,
-        secondary_color: QColor,
         priority: QualityErrorPriority,
-        line_or_border_width: float = 1,
-        fill_color: Optional[QColor] = None,
-        marker_size: float = 5,
-        symbol_map_scale: int = None,
     ) -> None:
-        self.primary_color = primary_color
-        self.secondary_color = secondary_color
+
+        self.style: QualityLayerStyle = QualityLayerStyle(
+            COLORS_FOR_ERRORS,
+            line_width=1.2,
+            polygon_border_width=0.4,
+            marker_border_width=0.4,
+            marker_size=5,
+        )
+        self.style_for_highlighted_error = QualityLayerStyle(
+            COLORS_FOR_HIGHLIGHTED_ERRORS,
+            line_width=1.6,
+            polygon_border_width=0.8,
+            marker_border_width=0.4,
+            marker_size=5,
+        )
+
+        self.current_style = self.style
+
         self.priority = priority
-        self.fill_color = fill_color
 
-        self.line_or_border_width = line_or_border_width
-        self.marker_size = marker_size
+        self.icon_symbol_enabled_expression = f"@map_scale > {self.SYMBOL_MAP_SCALE}"
+        self.geometry_symbol_enabled_expression = (
+            f"@map_scale <= {self.SYMBOL_MAP_SCALE}"
+        )
 
-        self.icon_symbol_enabled_expression: Optional[str] = None
-        self.geometry_symbol_enabled_expression: Optional[str] = None
-        if symbol_map_scale is not None:
-            self.icon_symbol_enabled_expression = f"@map_scale > {symbol_map_scale}"
-            self.geometry_symbol_enabled_expression = (
-                f"@map_scale <= {symbol_map_scale}"
-            )
+    def _get_polygon_symbol(self, highlighted: bool) -> QgsFillSymbol:
+        style = self.style
+        if highlighted:
+            style = self.style_for_highlighted_error
 
-    def get_polygon_symbol(self) -> QgsFillSymbol:
+        colors = style.colors_by_priority[self.priority]
+
         fill_color = QColor(0, 0, 0, 0)
-        if self.fill_color is not None:
-            fill_color = QColor(self.fill_color)
+        if colors.fill_color is not None:
+            fill_color = QColor(colors.fill_color)
 
         symbol = QgsFillSymbol()
         fill_symbol_layer = QgsSimpleFillSymbolLayer.create(
@@ -114,8 +174,8 @@ class ErrorSymbol(BaseSymbolByType):
 
         primary_border_symbol_layer = QgsSimpleLineSymbolLayer.create(
             {
-                "line_color": self.color_to_rgba_string(self.primary_color),
-                "line_width": str(self.line_or_border_width),
+                "line_color": self.color_to_rgba_string(colors.stroke_color),
+                "line_width": str(style.polygon_border_width),
                 "line_width_unit": "MM",
             }
         )
@@ -123,7 +183,7 @@ class ErrorSymbol(BaseSymbolByType):
 
         secondary_border_symbol_layer = QgsSimpleLineSymbolLayer.create(
             {
-                "line_color": self.color_to_rgba_string(self.secondary_color),
+                "line_color": self.color_to_rgba_string(colors.secondary_color),
                 "line_width": "3.4",
                 "line_width_unit": "MM",
                 "joinstyle": "round",
@@ -151,13 +211,21 @@ class ErrorSymbol(BaseSymbolByType):
 
         return symbol
 
-    def get_line_symbol(self) -> QgsLineSymbol:
+    def _get_line_symbol(self, highlighted: bool) -> QgsLineSymbol:
+        style = self.style
+        if highlighted:
+            style = self.style_for_highlighted_error
+
+        colors = style.colors_by_priority[self.priority]
+        modified_stroke_color = QColor(colors.stroke_color)
+        modified_stroke_color.setAlpha(170)
+
         line_symbol = QgsLineSymbol()
 
         primary_border_symbol_layer = QgsSimpleLineSymbolLayer.create(
             {
-                "line_color": self.color_to_rgba_string(self.primary_color),
-                "line_width": str(self.line_or_border_width),
+                "line_color": self.color_to_rgba_string(modified_stroke_color),
+                "line_width": str(style.line_width),
                 "line_width_unit": "MM",
             }
         )
@@ -165,7 +233,7 @@ class ErrorSymbol(BaseSymbolByType):
 
         secondary_border_symbol_layer = QgsSimpleLineSymbolLayer.create(
             {
-                "line_color": self.color_to_rgba_string(self.secondary_color),
+                "line_color": self.color_to_rgba_string(colors.secondary_color),
                 "line_width": "3.4",
                 "line_width_unit": "MM",
                 "joinstyle": "round",
@@ -192,18 +260,24 @@ class ErrorSymbol(BaseSymbolByType):
 
         return line_symbol
 
-    def get_point_symbol(self) -> QgsMarkerSymbol:
+    def _get_point_symbol(self, highlighted: bool) -> QgsMarkerSymbol:
+        style = self.style
+        if highlighted:
+            style = self.style_for_highlighted_error
+
+        colors = style.colors_by_priority[self.priority]
+
         fill_symbol_layer = QgsSimpleMarkerSymbolLayer.create(
             {
-                "size": str(self.marker_size),
+                "size": str(style.marker_size),
                 "size_unit": "MM",
                 "color": self.color_to_rgba_string(QColor(0, 0, 0, 0)),
-                "line_color": self.color_to_rgba_string(self.primary_color),
-                "line_width": str(self.line_or_border_width),
+                "line_color": self.color_to_rgba_string(colors.stroke_color),
+                "line_width": str(style.marker_border_width),
                 "line_width_unit": "MM",
             }
         )
-        modified_color = QColor(self.secondary_color)
+        modified_color = QColor(colors.secondary_color)
         modified_color.setAlphaF(0.7)
         set_symbol_layer_simple_outer_glow_effect(
             fill_symbol_layer, self.color_to_rgba_string(modified_color)

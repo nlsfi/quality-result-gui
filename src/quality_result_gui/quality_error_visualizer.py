@@ -32,6 +32,7 @@ from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
 )
+from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
@@ -67,7 +68,6 @@ class QualityErrorVisualizer:
 
     def __init__(self, crs: QgsCoordinateReferenceSystem) -> None:
         self._crs = crs
-        self._all_error_features: List[ErrorFeature] = []
         self._selected_error_feature: Optional[ErrorFeature] = None
 
         self._quality_error_layer = QualityErrorLayer()
@@ -137,6 +137,12 @@ class QualityErrorVisualizer:
                 preserve_scale,
                 min_extent_height=20,
             )
+
+    def override_quality_layer_style(
+        self,
+        style: QualityLayerStyleConfig,
+    ) -> None:
+        self._quality_error_layer.override_style(style)
 
     def _get_or_create_layer(self) -> QgsAnnotationLayer:
         layer = self._quality_error_layer.find_layer_from_project()
