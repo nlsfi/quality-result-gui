@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -179,7 +179,7 @@ class ErrorSymbol(BaseSymbolByType):
 
         generator_layer = QgsGeometryGeneratorSymbolLayer.create({})
         generator_layer.setGeometryExpression(
-            "line_interpolate_point( $geometry, $length / 2 )"
+            "line_interpolate_point( $geometry, length3D($geometry) / 2)"
         )
         generator_layer.setSubSymbol(marker_symbol)
 
