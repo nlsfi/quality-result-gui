@@ -35,12 +35,11 @@ from qgis.core import (
 from qgis_plugin_tools.tools.exceptions import QgsPluginException
 from qgis_plugin_tools.tools.i18n import tr
 
-from quality_result_gui.api.types.quality_error import QualityErrorPriority
 from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.style.default_style import DefaultErrorSymbol
 
 if TYPE_CHECKING:
-    from quality_result_gui.quality_error_visualizer import ErrorFeature
+    from quality_result_gui.api.types.quality_error import QualityError
     from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
 
 LOGGER = logging.getLogger(__name__)
@@ -51,8 +50,8 @@ class LayerException(QgsPluginException):
 
 
 class DefaultStyleConfig(QualityLayerStyleConfig):
-    def create_error_symbol(self, priority: QualityErrorPriority) -> "ErrorSymbol":
-        return DefaultErrorSymbol(priority)
+    def create_error_symbol(self, quality_error: "QualityError") -> "ErrorSymbol":
+        return DefaultErrorSymbol(quality_error)
 
 
 class QualityErrorLayer:
@@ -114,21 +113,20 @@ class QualityErrorLayer:
 
     def add_or_replace_annotation(
         self,
-        error_feature: "ErrorFeature",
+        quality_error: "QualityError",
         use_highlighted_style: bool,
         id_prefix: str = "",
     ) -> None:
         annotation_layer = self.annotation_layer
-        if error_feature.geometry.isNull():
+        if quality_error.geometry.isNull():
             return
 
         annotations = self._create_annotations(
-            error_feature.geometry,
-            error_feature.priority,
+            quality_error,
             use_highlighted_style,
         )
 
-        internal_id = f"{id_prefix}{error_feature.id}"
+        internal_id = f"{id_prefix}{quality_error.unique_identifier}"
 
         # Update
         if internal_id in self._annotation_ids:
@@ -153,12 +151,12 @@ class QualityErrorLayer:
             self._annotation_ids[internal_id] = new_ids
 
     def remove_annotations(
-        self, error_features: Iterable["ErrorFeature"], id_prefix: str = ""
+        self, quality_errors: Iterable["QualityError"], id_prefix: str = ""
     ) -> None:
         annotation_layer = self.annotation_layer
 
-        for error_feature in error_features:
-            internal_id = f"{id_prefix}{error_feature.id}"
+        for quality_error in quality_errors:
+            internal_id = f"{id_prefix}{quality_error.unique_identifier}"
             try:
                 annotation_ids = self._annotation_ids.pop(internal_id)
                 for annotation_id in annotation_ids:
@@ -169,8 +167,7 @@ class QualityErrorLayer:
 
     def _create_annotations(
         self,
-        geometry: QgsGeometry,
-        priority: QualityErrorPriority,
+        quality_error: "QualityError",
         use_highlighted_style: bool,
     ) -> List[
         Union[QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem]
@@ -180,6 +177,7 @@ class QualityErrorLayer:
                 QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem
             ]
         ] = []
+        geometry = quality_error.geometry
         geom_type = geometry.type()
 
         original_abstract_geometry = geometry.get()
@@ -188,7 +186,7 @@ class QualityErrorLayer:
 
         annotation = None
 
-        symbol = self.style.create_error_symbol(priority)
+        symbol = self.style.create_error_symbol(quality_error)
 
         if geom_type == QgsWkbTypes.PointGeometry:
             points = []

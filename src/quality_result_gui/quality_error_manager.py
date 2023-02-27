@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import TYPE_CHECKING, Generator, List, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, pyqtSignal
@@ -32,10 +32,7 @@ from quality_result_gui.quality_data_fetcher import (
     BackgroundQualityResultsFetcher,
     CheckStatus,
 )
-from quality_result_gui.quality_error_visualizer import (
-    ErrorFeature,
-    QualityErrorVisualizer,
-)
+from quality_result_gui.quality_error_visualizer import QualityErrorVisualizer
 from quality_result_gui.quality_errors_filters import (
     AbstractQualityErrorFilter,
     AttributeFilter,
@@ -88,14 +85,10 @@ class QualityResultManager(QObject):
         self.dock_widget.closed.connect(self.closed)
 
         self.dock_widget.error_tree_view.errors_inserted.connect(
-            lambda errors: self.visualizer.add_new_errors(
-                self._quality_errors_to_features(errors)
-            )
+            lambda errors: self.visualizer.add_new_errors(errors)
         )
         self.dock_widget.error_tree_view.errors_removed.connect(
-            lambda errors: self.visualizer.remove_errors(
-                self._quality_errors_to_features(errors)
-            )
+            lambda errors: self.visualizer.remove_errors(errors)
         )
 
         self._fetcher = BackgroundQualityResultsFetcher(self._api_client, self)
@@ -141,14 +134,6 @@ class QualityResultManager(QObject):
         )
 
         self._add_predefined_filters()
-
-    def _quality_errors_to_features(
-        self, quality_errors: List[QualityError]
-    ) -> Generator[ErrorFeature, None, None]:
-        return (
-            ErrorFeature.from_quality_error(quality_error, self._api_client.get_crs())
-            for quality_error in quality_errors
-        )
 
     def _add_predefined_filters(self) -> None:
         self._error_type_filter = ErrorTypeFilter()

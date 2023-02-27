@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,6 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Generator, List
+from unittest.mock import ANY
 
 import pytest
 from qgis.core import (
@@ -29,13 +30,21 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
-from quality_result_gui.api.types.quality_error import QualityErrorPriority
-from quality_result_gui.quality_error_visualizer import (
-    ErrorFeature,
-    QualityErrorVisualizer,
+from quality_result_gui.api.types.quality_error import (
+    QualityError,
+    QualityErrorPriority,
 )
+from quality_result_gui.quality_error_visualizer import QualityErrorVisualizer
 
 CRS = QgsCoordinateReferenceSystem("EPSG:3067")
+
+
+def _create_test_quality_error(
+    priority: QualityErrorPriority, unique_id: str, geom: QgsGeometry
+) -> QualityError:
+    return QualityError(
+        priority, ANY, ANY, ANY, unique_id, ANY, ANY, ANY, ANY, geom, ANY
+    )
 
 
 @pytest.fixture()
@@ -48,22 +57,20 @@ def visualizer() -> Generator[QualityErrorVisualizer, None, None]:
 
 
 @pytest.fixture()
-def error_features() -> List[ErrorFeature]:
+def visualized_errors() -> List[QualityError]:
     return [
-        ErrorFeature(
-            "1", QualityErrorPriority.FATAL, QgsGeometry.fromWkt("POINT(1 1)"), CRS
+        _create_test_quality_error(
+            QualityErrorPriority.FATAL, "1", QgsGeometry.fromWkt("Point(1 1)")
         ),
-        ErrorFeature(
-            "2",
+        _create_test_quality_error(
             QualityErrorPriority.WARNING,
+            "2",
             QgsGeometry.fromWkt("LinestringZ(1 1 0, 2 2 0)"),
-            CRS,
         ),
-        ErrorFeature(
-            "3",
+        _create_test_quality_error(
             QualityErrorPriority.INFO,
+            "3",
             QgsGeometry.fromWkt("Polygon((0 0, 0 1, 1 1, 1 0, 0 0))"),
-            CRS,
         ),
     ]
 
@@ -84,8 +91,8 @@ def test_add_new_errors_adds_geometries_to_annotation_layer(
     # Test
     visualizer.add_new_errors(
         [
-            ErrorFeature("1", QualityErrorPriority.FATAL, geometry, CRS),
-            ErrorFeature("2", QualityErrorPriority.WARNING, geometry, CRS),
+            _create_test_quality_error(QualityErrorPriority.FATAL, "1", geometry),
+            _create_test_quality_error(QualityErrorPriority.WARNING, "2", geometry),
         ]
     )
 
@@ -122,7 +129,7 @@ def test_add_new_errors_does_nothing_with_empty_input_geometry(
 
     # Test
     visualizer.add_new_errors(
-        [ErrorFeature("1", QualityErrorPriority.FATAL, QgsGeometry(), CRS)]
+        [_create_test_quality_error(QualityErrorPriority.FATAL, "1", QgsGeometry())]
     )
 
     assert get_num_visualized_features(visualizer) == 0
@@ -134,9 +141,9 @@ def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
 
     priority = QualityErrorPriority.FATAL
     errors = [
-        ErrorFeature("1", priority, QgsGeometry.fromWkt("Point(2 3)"), CRS),
-        ErrorFeature("2", priority, QgsGeometry.fromWkt("Point(1 1)"), CRS),
-        ErrorFeature("3", priority, QgsGeometry.fromWkt("Point(0 0)"), CRS),
+        _create_test_quality_error(priority, "1", QgsGeometry.fromWkt("Point(2 3)")),
+        _create_test_quality_error(priority, "2", QgsGeometry.fromWkt("Point(1 1)")),
+        _create_test_quality_error(priority, "3", QgsGeometry.fromWkt("Point(0 0)")),
     ]
 
     # Test
@@ -146,37 +153,37 @@ def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
 
 
 def test_remove_errors_removes_features_from_annotation_layer(
-    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
 ):
-    visualizer.add_new_errors(error_features)
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    visualizer.add_new_errors(visualized_errors)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
     # Test
-    visualizer.remove_errors(error_features[:2])
+    visualizer.remove_errors(visualized_errors[:2])
 
-    assert get_num_visualized_features(visualizer) == len(error_features) - 2
+    assert get_num_visualized_features(visualizer) == len(visualized_errors) - 2
     for key in visualizer._quality_error_layer._annotation_ids.keys():
-        assert key == error_features[2].id
+        assert key == visualized_errors[2].unique_identifier
 
 
 def test_remove_errors_does_nothing_with_empty_input(
-    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
 ):
-    visualizer.add_new_errors(error_features)
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    visualizer.add_new_errors(visualized_errors)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
     # Test
     visualizer.remove_errors([])
 
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
 
 def test_hide_errors_changes_quality_layer_visibility(
-    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
 ):
     root: QgsLayerTree = QgsProject.instance().layerTreeRoot()
 
-    visualizer.add_new_errors(error_features)
+    visualizer.add_new_errors(visualized_errors)
 
     layer = visualizer._quality_error_layer.find_layer_from_project()
     assert layer is not None
@@ -188,53 +195,53 @@ def test_hide_errors_changes_quality_layer_visibility(
     # Test
     visualizer.hide_errors()
 
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
     assert tree_node.itemVisibilityChecked() is False
 
 
 def test_add_new_errors_replaces_annotation_features_if_same_id(
     visualizer: QualityErrorVisualizer,
-    error_features: List[ErrorFeature],
+    visualized_errors: List[QualityError],
 ):
 
-    visualizer.add_new_errors(error_features)
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    visualizer.add_new_errors(visualized_errors)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
     new_errors = [
-        ErrorFeature(
-            "1", QualityErrorPriority.FATAL, QgsGeometry.fromWkt("Point(2 3)"), CRS
+        _create_test_quality_error(
+            QualityErrorPriority.FATAL, "1", QgsGeometry.fromWkt("Point(2 3)")
         )
     ]
 
     # Test
     visualizer.add_new_errors(new_errors)
 
-    assert get_num_visualized_features(visualizer) == len(error_features)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
 
 def test_refresh_selected_errors_replaces_selected_features_only(
-    visualizer: QualityErrorVisualizer, error_features: List[ErrorFeature]
+    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
 ):
 
-    visualizer.add_new_errors(error_features)
-    visualizer.refresh_selected_error(error_features[0])
+    visualizer.add_new_errors(visualized_errors)
+    visualizer.refresh_selected_error(visualized_errors[0])
 
     assert (
-        f"selected-{error_features[0].id}"
+        f"selected-{visualized_errors[0].unique_identifier}"
         in visualizer._quality_error_layer._annotation_ids
     )
 
     # Test
-    visualizer.refresh_selected_error(error_features[1])
+    visualizer.refresh_selected_error(visualized_errors[1])
 
-    assert get_num_visualized_features(visualizer) == len(error_features) + 1
+    assert get_num_visualized_features(visualizer) == len(visualized_errors) + 1
 
     assert sorted(visualizer._quality_error_layer._annotation_ids.keys()) == sorted(
         [
-            str(error_features[0].id),
-            str(error_features[1].id),
-            str(error_features[2].id),
-            f"selected-{error_features[1].id}",
+            str(visualized_errors[0].unique_identifier),
+            str(visualized_errors[1].unique_identifier),
+            str(visualized_errors[2].unique_identifier),
+            f"selected-{visualized_errors[1].unique_identifier}",
         ]
     )
 
@@ -272,13 +279,14 @@ def test_zoom_to_geometries_and_flash(  # noqa: QGS105
 ):
     qgis_iface.mapCanvas().setExtent(QgsRectangle(100, 100, 200, 200))
     original_extent = qgis_iface.mapCanvas().extent()
-    error_features = []
+    visualized_errors = []
 
     for geom in input_geoms:
-        error_features.append(ErrorFeature("1", QualityErrorPriority.FATAL, geom, CRS))
-
+        visualized_errors.append(
+            _create_test_quality_error(QualityErrorPriority.FATAL, "1", geom)
+        )
     # Test
-    visualizer.zoom_to_geometries_and_flash(error_features, preserve_scale)
+    visualizer.zoom_to_geometries_and_flash(visualized_errors, preserve_scale)
 
     if should_zoom_to_feature is True:
         assert original_extent != qgis_iface.mapCanvas().extent()

@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from importlib.resources import as_file, files
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from qgis.core import (
     QgsCentroidFillSymbolLayer,
@@ -43,6 +43,10 @@ from quality_result_gui.utils.styling_utils import (
     set_symbol_layer_data_defined_property_expressions,
     set_symbol_layer_simple_outer_glow_effect,
 )
+
+if TYPE_CHECKING:
+    from quality_result_gui.quality_error_visualizer import QualityError
+
 
 # Colors for error features
 FATAL_PRIMARY_COLOR = "#C31266"
@@ -125,7 +129,7 @@ class DefaultErrorSymbol(ErrorSymbol):
 
     def __init__(
         self,
-        priority: QualityErrorPriority,
+        quality_error: "QualityError",
     ) -> None:
 
         self.style: QualityLayerStyle = QualityLayerStyle(
@@ -145,7 +149,7 @@ class DefaultErrorSymbol(ErrorSymbol):
 
         self.current_style = self.style
 
-        self.priority = priority
+        self.priority = quality_error.priority
 
         self.icon_symbol_enabled_expression = f"@map_scale > {self.SYMBOL_MAP_SCALE}"
         self.geometry_symbol_enabled_expression = (

@@ -18,20 +18,22 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Iterator, List
+from unittest.mock import ANY
 
 import pytest
-from qgis.core import (
-    QgsAnnotationLayer,
-    QgsCoordinateReferenceSystem,
-    QgsGeometry,
-    QgsProject,
-)
+from qgis.core import QgsAnnotationLayer, QgsGeometry, QgsProject
 
 from quality_result_gui.api.types.quality_error import QualityErrorPriority
-from quality_result_gui.quality_error_visualizer import ErrorFeature
+from quality_result_gui.quality_error_visualizer import QualityError
 from quality_result_gui.quality_layer import QualityErrorLayer
 
-CRS = QgsCoordinateReferenceSystem("EPSG:3067")
+
+def _create_test_quality_error(
+    priority: QualityErrorPriority, unique_id: str, geom: QgsGeometry
+) -> QualityError:
+    return QualityError(
+        priority, ANY, ANY, ANY, unique_id, ANY, ANY, ANY, ANY, geom, ANY
+    )
 
 
 @pytest.fixture()
@@ -121,7 +123,7 @@ def test_find_layer_from_project_when_added_to_project_should_return_annotation_
         "MultiPolygonZ with hole",
     ],
 )
-def test_add_or_replace_annotation_with_new_error_features(
+def test_add_or_replace_annotation_with_new_quality_errors(
     quality_layer_created: QualityErrorLayer,
     priority: QualityErrorPriority,
     geometry: QgsGeometry,
@@ -131,7 +133,7 @@ def test_add_or_replace_annotation_with_new_error_features(
 
     # Test
     quality_layer_created.add_or_replace_annotation(
-        ErrorFeature("1", priority, geometry, CRS), False
+        _create_test_quality_error(priority, "1", geometry), False
     )
 
     annotation_layer = quality_layer_created.annotation_layer
@@ -185,7 +187,7 @@ def test_add_or_replace_annotation_with_new_error_features(
         "multigeometry to multigeometry with more parts",
     ],
 )
-def test_add_or_replace_annotation_with_updated_error_features(
+def test_add_or_replace_annotation_with_updated_quality_errors(
     quality_layer_created: QualityErrorLayer,
     old_geom: QgsGeometry,
     num_old_items: int,
@@ -197,14 +199,14 @@ def test_add_or_replace_annotation_with_updated_error_features(
 
     # Setup
     quality_layer_created.add_or_replace_annotation(
-        ErrorFeature("1", QualityErrorPriority.FATAL, old_geom, CRS), False
+        _create_test_quality_error(QualityErrorPriority.FATAL, "1", old_geom), False
     )
     annotation_layer = quality_layer_created.annotation_layer
     assert len(annotation_layer.items()) == num_old_items
 
     # Test
     quality_layer_created.add_or_replace_annotation(
-        ErrorFeature("1", QualityErrorPriority.FATAL, new_geom, CRS), False
+        _create_test_quality_error(QualityErrorPriority.FATAL, "1", new_geom), False
     )
 
     assert len(annotation_layer.items()) == len(expected_geoms_as_wkt)
@@ -229,18 +231,18 @@ def test_remove_annotations(
     assert not geometry.isNull(), "Input WKT was not valid"
 
     # Setup
-    error_features = [
-        ErrorFeature("1", QualityErrorPriority.FATAL, geometry, CRS),
-        ErrorFeature("2", QualityErrorPriority.FATAL, geometry, CRS),
+    quality_errors = [
+        _create_test_quality_error(QualityErrorPriority.FATAL, "1", geometry),
+        _create_test_quality_error(QualityErrorPriority.FATAL, "2", geometry),
     ]
-    quality_layer_created.add_or_replace_annotation(error_features[0], False)
-    quality_layer_created.add_or_replace_annotation(error_features[1], False)
+    quality_layer_created.add_or_replace_annotation(quality_errors[0], False)
+    quality_layer_created.add_or_replace_annotation(quality_errors[1], False)
 
     annotation_layer = quality_layer_created.annotation_layer
     assert len(annotation_layer.items()) == 2 * num_annotations_per_feature
 
     # Test: remove second item
-    quality_layer_created.remove_annotations(error_features[1:2])
+    quality_layer_created.remove_annotations(quality_errors[1:2])
 
     assert len(annotation_layer.items()) == num_annotations_per_feature
     assert list(quality_layer_created._annotation_ids.keys()) == ["1"]
@@ -250,16 +252,17 @@ def test_remove_annotations_with_different_id_prefix_should_not_be_removed(
     quality_layer_created: QualityErrorLayer,
 ):
     # Setup
-    error_feature = ErrorFeature(
-        "1", QualityErrorPriority.FATAL, QgsGeometry.fromWkt("Point(1 1)"), CRS
+    quality_error = _create_test_quality_error(
+        QualityErrorPriority.FATAL, "1", QgsGeometry.fromWkt("Point(1 1)")
     )
-    quality_layer_created.add_or_replace_annotation(error_feature, False)
+
+    quality_layer_created.add_or_replace_annotation(quality_error, False)
 
     annotation_layer = quality_layer_created.annotation_layer
     assert len(annotation_layer.items()) == 1
 
     # Test
-    quality_layer_created.remove_annotations([error_feature], "test_prefix")
+    quality_layer_created.remove_annotations([quality_error], "test_prefix")
 
     assert len(annotation_layer.items()) == 1
 
@@ -269,7 +272,7 @@ def test_remove_annotations_if_id_not_found_should_do_nothing(
 ):
     # Test
     quality_layer_created.remove_annotations(
-        [ErrorFeature("1", QualityErrorPriority.FATAL, QgsGeometry(), CRS)]
+        [_create_test_quality_error(QualityErrorPriority.FATAL, "1", QgsGeometry())]
     )
 
     assert len(quality_layer_created.annotation_layer.items()) == 0
