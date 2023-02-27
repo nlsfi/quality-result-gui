@@ -36,7 +36,6 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorType,
 )
 from quality_result_gui.quality_error_manager import QualityResultManager
-from quality_result_gui.quality_error_visualizer import ErrorFeature
 from quality_result_gui.quality_layer import QualityErrorLayer
 
 
@@ -305,13 +304,13 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
     )
 
     assert m_add_or_replace_annotation.call_count == 2
-    error_features: List[ErrorFeature] = [
+    quality_errors: List[QualityError] = [
         call_args[0][1] for call_args in m_add_or_replace_annotation.call_args_list
     ]
-    assert len(error_features) == 2
-    assert error_features[0].priority == QualityErrorPriority.WARNING
-    assert error_features[0].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(1 1)"))
-    assert error_features[1].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(0 0)"))
+    assert len(quality_errors) == 2
+    assert quality_errors[0].priority == QualityErrorPriority.WARNING
+    assert quality_errors[0].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(1 1)"))
+    assert quality_errors[1].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(0 0)"))
 
 
 def test_model_reset_expands_error_rows_recursively_on_tree_view(

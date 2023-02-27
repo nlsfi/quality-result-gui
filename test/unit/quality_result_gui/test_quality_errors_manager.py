@@ -29,7 +29,7 @@ from qgis.PyQt.QtWidgets import QMenu
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import (
-    QualityErrorPriority,
+    QualityError,
     QualityErrorsByPriority,
 )
 from quality_result_gui.configuration import QualityLayerStyleConfig
@@ -212,8 +212,8 @@ def test_override_quality_layer_style_changes_annotation_style(
     single_quality_error: list[QualityErrorsByPriority],
 ):
     class MockStyle(QualityLayerStyleConfig):
-        def create_error_symbol(self, priority: QualityErrorPriority) -> ErrorSymbol:
-            symbol = DefaultErrorSymbol(priority)
+        def create_error_symbol(self, quality_error: QualityError) -> ErrorSymbol:
+            symbol = DefaultErrorSymbol(quality_error)
             symbol.style.marker_size = 500
             return symbol
 

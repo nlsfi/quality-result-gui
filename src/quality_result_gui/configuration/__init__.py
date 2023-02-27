@@ -21,11 +21,11 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from quality_result_gui.api.types.quality_error import QualityErrorPriority
+    from quality_result_gui.api.types.quality_error import QualityError
     from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
 
 
 class QualityLayerStyleConfig(ABC):
     @abstractmethod
-    def create_error_symbol(self, priority: "QualityErrorPriority") -> "ErrorSymbol":
+    def create_error_symbol(self, quality_error: "QualityError") -> "ErrorSymbol":
         raise NotImplementedError()

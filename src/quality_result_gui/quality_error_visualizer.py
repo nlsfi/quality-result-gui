@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,45 +18,17 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from dataclasses import dataclass
 from typing import Iterable, List, Optional
 
-from qgis.core import (
-    QgsAnnotationLayer,
-    QgsCoordinateReferenceSystem,
-    QgsGeometry,
-    QgsProject,
-)
+from qgis.core import QgsAnnotationLayer, QgsCoordinateReferenceSystem, QgsProject
 
-from quality_result_gui.api.types.quality_error import (
-    QualityError,
-    QualityErrorPriority,
-)
+from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class ErrorFeature:
-    id: str
-    priority: QualityErrorPriority
-    geometry: QgsGeometry
-    crs: QgsCoordinateReferenceSystem
-
-    @staticmethod
-    def from_quality_error(
-        quality_error: QualityError, crs: QgsCoordinateReferenceSystem
-    ) -> "ErrorFeature":
-        return ErrorFeature(
-            quality_error.unique_identifier,
-            quality_error.priority,
-            quality_error.geometry,
-            crs,
-        )
 
 
 class QualityErrorVisualizer:
@@ -68,7 +40,7 @@ class QualityErrorVisualizer:
 
     def __init__(self, crs: QgsCoordinateReferenceSystem) -> None:
         self._crs = crs
-        self._selected_error_feature: Optional[ErrorFeature] = None
+        self._selected_quality_error: Optional[QualityError] = None
 
         self._quality_error_layer = QualityErrorLayer()
 
@@ -78,37 +50,35 @@ class QualityErrorVisualizer:
         else:
             self.hide_errors()
 
-    def add_new_errors(self, error_features: Iterable[ErrorFeature]) -> None:
-        for error_feature in error_features:
+    def add_new_errors(self, quality_errors: Iterable[QualityError]) -> None:
+        for quality_error in quality_errors:
             self._quality_error_layer.add_or_replace_annotation(
-                error_feature, use_highlighted_style=False
+                quality_error, use_highlighted_style=False
             )
 
-    def remove_errors(self, error_features: Iterable[ErrorFeature]) -> None:
-        self._quality_error_layer.remove_annotations(error_features)
+    def remove_errors(self, quality_errors: Iterable[QualityError]) -> None:
+        self._quality_error_layer.remove_annotations(quality_errors)
 
     def on_error_selected(
         self, quality_error: QualityError, selection_type: SelectionType
     ) -> None:
-        error_feature = ErrorFeature.from_quality_error(quality_error, self._crs)
-
         preserve_scale = selection_type == SelectionType.RightClick
 
         self.zoom_to_geometries_and_flash(
-            [error_feature], preserve_scale=preserve_scale
+            [quality_error], preserve_scale=preserve_scale
         )
 
-        self.refresh_selected_error(error_feature)
+        self.refresh_selected_error(quality_error)
 
     def refresh_selected_error(
         self,
-        selected_error_feature: ErrorFeature,
+        selected_quality_error: QualityError,
     ) -> None:
         self._remove_selected_error()
-        self._selected_error_feature = selected_error_feature
+        self._selected_quality_error = selected_quality_error
 
         self._quality_error_layer.add_or_replace_annotation(
-            selected_error_feature,
+            selected_quality_error,
             use_highlighted_style=True,
             id_prefix=self.ID_PREFIX_FOR_SELECTED,
         )
@@ -128,12 +98,12 @@ class QualityErrorVisualizer:
             QgsProject.instance().removeMapLayer(layer.id())
 
     def zoom_to_geometries_and_flash(
-        self, error_features: List[ErrorFeature], preserve_scale: bool = False
+        self, quality_errors: List[QualityError], preserve_scale: bool = False
     ) -> None:
-        if len(error_features) > 0:
+        if len(quality_errors) > 0:
             layer_utils.zoom_to_geometries_and_flash(
-                [feature.geometry for feature in error_features],
-                error_features[0].crs,  # Use crs from first feature
+                [error.geometry for error in quality_errors],
+                self._crs,
                 preserve_scale,
                 min_extent_height=20,
             )
@@ -155,8 +125,8 @@ class QualityErrorVisualizer:
         return layer
 
     def _remove_selected_error(self) -> None:
-        if self._selected_error_feature is not None:
+        if self._selected_quality_error is not None:
             self._quality_error_layer.remove_annotations(
-                [self._selected_error_feature], id_prefix=self.ID_PREFIX_FOR_SELECTED
+                [self._selected_quality_error], id_prefix=self.ID_PREFIX_FOR_SELECTED
             )
-            self._selected_error_feature = None
+            self._selected_quality_error = None
