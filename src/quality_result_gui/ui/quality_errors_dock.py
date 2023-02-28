@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -22,9 +22,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from qgis.core import QgsApplication
+from qgis.gui import QgsGui
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.PyQt.QtWidgets import QDockWidget
+from qgis.PyQt.QtWidgets import QDockWidget, QShortcut
+from qgis_plugin_tools.tools.i18n import tr
 
 from quality_result_gui.ui.quality_errors_tree_filter_menu import (
     QualityErrorsTreeFilterMenu,
@@ -50,6 +52,8 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
     Graphical user interface for quality errors dock widget.
     """
 
+    SHORTCUT_TOGGLE_ERRORS_ON_MAP_FILTER = "Alt+Q"
+
     closed = pyqtSignal()
 
     # type necessary widgets that are provided from the .ui
@@ -64,6 +68,17 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
         super().__init__(parent)
         self.setupUi(self)
 
+        self.shortcut_for_toggle_errors = QShortcut(self)
+        self.shortcut_for_toggle_errors.setObjectName(
+            "Toggle show errors on map filter"
+        )
+        self.shortcut_for_toggle_errors.setWhatsThis(
+            tr("Toggle show errors on map filter")
+        )
+        self.shortcut_for_toggle_errors.activated.connect(
+            self.show_errors_on_map_check_box.toggle
+        )
+
         self.filter_menu = QualityErrorsTreeFilterMenu(self)
         self.filter_button.setIcon(QgsApplication.getThemeIcon("/mActionFilter2.svg"))
         self.filter_button.setMenu(self.filter_menu)
@@ -76,6 +91,18 @@ class QualityErrorsDockWidget(QDockWidget, DOCK_UI):
         else:
             self.filter_button.setDown(False)
 
+    def _register_shortcut(self) -> None:
+        QgsGui.shortcutsManager().registerShortcut(
+            self.shortcut_for_toggle_errors,
+            self.SHORTCUT_TOGGLE_ERRORS_ON_MAP_FILTER,
+        )
+
+    def show(self) -> None:
+        self._register_shortcut()
+        return super().show()
+
     def closeEvent(self, event: "QCloseEvent") -> None:  # noqa: N802 (qt override)
+        QgsGui.shortcutsManager().unregisterShortcut(self.shortcut_for_toggle_errors)
+
         self.closed.emit()
         return super().closeEvent(event)
