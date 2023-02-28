@@ -24,6 +24,7 @@ import pytest
 from pytest_mock import MockerFixture
 from pytestqt.qtbot import QtBot
 from qgis.core import QgsLayerTree, QgsProject
+from qgis.gui import QgsGui
 from qgis.PyQt.QtCore import QModelIndex, Qt
 from qgis.PyQt.QtWidgets import QMenu
 
@@ -237,24 +238,22 @@ def test_override_quality_layer_style_changes_annotation_style(
     manager.dock_widget.deleteLater()
 
 
-def test_toggle_show_errors_on_map_checkbox(
-    quality_result_manager_with_data: QualityResultManager,
+def test_shortcut_for_toggle_errors_is_unregistered_after_unload(
+    quality_result_manager: QualityResultManager,
 ) -> None:
-    check_state = (
-        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
+
+    quality_result_manager.show_dock_widget()
+
+    shortcut_name = (
+        quality_result_manager.dock_widget.shortcut_for_toggle_errors.objectName()
     )
-    assert check_state == Qt.CheckState.Checked
 
-    quality_result_manager_with_data.toggle_show_errors_on_map_action.trigger()
+    assert shortcut_name in [
+        shortcut.objectName() for shortcut in QgsGui.shortcutsManager().listShortcuts()
+    ]
 
-    check_state = (
-        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
-    )
-    assert check_state == Qt.CheckState.Unchecked
+    quality_result_manager.unload()
 
-    quality_result_manager_with_data.toggle_show_errors_on_map_action.trigger()
-
-    check_state = (
-        quality_result_manager_with_data.dock_widget.show_errors_on_map_check_box.checkState()
-    )
-    assert check_state == Qt.CheckState.Checked
+    assert shortcut_name not in [
+        shortcut.objectName() for shortcut in QgsGui.shortcutsManager().listShortcuts()
+    ]

@@ -20,10 +20,8 @@
 
 from typing import TYPE_CHECKING, Optional, cast
 
-from qgis.gui import QgisInterface, QgsGui
-from qgis.PyQt.QtCore import QObject, Qt, pyqtSignal
-from qgis.PyQt.QtGui import QKeySequence
-from qgis.PyQt.QtWidgets import QAction
+from qgis.gui import QgisInterface
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.utils import iface as utils_iface
 from qgis_plugin_tools.tools.i18n import tr
 
@@ -61,8 +59,6 @@ class QualityResultManager(QObject):
     closed = pyqtSignal()
     error_checked = pyqtSignal(str, bool)
     quality_error_selected = pyqtSignal(QualityError, SelectionType)
-
-    SHORTCUT_TOGGLE_ERRORS_ON_MAP_FILTER = "Ctrl+Alt+L"
 
     def __init__(
         self,
@@ -137,7 +133,6 @@ class QualityResultManager(QObject):
             self.visualizer.on_error_selected
         )
 
-        self._add_actions()
         self._add_predefined_filters()
 
     def _add_predefined_filters(self) -> None:
@@ -156,44 +151,10 @@ class QualityResultManager(QObject):
             self._attribute_filter.update_filter_from_errors
         )
 
-    def _add_actions(self) -> None:
-        self.toggle_show_errors_on_map_action = QAction(
-            tr("Toggle show errors on map filter"), self.dock_widget
-        )
-        self.toggle_show_errors_on_map_action.triggered.connect(
-            self._toggle_show_errors_on_map_filter
-        )
-        self._add_shortcut_for_action(
-            self.toggle_show_errors_on_map_action,
-            QualityResultManager.SHORTCUT_TOGGLE_ERRORS_ON_MAP_FILTER,
-        )
-
-    def _add_shortcut_for_action(
-        self,
-        action: QAction,
-        shortcut: str,
-    ) -> None:
-        iface.mainWindow().addAction(action)
-
-        QgsGui.shortcutsManager().registerAction(action, shortcut)
-        action.setShortcut(QKeySequence(shortcut))
-
-    def _toggle_show_errors_on_map_filter(self) -> None:
-        if (
-            self.dock_widget.show_errors_on_map_check_box.checkState()
-            == Qt.CheckState.Checked
-        ):
-            self.dock_widget.show_errors_on_map_check_box.setCheckState(
-                Qt.CheckState.Unchecked
-            )
-        else:
-            self.dock_widget.show_errors_on_map_check_box.setCheckState(
-                Qt.CheckState.Checked
-            )
-
     def unload(self) -> None:
         self._fetcher.stop()
         self._filter_map_extent_model.set_enabled(False)
+        self.dock_widget.close()
         self.dock_widget.deleteLater()
         self.visualizer.remove_quality_error_layer()
 

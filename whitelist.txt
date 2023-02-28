@@ -25,3 +25,4 @@ getitem
 uic
 btn
 Hashable
+unregister
