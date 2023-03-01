@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.2] - 2023-03-01
 
 - Fix: Do not hide filter menu when a filter is selected
 - Fix: Fix missing marker symbol from line type annotations
@@ -50,3 +50,4 @@
 [1.0.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.0.0
 [1.1.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.0
 [1.1.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.1
+[1.1.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.2
