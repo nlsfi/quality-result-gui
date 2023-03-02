@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from types import GeneratorType
-from typing import TYPE_CHECKING, Generator, Optional, cast
+from typing import TYPE_CHECKING, Generator, List, Optional, cast
 
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, pyqtSignal
 from qgis.PyQt.QtWidgets import QTreeView, QWidget
@@ -90,6 +90,13 @@ class QualityErrorTreeView(QTreeView):
         super().mousePressEvent(event)
 
         self.source_button_event = None
+
+    def get_all_quality_errors(self) -> List[QualityError]:
+        return [
+            error
+            for i in range(self.model().rowCount())
+            for error in self._get_quality_errors_from_index(self.model().index(i, 0))
+        ]
 
     def _on_model_rows_inserted(
         self, parent: QModelIndex, first: int, last: int

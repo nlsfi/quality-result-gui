@@ -70,15 +70,9 @@ class QualityResultManager(QObject):
 
         self._api_client = api_client
 
-        self.visualizer = QualityErrorVisualizer(self._api_client.get_crs())
-
-        # TODO: Move show_errors to show_widget method to be cleaner.
-        # Styles must be set here because currently there's no easy way to reset
-        # error visualizations
-        if style_config:
-            self.visualizer.override_quality_layer_style(style_config)
-        # This also creates the layer
-        # Layer creation should probably be done separately.
+        self.visualizer = QualityErrorVisualizer(
+            self._api_client.get_crs(), style_config
+        )
         self.visualizer.show_errors()
 
         self.dock_widget = QualityErrorsDockWidget(iface.mainWindow())
@@ -167,6 +161,17 @@ class QualityResultManager(QObject):
     def show_dock_widget(self) -> None:
         self._fetcher.start()
         self.dock_widget.show()
+        self.visualizer.initialize_quality_error_layer(
+            self.dock_widget.show_errors_on_map_check_box.isChecked()
+        )
+        self.visualizer.add_new_errors(
+            self.dock_widget.error_tree_view.get_all_quality_errors()
+        )
+
+    def hide_dock_widget(self) -> None:
+        self._fetcher.stop()
+        self.dock_widget.hide()
+        self.visualizer.remove_quality_error_layer()
 
     def add_filter(self, filter: AbstractQualityErrorFilter) -> None:
         filter.filters_changed.connect(self.dock_widget._update_filter_menu_icon_state)

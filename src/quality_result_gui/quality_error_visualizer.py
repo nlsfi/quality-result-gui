@@ -37,10 +37,16 @@ class QualityErrorVisualizer:
     """
 
     ID_PREFIX_FOR_SELECTED = "selected-"
+    style_config: Optional["QualityLayerStyleConfig"] = None
 
-    def __init__(self, crs: QgsCoordinateReferenceSystem) -> None:
+    def __init__(
+        self,
+        crs: QgsCoordinateReferenceSystem,
+        style_config: Optional["QualityLayerStyleConfig"] = None,
+    ) -> None:
         self._crs = crs
         self._selected_quality_error: Optional[QualityError] = None
+        self.style_config = style_config
 
         self._quality_error_layer = QualityErrorLayer()
 
@@ -85,11 +91,17 @@ class QualityErrorVisualizer:
 
     def show_errors(self) -> None:
         layer = self._get_or_create_layer()
+        self.override_quality_layer_style()
         layer_utils.set_visibility_checked(layer, True)
 
     def hide_errors(self) -> None:
         layer = self._get_or_create_layer()
         layer_utils.set_visibility_checked(layer, False)
+
+    def initialize_quality_error_layer(self, visible: bool = True) -> None:
+        self.remove_quality_error_layer()
+        layer = self._get_or_create_layer()
+        layer_utils.set_visibility_checked(layer, visible)
 
     def remove_quality_error_layer(self) -> None:
         layer = self._quality_error_layer.find_layer_from_project()
@@ -108,11 +120,9 @@ class QualityErrorVisualizer:
                 min_extent_height=20,
             )
 
-    def override_quality_layer_style(
-        self,
-        style: QualityLayerStyleConfig,
-    ) -> None:
-        self._quality_error_layer.override_style(style)
+    def override_quality_layer_style(self) -> None:
+        if self.style_config:
+            self._quality_error_layer.override_style(self.style_config)
 
     def _get_or_create_layer(self) -> QgsAnnotationLayer:
         layer = self._quality_error_layer.find_layer_from_project()
