@@ -127,7 +127,6 @@ def test_show_dock_widget_starts_fetcher_and_shows_widget(
     assert quality_result_manager._fetcher._thread is not None
 
 
-@pytest.mark.skip("Checkbox values are not preseved anymore when dialog is closed")
 def test_close_and_reopen_preserves_error_visibility_on_map(
     mock_api_client: QualityResultClient,
 ) -> None:
@@ -155,9 +154,8 @@ def test_close_and_reopen_preserves_error_visibility_on_map(
     _check_quality_layer_visibility(False)
 
     # Close and reopen dialog
-    quality_result_manager.unload()
-
-    quality_result_manager = QualityResultManager(mock_api_client, None)
+    quality_result_manager.hide_dock_widget()
+    quality_result_manager.show_dock_widget()
 
     assert not show_errors_on_map_check_box.isChecked()
     # Check that quality layer is not visible

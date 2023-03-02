@@ -99,7 +99,7 @@ class QualityResultGuiPlugin:
                 iface.mainWindow(),
             )
             self.dev_tool_action.triggered.connect(
-                self._open_quality_result_gui_in_dev_mode
+                self._toggle_quality_result_gui_in_dev_mode
             )
             iface.addToolBarIcon(self.dev_tool_action)
 
@@ -128,11 +128,18 @@ class QualityResultGuiPlugin:
             self._test_json_file_path = (
                 dialog.quality_errors_data_file_widget.filePath()
             )
-            self._open_quality_result_gui_in_dev_mode()
+            self._unload_quality_error_manager_if_exists()
+            self._create_quality_result_gui_in_dev_mode()
 
-    def _open_quality_result_gui_in_dev_mode(self) -> None:
-        self._unload_quality_error_manager_if_exists()
+    def _toggle_quality_result_gui_in_dev_mode(self) -> None:
+        if self.quality_error_manager is None:
+            return self._create_quality_result_gui_in_dev_mode()
+        if self.quality_error_manager.dock_widget.isVisible():
+            self.quality_error_manager.hide_dock_widget()
+        else:
+            self.quality_error_manager.show_dock_widget()
 
+    def _create_quality_result_gui_in_dev_mode(self) -> None:
         api_client = MockQualityResultClient(Path(self._test_json_file_path))
         QgsProject.instance().setCrs(api_client.get_crs())
 
@@ -140,7 +147,7 @@ class QualityResultGuiPlugin:
             api_client, iface.mainWindow()
         )
         self.quality_error_manager.closed.connect(
-            self._unload_quality_error_manager_if_exists
+            self.quality_error_manager.hide_dock_widget
         )
 
         iface.addDockWidget(

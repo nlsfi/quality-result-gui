@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Feat: Add method to hide dock widget and functionality to recreate error visualizations
+
 ## [1.1.2] - 2023-03-01
 
 - Fix: Do not hide filter menu when a filter is selected
