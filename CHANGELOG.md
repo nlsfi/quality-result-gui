@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.3] - 2023-03-03
 
 - Feat: Add method to hide dock widget and functionality to recreate error visualizations
 
@@ -55,3 +55,4 @@
 [1.1.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.0
 [1.1.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.1
 [1.1.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.2
+[1.1.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.3
