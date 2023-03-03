@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [1.1.3] - 2023-03-03
 
 - Feat: Add method to hide dock widget and functionality to recreate error visualizations
