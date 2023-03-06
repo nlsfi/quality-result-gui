@@ -787,6 +787,34 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
 
         return quality_error.geometry.intersects(self._extent)
 
+    def headerData(  # noqa: N802 (qt override)
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: Qt.ItemDataRole = Qt.DisplayRole,
+    ) -> QVariant:
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            try:
+                model_column = ModelColumn(section)
+                if model_column == ModelColumn.TYPE_OR_ID:
+                    total_count = (
+                        self.sourceModel()
+                        .headerData(section, orientation, role)
+                        .value()
+                        .split("/")[1]
+                    )
+                    total_count = "".join([n for n in total_count if n.isdigit()])
+
+                    filtered_count = _count_all_rows(self)
+                    return QVariant(
+                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f" ({filtered_count}/{total_count})"
+                    )
+                return COLUMN_HEADERS.get(model_column, QVariant())
+            except ValueError:
+                return QVariant()
+        return QVariant()
+
 
 class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
     def __init__(self, parent: Optional[QObject] = None) -> None:
@@ -806,3 +834,31 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
             and tree_item_type == QualityErrorTreeItemType.ERROR
             and cast(QualityError, tree_item_value).is_user_processed is True
         )
+
+    def headerData(  # noqa: N802 (qt override)
+        self,
+        section: int,
+        orientation: Qt.Orientation,
+        role: Qt.ItemDataRole = Qt.DisplayRole,
+    ) -> QVariant:
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            try:
+                model_column = ModelColumn(section)
+                if model_column == ModelColumn.TYPE_OR_ID:
+                    total_count = (
+                        self.sourceModel()
+                        .headerData(section, orientation, role)
+                        .value()
+                        .split("/")[1]
+                    )
+                    total_count = "".join([n for n in total_count if n.isdigit()])
+
+                    filtered_count = _count_all_rows(self)
+                    return QVariant(
+                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f" ({filtered_count}/{total_count})"
+                    )
+                return COLUMN_HEADERS.get(model_column, QVariant())
+            except ValueError:
+                return QVariant()
+        return QVariant()
