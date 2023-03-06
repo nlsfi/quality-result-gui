@@ -304,16 +304,20 @@ def test_model_column_count(model: FilterByExtentProxyModel):
     )
 
 
-@pytest.mark.skip("Counts are currently not working in FilterByExtentProxyModel")
 def test_model_header_data(model: FilterByExtentProxyModel):
+    base_model = QualityErrorsTreeBaseModel(None)
+    model.setSourceModel(base_model)
+
     assert not QVariant(model.headerData(0, Qt.Vertical)).isValid()
     assert QVariant(model.headerData(0, Qt.Horizontal)).isValid()
 
     for valid_col_index in [0, 1]:
-        assert model.headerData(valid_col_index, Qt.Horizontal).isValid()
+        assert QVariant(model.headerData(valid_col_index, Qt.Horizontal)).isValid()
 
     for invalid_col_index in [-1, 2, 3, 4, 5, 10, 99]:
-        assert not model.headerData(invalid_col_index, Qt.Horizontal).isValid()
+        assert not QVariant(
+            model.headerData(invalid_col_index, Qt.Horizontal)
+        ).isValid()
 
 
 def test_total_number_of_errors_is_shown_in_header(
@@ -417,7 +421,7 @@ def test_model_data_error(
     )
 
 
-def test_model_data_user_processed(model: FilterByExtentProxyModel):
+def test_model_data_user_processed_values(model: FilterByExtentProxyModel):
     assert (
         model.data(
             _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.CheckStateRole
