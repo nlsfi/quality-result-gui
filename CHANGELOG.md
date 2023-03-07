@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix: Show correct error count when errors are filtered
+- Fix: Remove selected error visualization from map when error is removed from list
+
 ## [1.1.3] - 2023-03-03
 
 - Feat: Add method to hide dock widget and functionality to recreate error visualizations
