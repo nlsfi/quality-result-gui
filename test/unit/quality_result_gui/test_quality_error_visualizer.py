@@ -152,30 +152,63 @@ def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
     assert get_num_visualized_features(visualizer) == len(errors)
 
 
+@pytest.mark.parametrize(
+    ("remove_selected_error"),
+    [
+        (True),
+        (False),
+    ],
+    ids=[
+        "selected error in removed list",
+        "selected error not in removed list",
+    ],
+)
 def test_remove_errors_removes_features_from_annotation_layer(
-    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
+    visualizer: QualityErrorVisualizer,
+    visualized_errors: List[QualityError],
+    remove_selected_error: bool,
 ):
     visualizer.add_new_errors(visualized_errors)
-    assert get_num_visualized_features(visualizer) == len(visualized_errors)
+    # Select first error
+    visualizer.refresh_selected_error(visualized_errors[0])
+
+    num_errors_before_removal = len(visualized_errors) + 1
+    assert get_num_visualized_features(visualizer) == num_errors_before_removal
 
     # Test
-    visualizer.remove_errors(visualized_errors[:2])
+    if remove_selected_error:
+        visualizer.remove_errors(visualized_errors[:2])
+    else:
+        visualizer.remove_errors(visualized_errors[1:3])
 
-    assert get_num_visualized_features(visualizer) == len(visualized_errors) - 2
-    for key in visualizer._quality_error_layer._annotation_ids.keys():
-        assert key == visualized_errors[2].unique_identifier
+    if remove_selected_error:
+        assert get_num_visualized_features(visualizer) == num_errors_before_removal - 3
+        for key in visualizer._quality_error_layer._annotation_ids.keys():
+            assert key == visualized_errors[2].unique_identifier
+    else:
+        assert get_num_visualized_features(visualizer) == num_errors_before_removal - 2
+        assert set(visualizer._quality_error_layer._annotation_ids.keys()) == {
+            visualized_errors[0].unique_identifier,
+            f"selected-{visualized_errors[0].unique_identifier}",
+        }
 
 
 def test_remove_errors_does_nothing_with_empty_input(
     visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
 ):
     visualizer.add_new_errors(visualized_errors)
-    assert get_num_visualized_features(visualizer) == len(visualized_errors)
+    visualizer.refresh_selected_error(visualized_errors[0])
+
+    assert get_num_visualized_features(visualizer) == len(visualized_errors) + 1
 
     # Test
     visualizer.remove_errors([])
 
-    assert get_num_visualized_features(visualizer) == len(visualized_errors)
+    assert get_num_visualized_features(visualizer) == len(visualized_errors) + 1
+    assert (
+        f"selected-{visualized_errors[0].unique_identifier}"
+        in visualizer._quality_error_layer._annotation_ids
+    )
 
 
 def test_hide_errors_changes_quality_layer_visibility(

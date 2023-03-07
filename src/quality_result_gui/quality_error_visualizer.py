@@ -63,7 +63,16 @@ class QualityErrorVisualizer:
             )
 
     def remove_errors(self, quality_errors: Iterable[QualityError]) -> None:
-        self._quality_error_layer.remove_annotations(quality_errors)
+        errors = list(quality_errors)
+        self._quality_error_layer.remove_annotations(errors)
+
+        if (
+            self._selected_quality_error
+            and self._selected_quality_error.unique_identifier
+            in [error.unique_identifier for error in errors]
+        ):
+            self._remove_selected_error()
+            self._selected_quality_error = None
 
     def on_error_selected(
         self, quality_error: QualityError, selection_type: SelectionType
