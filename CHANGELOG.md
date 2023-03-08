@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [1.1.4] - 2023-03-08
 
 - Fix: Show correct error count when errors are filtered
