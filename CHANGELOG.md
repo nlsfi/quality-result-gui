@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.4] - 2023-03-08
 
 - Fix: Show correct error count when errors are filtered
 - Fix: Remove selected error visualization from map when error is removed from list
@@ -61,3 +61,4 @@
 [1.1.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.1
 [1.1.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.2
 [1.1.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.3
+[1.1.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.4
