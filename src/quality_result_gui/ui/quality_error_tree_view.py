@@ -33,7 +33,7 @@ from quality_result_gui.quality_errors_tree_model import (
 )
 
 if TYPE_CHECKING:
-    from qgis.PyQt.QtGui import QMouseEvent
+    from qgis.PyQt.QtGui import QKeyEvent, QMouseEvent
 
 TREE_VIEW_STYLE = """
         QTreeView::item:hover, QTreeView::item:selected:active,
@@ -62,7 +62,7 @@ class QualityErrorTreeView(QTreeView):
     ) -> None:
         super().__init__(parent)
 
-        self.source_button_event: Optional["QMouseEvent"] = None
+        self.current_selection_type = SelectionType.Other
 
         self.setColumnWidth(ModelColumn.TYPE_OR_ID.value, 150)
         self.setIndentation(10)
@@ -85,11 +85,25 @@ class QualityErrorTreeView(QTreeView):
     def mousePressEvent(  # noqa: N802 (override qt method)
         self, event: "QMouseEvent"
     ) -> None:
-        self.source_button_event = event
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.current_selection_type = SelectionType.LeftClick
+        elif event.button() == Qt.MouseButton.RightButton:
+            self.current_selection_type = SelectionType.RightClick
+
         # Calling super will trigger currentChanged if row clicked
         super().mousePressEvent(event)
 
-        self.source_button_event = None
+        self.current_selection_type = SelectionType.Other
+
+    def keyPressEvent(  # noqa: N802 (override qt method)
+        self, event: "QKeyEvent"
+    ) -> None:
+        self.current_selection_type = SelectionType.Keyboard
+
+        # Calling super will trigger currentChanged if arrow keys used
+        super().keyPressEvent(event)
+
+        self.current_selection_type = SelectionType.Other
 
     def get_all_quality_errors(self) -> List[QualityError]:
         return [
@@ -129,16 +143,7 @@ class QualityErrorTreeView(QTreeView):
         if quality_error is None:
             return
 
-        selection_mode = (
-            SelectionType.RightClick
-            if (
-                self.source_button_event is not None
-                and self.source_button_event.button() == Qt.MouseButton.RightButton
-            )
-            else SelectionType.Other
-        )
-
-        self.quality_error_selected.emit(quality_error, selection_mode)
+        self.quality_error_selected.emit(quality_error, self.current_selection_type)
 
     def _get_quality_errors_from_index(
         self, index: QModelIndex

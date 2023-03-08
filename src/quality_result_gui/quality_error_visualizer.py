@@ -79,9 +79,11 @@ class QualityErrorVisualizer:
     ) -> None:
         preserve_scale = selection_type == SelectionType.RightClick
 
-        self.zoom_to_geometries_and_flash(
-            [quality_error], preserve_scale=preserve_scale
-        )
+        # Zoom and flash feature only when row is selected by user
+        if selection_type != SelectionType.Other:
+            self.zoom_to_geometries_and_flash(
+                [quality_error], preserve_scale=preserve_scale
+            )
 
         self.refresh_selected_error(quality_error)
 

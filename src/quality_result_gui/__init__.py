@@ -21,9 +21,11 @@
 __version__ = "1.1.3.post0"
 
 
-from enum import Enum
+from enum import Enum, auto
 
 
 class SelectionType(Enum):
-    RightClick = 1
-    Other = 2
+    LeftClick = auto()
+    RightClick = auto()
+    Keyboard = auto()
+    Other = auto()
