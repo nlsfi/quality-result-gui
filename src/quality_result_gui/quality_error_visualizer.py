@@ -80,7 +80,11 @@ class QualityErrorVisualizer:
         preserve_scale = selection_type == SelectionType.RightClick
 
         # Zoom and flash feature only when row is selected by user
-        if selection_type != SelectionType.Other:
+        # and geometry is not null geometry
+        if (
+            selection_type != SelectionType.Other
+            and quality_error.geometry.isNull() is False
+        ):
             self.zoom_to_geometries_and_flash(
                 [quality_error], preserve_scale=preserve_scale
             )
