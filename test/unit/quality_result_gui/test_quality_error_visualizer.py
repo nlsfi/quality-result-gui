@@ -30,6 +30,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 
+from quality_result_gui import SelectionType
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
@@ -277,6 +278,41 @@ def test_refresh_selected_errors_replaces_selected_features_only(
             f"selected-{visualized_errors[1].unique_identifier}",
         ]
     )
+
+
+@pytest.mark.parametrize(
+    ("input_geom", "should_zoom_to_feature"),
+    [
+        (QgsGeometry.fromWkt("Point(2 3)"), True),
+        (QgsGeometry(), False),
+    ],
+    ids=[
+        "one geom",
+        "null geometry",
+    ],
+)
+def test_on_error_selected(
+    visualizer: QualityErrorVisualizer,
+    qgis_iface: QgisInterface,
+    input_geom: QgsGeometry,
+    should_zoom_to_feature: bool,
+):
+    qgis_iface.mapCanvas().setExtent(QgsRectangle(100, 100, 200, 200))
+    original_extent = qgis_iface.mapCanvas().extent()
+    visualized_error = _create_test_quality_error(
+        QualityErrorPriority.FATAL, "1", input_geom
+    )
+
+    # Test
+    visualizer.on_error_selected(visualized_error, SelectionType.RightClick)
+
+    if should_zoom_to_feature is True:
+        assert original_extent != qgis_iface.mapCanvas().extent()
+        assert round(original_extent.area(), 1) == round(
+            qgis_iface.mapCanvas().extent().area(), 1
+        )
+    else:
+        assert original_extent == qgis_iface.mapCanvas().extent()
 
 
 @pytest.mark.parametrize(
