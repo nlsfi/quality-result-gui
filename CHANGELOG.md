@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [1.1.5] - 2023-03-29
 
 - Fix: Do not zoom to error when geometry is null geometry
