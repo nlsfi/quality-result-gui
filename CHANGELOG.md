@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.5] - 2023-03-29
 
 - Fix: Do not zoom to error when geometry is null geometry
 
@@ -66,3 +66,4 @@
 [1.1.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.2
 [1.1.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.3
 [1.1.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.4
+[1.1.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.5
