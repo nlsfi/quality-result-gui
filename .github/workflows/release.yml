@@ -2,7 +2,7 @@ name: Release
 
 on:
   release:
-    types: released
+    types: [released]
 
 jobs:
   pypi:
@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - run: |
           pip install build
       - run: |
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       # use extra pip install . to do a non-editable install,
       # so that .dist-info will go the package instead of .egg-info
       - run: |
