@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Dict, Optional, cast
 
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, pyqtSignal
@@ -27,10 +27,14 @@ from qgis_plugin_tools.tools.i18n import tr
 
 from quality_result_gui import SelectionType
 from quality_result_gui.api.types.quality_error import QualityError
+from quality_result_gui.layer_mapping import LayerMapping
 from quality_result_gui.quality_data_fetcher import (
     CHECK_STATUS_LABELS,
     BackgroundQualityResultsFetcher,
     CheckStatus,
+)
+from quality_result_gui.quality_error_manager_settings import (
+    QualityResultManagerSettings,
 )
 from quality_result_gui.quality_error_visualizer import QualityErrorVisualizer
 from quality_result_gui.quality_errors_filters import (
@@ -177,3 +181,8 @@ class QualityResultManager(QObject):
         filter.filters_changed.connect(self.dock_widget._update_filter_menu_icon_state)
         self.dock_widget.filter_menu.add_filter_menu(filter.menu)
         self._filter_model.add_filter(filter)
+
+    def set_layer_mapping(self, layer_mapping: Dict[str, str]) -> None:
+        QualityResultManagerSettings.get().set_layer_mapping(
+            LayerMapping(layer_map=layer_mapping)
+        )

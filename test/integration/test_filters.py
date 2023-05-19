@@ -188,7 +188,6 @@ def test_select_and_deselect_all_actions_are_present(
     filter_menu: QualityErrorsTreeFilterMenu,
     is_action_present: Callable[[QMenu, str], bool],
 ):
-
     for action in filter_menu.actions():
         if action.menu() is not None:
             assert is_action_present(
@@ -345,7 +344,6 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     expected_feature_attributes: list[str],
     expected_error_types: list[int],
 ):
-
     # Baseline filters for menu
     assert get_checked_menu_items(error_type_menu) == sorted(ERROR_TYPE_LABEL.values())
     assert get_checked_menu_items(feature_type_menu) == error_feature_types
@@ -485,7 +483,6 @@ def test_filters_are_retained_when_data_changes(
     expected_attribute_filter_options_after_revert: list[str],
     request: pytest.FixtureRequest,
 ):
-
     assert get_checked_menu_items(feature_type_menu) == error_feature_types
     assert get_checked_menu_items(attribute_menu) == error_feature_attributes
 
@@ -581,3 +578,27 @@ def test_updating_filter_refreshes_errors_on_tree_view_and_map(
 
     # Test filter button changed
     assert quality_result_manager_with_data.dock_widget.filter_button.isDown() is True
+
+
+def test_filter_menu_label_aliases(
+    filter_menu_with_chimney_point_alias: QualityErrorsTreeFilterMenu,
+    get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
+):
+    feature_type_menu = get_submenu_from_menu(
+        filter_menu_with_chimney_point_alias, FEATURE_TYPE_FILTER_MENU_LABEL
+    )
+    attribute_type_menu = get_submenu_from_menu(
+        filter_menu_with_chimney_point_alias, ATTRIBUTE_NAME_FILTER_MENU_LABEL
+    )
+    feature_type_menu = get_submenu_from_menu(
+        filter_menu_with_chimney_point_alias, FEATURE_TYPE_FILTER_MENU_LABEL
+    )
+
+    assert feature_type_menu is not None
+    assert attribute_type_menu is not None
+    assert "chimney point alias" in [
+        action.text() for action in feature_type_menu.actions()
+    ]
+    assert "height relative alias" in [
+        action.text() for action in attribute_type_menu.actions()
+    ]

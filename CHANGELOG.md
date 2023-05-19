@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Feat: Add functionality to display quality error feature type and attribute names from layer aliases.
+
 ## [1.1.5] - 2023-03-29
 
 - Fix: Do not zoom to error when geometry is null geometry

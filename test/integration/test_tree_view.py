@@ -317,7 +317,6 @@ def test_model_reset_expands_error_rows_recursively_on_tree_view(
     quality_result_manager_with_data: QualityResultManager,
     quality_errors: List[QualityErrorsByPriority],
 ) -> None:
-
     quality_result_manager_with_data._fetcher.results_received.emit(quality_errors)
 
     errors_index = (
@@ -393,3 +392,14 @@ def test_model_reset_expands_error_rows_recursively_on_tree_view(
         )
         is True
     )
+
+
+def test_quality_error_tree_view_with_layer_aliases(
+    quality_result_manager_with_data_and_layer_mapping: QualityResultManager,
+) -> None:
+    model = (
+        quality_result_manager_with_data_and_layer_mapping.dock_widget.error_tree_view.model()
+    )
+    first_priority_index = model.index(0, 0, QModelIndex())
+    feature_type = first_priority_index.child(1, 0).data()
+    assert feature_type == "chimney point alias"
