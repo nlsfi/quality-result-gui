@@ -59,6 +59,9 @@ from quality_result_gui.api.types.quality_error import (
     QualityErrorPriority,
     QualityErrorsByPriority,
 )
+from quality_result_gui.quality_error_manager_settings import (
+    QualityResultManagerSettings,
+)
 
 if TYPE_CHECKING:
     from qgis.core import QgsRectangle
@@ -233,9 +236,11 @@ class QualityErrorTreeItem:
                 column_data = ERROR_PRIORITY_LABEL[QualityErrorPriority(item_data)]
 
             elif self.item_type == QualityErrorTreeItemType.FEATURE_TYPE:
-                column_data = item_data
-                # TODO: how to configurate custom data mapping
-                # column_data = common.FEATURE_TYPE_NAMES[item_data]
+                column_data = (
+                    QualityResultManagerSettings.get().layer_mapping.get_layer_alias(
+                        item_data
+                    )
+                )
 
             elif self.item_type == QualityErrorTreeItemType.FEATURE:
                 column_data = item_data[1][:8]
@@ -446,7 +451,6 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         return super().flags(index)
 
     def refresh_model(self, quality_errors: List[QualityErrorsByPriority]) -> None:
-
         updated_quality_error_ids = {
             error.unique_identifier
             for errors_by_priority in quality_errors
@@ -571,7 +575,6 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             )
 
     def _get_index_for_item(self, item: QualityErrorTreeItem) -> QModelIndex:
-
         if item.item_type == QualityErrorTreeItemType.HEADER:
             return QModelIndex()
         else:

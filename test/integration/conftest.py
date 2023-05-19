@@ -21,6 +21,12 @@ from typing import TYPE_CHECKING, Generator, List
 
 import pytest
 from pytestqt.qtbot import QtBot
+from qgis.core import QgsField, QgsProject, QgsVectorLayer, edit
+from qgis.PyQt.QtCore import QVariant
+
+from quality_result_gui.ui.quality_errors_tree_filter_menu import (
+    QualityErrorsTreeFilterMenu,
+)
 
 if TYPE_CHECKING:
     from quality_result_gui.api.quality_api_client import QualityResultClient
@@ -59,3 +65,35 @@ def quality_result_manager_with_data(
         quality_result_manager._fetcher.results_received.emit(quality_errors)
 
     return quality_result_manager
+
+
+@pytest.fixture()
+def quality_result_manager_with_data_and_layer_mapping(
+    quality_result_manager: "QualityResultManager",
+    quality_errors: List["QualityErrorsByPriority"],
+    qtbot: QtBot,
+) -> Generator["QualityResultManager", None, None]:
+    layer = QgsVectorLayer("NoGeometry", "mock", "memory")
+    with edit(layer):
+        field = QgsField("height_relative", QVariant.String)
+        field.setAlias("height relative alias")
+        layer.setName("chimney point alias")
+        layer.dataProvider().addAttributes([field])
+    QgsProject.instance().addMapLayer(layer, False)
+    quality_result_manager.set_layer_mapping({"chimney_point": layer.id()})
+    with qtbot.waitSignal(
+        quality_result_manager._base_model.filterable_data_changed,
+        timeout=200,
+    ) as _:
+        quality_result_manager._fetcher.results_received.emit(quality_errors)
+
+    yield quality_result_manager
+    quality_result_manager.set_layer_mapping({})
+    QgsProject.instance().removeMapLayer(layer.id())
+
+
+@pytest.fixture()
+def filter_menu_with_chimney_point_alias(
+    quality_result_manager_with_data_and_layer_mapping: "QualityResultManager",
+) -> "QualityErrorsTreeFilterMenu":
+    return quality_result_manager_with_data_and_layer_mapping.dock_widget.filter_menu

@@ -29,6 +29,9 @@ from qgis.PyQt.QtWidgets import QAction, QMenu
 from qgis_plugin_tools.tools.i18n import tr
 
 from quality_result_gui.api.types.quality_error import ERROR_TYPE_LABEL, QualityError
+from quality_result_gui.quality_error_manager_settings import (
+    QualityResultManagerSettings,
+)
 from quality_result_gui.quality_errors_tree_model import QualityErrorTreeItemType
 
 if TYPE_CHECKING:
@@ -383,12 +386,17 @@ class FeatureTypeFilter(AbstractQualityErrorFilter):
             quality_errors (List[&quot;QualityErrorsByPriority&quot;]): _description_
         """
         feature_types_in_errors = {  # Dict[filter_value, filter_label]
-            errors.feature_type: errors.feature_type
+            errors.feature_type: self._get_label_value(errors.feature_type)
             for errors_by_feature_type in quality_errors
             for errors in errors_by_feature_type.errors
         }
 
         self._refresh_filters(feature_types_in_errors)
+
+    def _get_label_value(self, feature_type: str) -> str:
+        return QualityResultManagerSettings.get().layer_mapping.get_layer_alias(
+            feature_type
+        )
 
 
 class AttributeFilter(AbstractQualityErrorFilter):
@@ -418,7 +426,9 @@ class AttributeFilter(AbstractQualityErrorFilter):
         self, quality_errors: List["QualityErrorsByPriority"]
     ) -> None:
         attribute_names_in_errors = {  # Dict[filter_value, filter_label]
-            error.attribute_name: error.attribute_name
+            error.attribute_name: self._get_label_value(
+                error.feature_type, error.attribute_name
+            )
             for errors_by_priority in quality_errors
             for errors_by_feature_type in errors_by_priority.errors
             for errors_by_feature in errors_by_feature_type.errors
@@ -427,3 +437,8 @@ class AttributeFilter(AbstractQualityErrorFilter):
         }
 
         self._refresh_filters(attribute_names_in_errors)
+
+    def _get_label_value(self, feature_type: str, attribute_name: str) -> str:
+        return QualityResultManagerSettings.get().layer_mapping.get_field_alias(
+            feature_type, attribute_name
+        )
