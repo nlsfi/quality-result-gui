@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [1.1.6] - 2023-05-23
 
 - Feat: Add functionality to display quality error feature type and attribute names from layer aliases.
 
@@ -71,3 +71,4 @@
 [1.1.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.3
 [1.1.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.4
 [1.1.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.5
+[1.1.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.6
