@@ -143,7 +143,7 @@ pytest-mock==3.7.0
     # via -r requirements.in
 pytest-order==1.0.0
     # via -r requirements.in
-pytest-qgis==1.3.0
+pytest-qgis==1.3.5
     # via -r requirements.in
 pytest-qt==3.3.0
     # via -r requirements.in
