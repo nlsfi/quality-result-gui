@@ -25,84 +25,29 @@ from qgis.core import QgsGeometry
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
-    QualityErrorsByFeature,
-    QualityErrorsByFeatureType,
-    QualityErrorsByPriority,
     QualityErrorType,
 )
 
 
 @dataclass
 class QualityErrorResponse:
-    errors_by_priority: List[QualityErrorsByPriority] = field(init=False)
+    quality_results: List[QualityError] = field(init=False)
     _errors_obj: List[Dict[str, Any]]
 
     def __post_init__(self) -> None:
-        self.errors_by_priority = self._parse_errors_by_priority(self._errors_obj)
-
-    def _parse_errors_by_priority(
-        self, errors_obj: List[Dict[str, Any]]
-    ) -> List[QualityErrorsByPriority]:
-        return [
-            QualityErrorsByPriority(
-                QualityErrorPriority(error_obj["priority"]),
-                self._parse_errors_by_feature_type(
-                    QualityErrorPriority(error_obj["priority"]), error_obj["errors"]
-                ),
-            )
-            for error_obj in errors_obj
-        ]
-
-    def _parse_errors_by_feature_type(
-        self, priority: QualityErrorPriority, errors_obj: List[Dict[str, Any]]
-    ) -> List[QualityErrorsByFeatureType]:
-        return [
-            QualityErrorsByFeatureType(
-                error_obj["feature_type"],
-                self._parse_errors_by_feature(
-                    priority, error_obj["feature_type"], error_obj["errors"]
-                ),
-            )
-            for error_obj in errors_obj
-        ]
-
-    def _parse_errors_by_feature(
-        self,
-        priority: QualityErrorPriority,
-        feature_type: str,
-        errors_obj: List[Dict[str, Any]],
-    ) -> List[QualityErrorsByFeature]:
-        return [
-            QualityErrorsByFeature(
-                feature_type,
-                error_obj["feature_id"],
-                self._parse_errors(
-                    priority, feature_type, error_obj["feature_id"], error_obj["errors"]
-                ),
-            )
-            for error_obj in errors_obj
-        ]
-
-    def _parse_errors(
-        self,
-        priority: QualityErrorPriority,
-        feature_type: str,
-        feature_id: str,
-        errors_obj: List[Dict[str, Any]],
-    ) -> List[QualityError]:
-        return [
+        self.quality_results = [
             QualityError(
-                priority,
-                feature_type,
-                feature_id,
-                error_obj["error_id"],
-                error_obj["unique_identifier"],
-                QualityErrorType(error_obj["error_type"]),
-                error_obj["attribute_name"],
-                error_obj["error_description"],
-                error_obj.get("extra_info", None),
-                QgsGeometry.fromWkt(error_obj["wkt_geom"]),
-                error_obj["is_user_processed"],
+                priority=QualityErrorPriority(error_obj["priority"]),
+                feature_type=error_obj["feature_type"],
+                feature_id=error_obj["feature_id"],
+                error_id=error_obj["error_id"],
+                unique_identifier=error_obj["unique_identifier"],
+                error_type=QualityErrorType(error_obj["error_type"]),
+                attribute_name=error_obj["attribute_name"],
+                error_description=error_obj["error_description"],
+                error_extra_info=error_obj.get("extra_info", None),
+                geometry=QgsGeometry.fromWkt(error_obj["wkt_geom"]),
+                is_user_processed=error_obj["is_user_processed"],
             )
-            for error_obj in errors_obj
+            for error_obj in self._errors_obj
         ]

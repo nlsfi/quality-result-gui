@@ -30,7 +30,7 @@ from quality_result_gui.ui.quality_errors_tree_filter_menu import (
 
 if TYPE_CHECKING:
     from quality_result_gui.api.quality_api_client import QualityResultClient
-    from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+    from quality_result_gui.api.types.quality_error import QualityError
     from quality_result_gui.quality_error_manager import QualityResultManager
 
 
@@ -55,7 +55,7 @@ def quality_result_manager(
 @pytest.fixture()
 def quality_result_manager_with_data(
     quality_result_manager: "QualityResultManager",
-    quality_errors: List["QualityErrorsByPriority"],
+    quality_errors: List["QualityError"],
     qtbot: QtBot,
 ) -> "QualityResultManager":
     with qtbot.waitSignal(
@@ -70,7 +70,7 @@ def quality_result_manager_with_data(
 @pytest.fixture()
 def quality_result_manager_with_data_and_layer_mapping(
     quality_result_manager: "QualityResultManager",
-    quality_errors: List["QualityErrorsByPriority"],
+    quality_errors: List["QualityError"],
     qtbot: QtBot,
 ) -> Generator["QualityResultManager", None, None]:
     layer = QgsVectorLayer("NoGeometry", "mock", "memory")

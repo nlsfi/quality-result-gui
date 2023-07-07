@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Refactor!: replace hierachical representation of quality errors with a flat quality error list
+
 ## [1.1.6] - 2023-05-23
 
 - Feat: Add functionality to display quality error feature type and attribute names from layer aliases.

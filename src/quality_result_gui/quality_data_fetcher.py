@@ -31,7 +31,7 @@ from quality_result_gui.api.quality_api_client import (
 )
 
 if TYPE_CHECKING:
-    from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+    from quality_result_gui.api.types.quality_error import QualityError
 
 BACKGROUND_POLL_INTERVAL = 10 * 1000
 
@@ -129,9 +129,7 @@ class BackgroundQualityResultsFetcher(QObject):
         self.status_changed.emit(status)
 
     @pyqtSlot(list)
-    def _worker_results_received(
-        self, results: List["QualityErrorsByPriority"]
-    ) -> None:
+    def _worker_results_received(self, results: List["QualityError"]) -> None:
         self.results_received.emit(results)
 
     @pyqtSlot()

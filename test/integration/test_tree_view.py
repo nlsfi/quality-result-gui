@@ -30,9 +30,6 @@ from qgis.PyQt.QtCore import QAbstractItemModel, QCoreApplication, QModelIndex, 
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
-    QualityErrorsByFeature,
-    QualityErrorsByFeatureType,
-    QualityErrorsByPriority,
     QualityErrorType,
 )
 from quality_result_gui.quality_error_manager import QualityResultManager
@@ -83,20 +80,18 @@ def test_quality_error_tree_view_performance_with_big_dataset(
 ) -> None:
     quality_errors = []
     # Generate 1000+ errors
-    for priority in list(QualityErrorPriority):
+    for priority in [1, 2, 3]:
         feature_type = "test_feature_type"
-        feature_type_errors = []
         for id in range(20):
             feature_id = f"a-{id}"
-            feature_errors = []
             for i in range(30):
-                feature_errors.append(
+                quality_errors.append(
                     QualityError(
-                        priority,
+                        QualityErrorPriority(priority),
                         feature_type,
                         feature_id,
-                        priority.value * 100 + id * 10 + i,
-                        str(priority.value * 100 + id * 10 + i),
+                        priority * 100 + id * 10 + i,
+                        str(priority * 100 + id * 10 + i),
                         QualityErrorType.ATTRIBUTE,
                         "test_attribute",
                         "desc1",
@@ -105,15 +100,6 @@ def test_quality_error_tree_view_performance_with_big_dataset(
                         False,
                     )
                 )
-            feature_type_errors.append(
-                QualityErrorsByFeature(feature_type, feature_id, feature_errors)
-            )
-        quality_errors.append(
-            QualityErrorsByPriority(
-                priority,
-                [QualityErrorsByFeatureType(feature_type, feature_type_errors)],
-            )
-        )
 
     quality_result_manager_with_data._fetcher.results_received.emit(quality_errors)
     # Remove all fatal errors
@@ -123,12 +109,13 @@ def test_quality_error_tree_view_performance_with_big_dataset(
 
 def test_quality_error_tree_view_updates_view_partially_when_data_is_refreshed(
     quality_result_manager_with_data: QualityResultManager,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> None:
     model = quality_result_manager_with_data.dock_widget.error_tree_view.model()
-
     original_quality_errors = copy(quality_errors)
-    quality_errors.remove(quality_errors[0])
+    quality_errors = list(
+        filter(lambda a: a.priority != QualityErrorPriority.FATAL, quality_errors)
+    )
     quality_result_manager_with_data._fetcher.results_received.emit(quality_errors)
 
     first_priority_index = model.index(0, 0, QModelIndex())
@@ -258,48 +245,32 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
 
     quality_result_manager._fetcher.results_received.emit(
         [
-            QualityErrorsByPriority(
+            QualityError(
                 QualityErrorPriority.WARNING,
-                [
-                    QualityErrorsByFeatureType(
-                        feature_type,
-                        [
-                            QualityErrorsByFeature(
-                                feature_type,
-                                "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                [
-                                    QualityError(
-                                        QualityErrorPriority.WARNING,
-                                        feature_type,
-                                        "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                        1,
-                                        "1",
-                                        QualityErrorType.ATTRIBUTE,
-                                        "test",
-                                        "",
-                                        "",
-                                        QgsGeometry.fromWkt("Point(0 0)"),
-                                        False,
-                                    ),
-                                    QualityError(
-                                        QualityErrorPriority.WARNING,
-                                        feature_type,
-                                        "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                        2,
-                                        "2",
-                                        QualityErrorType.GEOMETRY,
-                                        None,
-                                        "",
-                                        "",
-                                        QgsGeometry.fromWkt("Point(1 1)"),
-                                        True,
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                ],
-            )
+                feature_type,
+                "123c1e9b-fade-410d-9b7e-f7ad32317883",
+                1,
+                "1",
+                QualityErrorType.ATTRIBUTE,
+                "test",
+                "",
+                "",
+                QgsGeometry.fromWkt("Point(0 0)"),
+                False,
+            ),
+            QualityError(
+                QualityErrorPriority.WARNING,
+                feature_type,
+                "123c1e9b-fade-410d-9b7e-f7ad32317883",
+                2,
+                "2",
+                QualityErrorType.GEOMETRY,
+                None,
+                "",
+                "",
+                QgsGeometry.fromWkt("Point(1 1)"),
+                True,
+            ),
         ]
     )
 
@@ -308,14 +279,14 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
         call_args[0][1] for call_args in m_add_or_replace_annotation.call_args_list
     ]
     assert len(quality_errors) == 2
-    assert quality_errors[0].priority == QualityErrorPriority.WARNING
+    assert quality_errors[0].priority.value == 2
     assert quality_errors[0].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(1 1)"))
     assert quality_errors[1].geometry.isGeosEqual(QgsGeometry.fromWkt("Point(0 0)"))
 
 
 def test_model_reset_expands_error_rows_recursively_on_tree_view(
     quality_result_manager_with_data: QualityResultManager,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> None:
     quality_result_manager_with_data._fetcher.results_received.emit(quality_errors)
 

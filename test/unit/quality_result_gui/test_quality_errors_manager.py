@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Callable, Generator, Optional
+from typing import Callable, Generator, List, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -29,10 +29,7 @@ from qgis.PyQt.QtCore import QModelIndex, Qt
 from qgis.PyQt.QtWidgets import QMenu
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
-from quality_result_gui.api.types.quality_error import (
-    QualityError,
-    QualityErrorsByPriority,
-)
+from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui.quality_errors_filters import (
@@ -59,7 +56,7 @@ def quality_result_manager(
 @pytest.fixture()
 def quality_result_manager_with_data(
     quality_result_manager: QualityResultManager,
-    quality_errors: list[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
     qtbot: QtBot,
 ) -> QualityResultManager:
     with qtbot.waitSignal(
@@ -205,10 +202,11 @@ def test_model_set_data_user_processed(
         m_user_processed_callback.assert_not_called()
 
 
+# @pytest.mark.skip("TODO")
 def test_override_quality_layer_style_changes_annotation_style(
     qtbot: QtBot,
     mock_api_client: QualityResultClient,
-    single_quality_error: list[QualityErrorsByPriority],
+    single_quality_error: List[QualityError],
 ):
     class MockStyle(QualityLayerStyleConfig):
         def create_error_symbol(self, quality_error: QualityError) -> ErrorSymbol:

@@ -25,7 +25,7 @@ from typing import List, Optional
 from qgis.core import QgsCoordinateReferenceSystem
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
-from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResponse
 
 
@@ -33,13 +33,13 @@ from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResp
 class MockQualityResultClient(QualityResultClient):
     json_file_path: Path
 
-    def get_results(self) -> Optional[List[QualityErrorsByPriority]]:
+    def get_results(self) -> Optional[List[QualityError]]:
         """
         Retrieve latest quality errors from API
 
         Returns:
             None: if no results available
-            List[QualityErrorsByPriority]: if results available
+            List[QualityError]: if results available
 
         Raises:
             QualityResultClientError: if request fails
@@ -47,7 +47,7 @@ class MockQualityResultClient(QualityResultClient):
         """
         return QualityErrorResponse(
             json.loads(self.json_file_path.read_text())
-        ).errors_by_priority
+        ).quality_results
 
     def get_crs(self) -> QgsCoordinateReferenceSystem:
         return QgsCoordinateReferenceSystem("EPSG:3067")

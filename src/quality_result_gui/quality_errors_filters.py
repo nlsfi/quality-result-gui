@@ -37,8 +37,6 @@ from quality_result_gui.quality_errors_tree_model import QualityErrorTreeItemTyp
 if TYPE_CHECKING:
     from qgis.PyQt.QtWidgets import QWidget
 
-    from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
-
 FEATURE_TYPE_FILTER_MENU_LABEL = tr("Feature type")
 ERROR_TYPE_FILTER_MENU_LABEL = tr("Error type")
 ATTRIBUTE_NAME_FILTER_MENU_LABEL = tr("Attribute Filter")
@@ -246,15 +244,13 @@ class AbstractQualityErrorFilter(QObject):
         """
         raise NotImplementedError()
 
-    def update_filter_from_errors(
-        self, quality_errors: List["QualityErrorsByPriority"]
-    ) -> None:
+    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
         """Updates filters dynamically from a given list of quality errors.
 
         Should be implemented in inherited classes if feature is wanted.
 
         Args:
-            quality_errors (List[&quot;QualityErrorsByPriority&quot;]): List of errors
+            quality_errors (List[&quot;QualityError&quot;]): List of errors
               to use to update filters
 
         Raises:
@@ -377,18 +373,15 @@ class FeatureTypeFilter(AbstractQualityErrorFilter):
 
         return True
 
-    def update_filter_from_errors(
-        self, quality_errors: List["QualityErrorsByPriority"]
-    ) -> None:
+    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
         """
 
         Args:
-            quality_errors (List[&quot;QualityErrorsByPriority&quot;]): _description_
+            quality_errors (List[&quot;QualityError&quot;]): _description_
         """
         feature_types_in_errors = {  # Dict[filter_value, filter_label]
-            errors.feature_type: self._get_label_value(errors.feature_type)
-            for errors_by_feature_type in quality_errors
-            for errors in errors_by_feature_type.errors
+            error.feature_type: self._get_label_value(error.feature_type)
+            for error in quality_errors
         }
 
         self._refresh_filters(feature_types_in_errors)
@@ -422,17 +415,12 @@ class AttributeFilter(AbstractQualityErrorFilter):
 
         return True
 
-    def update_filter_from_errors(
-        self, quality_errors: List["QualityErrorsByPriority"]
-    ) -> None:
+    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
         attribute_names_in_errors = {  # Dict[filter_value, filter_label]
             error.attribute_name: self._get_label_value(
                 error.feature_type, error.attribute_name
             )
-            for errors_by_priority in quality_errors
-            for errors_by_feature_type in errors_by_priority.errors
-            for errors_by_feature in errors_by_feature_type.errors
-            for error in errors_by_feature.errors
+            for error in quality_errors
             if error.attribute_name
         }
 

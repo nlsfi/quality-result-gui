@@ -29,15 +29,12 @@ from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
-    QualityErrorsByFeature,
-    QualityErrorsByFeatureType,
-    QualityErrorsByPriority,
     QualityErrorType,
 )
 
 
 class MockQualityResultClient(QualityResultClient):
-    def get_results(self) -> Optional[List[QualityErrorsByPriority]]:
+    def get_results(self) -> Optional[List[QualityError]]:
         return []
 
     def get_crs(self) -> QgsCoordinateReferenceSystem:
@@ -67,129 +64,72 @@ def bypass_log_if_fails(mocker: MockerFixture) -> None:
 
 
 @pytest.fixture()
-def quality_errors() -> List[QualityErrorsByPriority]:
+def quality_errors() -> List[QualityError]:
     return [
-        QualityErrorsByPriority(
+        QualityError(
             QualityErrorPriority.FATAL,
-            [
-                QualityErrorsByFeatureType(
-                    "building_part_area",
-                    [
-                        QualityErrorsByFeature(
-                            "building_part_area",
-                            "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                    1,
-                                    "1",
-                                    QualityErrorType.GEOMETRY,
-                                    None,
-                                    "Invalid geometry",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt("POINT ((5 5))"),
-                                    False,
-                                ),
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                    2,
-                                    "2",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "vtj_prt",
-                                    "Invalid value",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"
-                                    ),
-                                    True,
-                                ),
-                            ],
-                        ),
-                        QualityErrorsByFeature(
-                            "building_part_area",
-                            "604eb499-cff7-4d28-bb31-154106480eca",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "604eb499-cff7-4d28-bb31-154106480eca",
-                                    3,
-                                    "3",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "height_absolute",
-                                    "Invalidvalue",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((10 10, 10 15, 15 15, 15 10, 10 10))"
-                                    ),
-                                    False,
-                                )
-                            ],
-                        ),
-                    ],
-                ),
-                QualityErrorsByFeatureType(
-                    "chimney_point",
-                    [
-                        QualityErrorsByFeature(
-                            "chimney_point",
-                            "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "chimney_point",
-                                    "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
-                                    4,
-                                    "4",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "height_relative",
-                                    "Invalid value",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"
-                                    ),
-                                    False,
-                                )
-                            ],
-                        ),
-                    ],
-                ),
-            ],
+            "building_part_area",
+            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+            1,
+            "1",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POINT ((5 5))"),
+            False,
         ),
-        QualityErrorsByPriority(
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "building_part_area",
+            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+            2,
+            "2",
+            QualityErrorType.ATTRIBUTE,
+            "vtj_prt",
+            "Invalid value",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"),
+            True,
+        ),
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "building_part_area",
+            "604eb499-cff7-4d28-bb31-154106480eca",
+            3,
+            "3",
+            QualityErrorType.ATTRIBUTE,
+            "height_absolute",
+            "Invalidvalue",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((10 10, 10 15, 15 15, 15 10, 10 10))"),
+            False,
+        ),
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "chimney_point",
+            "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
+            4,
+            "4",
+            QualityErrorType.ATTRIBUTE,
+            "height_relative",
+            "Invalid value",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"),
+            False,
+        ),
+        QualityError(
             QualityErrorPriority.WARNING,
-            [
-                QualityErrorsByFeatureType(
-                    "building_part_area",
-                    [
-                        QualityErrorsByFeature(
-                            "building_part_area",
-                            "2b89a0b0-33f8-4241-b169-70b4a8c0f941",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.WARNING,
-                                    "building_part_area",
-                                    "2b89a0b0-33f8-4241-b169-70b4a8c0f941",
-                                    102,
-                                    "102",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "floors_above_ground",
-                                    "Missing value",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((30 30, 30 35, 35 35, 35 30, 30 30))"
-                                    ),
-                                    False,
-                                )
-                            ],
-                        ),
-                    ],
-                ),
-            ],
+            "building_part_area",
+            "2b89a0b0-33f8-4241-b169-70b4a8c0f941",
+            102,
+            "102",
+            QualityErrorType.ATTRIBUTE,
+            "floors_above_ground",
+            "Missing value",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((30 30, 30 35, 35 35, 35 30, 30 30))"),
+            False,
         ),
     ]
 
@@ -212,37 +152,21 @@ def error_feature_attributes() -> list[str]:
 
 
 @pytest.fixture()
-def single_quality_error() -> list[QualityErrorsByPriority]:
+def single_quality_error() -> List[QualityError]:
     return [
-        QualityErrorsByPriority(
+        QualityError(
             QualityErrorPriority.FATAL,
-            [
-                QualityErrorsByFeatureType(
-                    "building_part_area",
-                    [
-                        QualityErrorsByFeature(
-                            "building_part_area",
-                            "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                    1,
-                                    "1",
-                                    QualityErrorType.GEOMETRY,
-                                    None,
-                                    "Invalid geometry",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt("POINT ((5 5))"),
-                                    False,
-                                )
-                            ],
-                        ),
-                    ],
-                ),
-            ],
-        )
+            "building_part_area",
+            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+            1,
+            "1",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POINT ((5 5))"),
+            False,
+        ),
     ]
 
 

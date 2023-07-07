@@ -22,18 +22,18 @@ from typing import List, Optional
 
 from qgis.core import QgsCoordinateReferenceSystem
 
-from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+from quality_result_gui.api.types.quality_error import QualityError
 
 
 class QualityResultClient(ABC):
     @abstractmethod
-    def get_results(self) -> Optional[List[QualityErrorsByPriority]]:
+    def get_results(self) -> Optional[List[QualityError]]:
         """
         Retrieve latest quality errors from API
 
         Returns:
             None: if no results available
-            List[QualityErrorsByPriority]: if results available
+            List[QualityError]: if results available
 
         Raises:
             QualityResultClientError: if request fails

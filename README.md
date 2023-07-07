@@ -22,20 +22,20 @@ import json
 from qgis.utils import iface
 
 from quality_result_gui.api.quality_api_client import QualityResultClient
-from quality_result_gui.api.types.quality_error import QualityErrorsByPriority
+from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResponse
 from quality_result_gui.quality_error_manager import QualityResultManager
 
 
 class ExampleQualityResultClient(QualityResultClient):
 
-    def get_results(self) -> Optional[List[QualityErrorsByPriority]]:
+    def get_results(self) -> Optional[List[QualityError]]:
         """
         Retrieve latest quality errors from API
 
         Returns:
             None: if no results available
-            List[QualityErrorsByPriority]: if results available
+            List[QualityError]: if results available
 
         Raises:
             QualityResultClientError: if request fails
@@ -44,7 +44,7 @@ class ExampleQualityResultClient(QualityResultClient):
         full_path_to_json = "some-path/example_quality_errors.json"
         example_response = json.loads(Path(full_path_to_json).read_text())
 
-        return QualityErrorResponse(example_response).errors_by_priority
+        return QualityErrorResponse(example_response).quality_results
 
     def get_crs(self) -> QgsCoordinateReferenceSystem:
         return QgsCoordinateReferenceSystem("EPSG:3067")
