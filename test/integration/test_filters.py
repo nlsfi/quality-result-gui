@@ -30,9 +30,6 @@ from quality_result_gui.api.types.quality_error import (
     ERROR_TYPE_LABEL,
     QualityError,
     QualityErrorPriority,
-    QualityErrorsByFeature,
-    QualityErrorsByFeatureType,
-    QualityErrorsByPriority,
     QualityErrorType,
 )
 from quality_result_gui.quality_error_manager import QualityResultManager
@@ -84,102 +81,97 @@ def attribute_menu(
 
 
 @pytest.fixture()
-def quality_errors_with_fence() -> list[QualityErrorsByPriority]:
+def quality_errors_with_fence() -> List[QualityError]:
     return [
-        QualityErrorsByPriority(
+        QualityError(
             QualityErrorPriority.FATAL,
-            [
-                QualityErrorsByFeatureType("building_part_area", []),
-                QualityErrorsByFeatureType("chimney_point", []),
-                QualityErrorsByFeatureType("fence", []),
-            ],
-        )
+            "building_part_area",
+            "aa-bbb-cc-1",
+            5,
+            "5",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POINT ((5 5))"),
+            False,
+        ),
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "chimney_point",
+            "aa-bbb-cc-2",
+            6,
+            "6",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"),
+            False,
+        ),
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "fence",
+            "aa-bbb-cc-3",
+            7,
+            "7",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POINT ((5 5))"),
+            False,
+        ),
     ]
 
 
 @pytest.fixture()
-def quality_errors_without_chimney_point() -> list[QualityErrorsByPriority]:
+def quality_errors_without_chimney_point() -> List[QualityError]:
     return [
-        QualityErrorsByPriority(
+        QualityError(
             QualityErrorPriority.FATAL,
-            [
-                QualityErrorsByFeatureType(
-                    "building_part_area",
-                    [
-                        QualityErrorsByFeature(
-                            "building_part_area",
-                            "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                    1,
-                                    "1",
-                                    QualityErrorType.GEOMETRY,
-                                    None,
-                                    "Invalid geometry",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt("POINT ((5 5))"),
-                                    False,
-                                ),
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "building_part_area",
-                                    "123c1e9b-fade-410d-9b7e-f7ad32317883",
-                                    2,
-                                    "2",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "vtj_prt",
-                                    "Invalid value",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"
-                                    ),
-                                    True,
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ],
-        )
+            "building_part_area",
+            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+            1,
+            "1",
+            QualityErrorType.GEOMETRY,
+            None,
+            "Invalid geometry",
+            "Extra info",
+            QgsGeometry.fromWkt("POINT ((5 5))"),
+            False,
+        ),
+        QualityError(
+            QualityErrorPriority.FATAL,
+            "building_part_area",
+            "123c1e9b-fade-410d-9b7e-f7ad32317883",
+            2,
+            "2",
+            QualityErrorType.ATTRIBUTE,
+            "vtj_prt",
+            "Invalid value",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))"),
+            True,
+        ),
     ]
 
 
 @pytest.fixture()
-def quality_errors_without_building_part_area() -> list[QualityErrorsByPriority]:
+def quality_errors_without_building_part_area() -> List[QualityError]:
     return [
-        QualityErrorsByPriority(
+        QualityError(
             QualityErrorPriority.FATAL,
-            [
-                QualityErrorsByFeatureType(
-                    "chimney_point",
-                    [
-                        QualityErrorsByFeature(
-                            "chimney_point",
-                            "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
-                            [
-                                QualityError(
-                                    QualityErrorPriority.FATAL,
-                                    "chimney_point",
-                                    "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
-                                    4,
-                                    "4",
-                                    QualityErrorType.ATTRIBUTE,
-                                    "height_relative",
-                                    "Invalid value",
-                                    "Extra info",
-                                    QgsGeometry.fromWkt(
-                                        "POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"
-                                    ),
-                                    False,
-                                )
-                            ],
-                        ),
-                    ],
-                ),
-            ],
+            "chimney_point",
+            "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
+            4,
+            "4",
+            QualityErrorType.ATTRIBUTE,
+            "height_relative",
+            "Invalid value",
+            "Extra info",
+            QgsGeometry.fromWkt("POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))"),
+            False,
         )
     ]
 
@@ -467,7 +459,7 @@ def test_is_any_filter_active_returns_true_all_false_based_on_filter(
 )
 def test_filters_are_retained_when_data_changes(
     qtbot: QtBot,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
     error_feature_types: list[str],
     error_feature_attributes: list[str],
     quality_result_manager_with_data: QualityResultManager,

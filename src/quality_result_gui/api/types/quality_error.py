@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from qgis.core import QgsGeometry
 from qgis_plugin_tools.tools.i18n import tr
@@ -69,33 +69,3 @@ class QualityError:
 
     def __getitem__(self, item: str) -> Any:
         return getattr(self, item)
-
-
-@dataclass
-class QualityErrorsByFeature:
-    feature_type: str
-    feature_id: str
-    errors: List[QualityError]
-
-
-@dataclass
-class QualityErrorsByFeatureType:
-    feature_type: str
-    errors: List[QualityErrorsByFeature]
-
-    def get_all_errors(self) -> List[QualityError]:
-        errors = [errors_by_feature.errors for errors_by_feature in self.errors]
-        return [item for sub_list in errors for item in sub_list]
-
-
-@dataclass
-class QualityErrorsByPriority:
-    priority: QualityErrorPriority
-    errors: List[QualityErrorsByFeatureType]
-
-    def get_all_errors(self) -> List[QualityError]:
-        errors = [
-            errors_by_feature_type.get_all_errors()
-            for errors_by_feature_type in self.errors
-        ]
-        return [item for sub_list in errors for item in sub_list]

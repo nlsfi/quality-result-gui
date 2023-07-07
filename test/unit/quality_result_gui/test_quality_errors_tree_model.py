@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
 
 from quality_result_gui.api.types.quality_error import (
     ERROR_TYPE_LABEL,
-    QualityErrorsByPriority,
+    QualityError,
     QualityErrorType,
 )
 from quality_result_gui.quality_errors_filters import (
@@ -44,12 +44,12 @@ from quality_result_gui.quality_errors_tree_model import (
 )
 
 
-def _feature_type_filters(quality_errors: List[QualityErrorsByPriority]) -> Set[str]:
+def _feature_type_filters(quality_errors: List[QualityError]) -> Set[str]:
     return get_error_feature_types(quality_errors)
 
 
 def _feature_attribute_filters(
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> Set[str]:
     return get_error_feature_attributes(quality_errors)
 
@@ -126,7 +126,7 @@ def _priority_1_feature_type_1_feature_1_error_2_description_index(
 
 @pytest.fixture()
 def feature_type_filter(
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> FeatureTypeFilter:
     feature_type_filter = FeatureTypeFilter()
     for feature_type in get_error_feature_types(quality_errors):
@@ -141,7 +141,7 @@ def base_model() -> QualityErrorsTreeBaseModel:
 
 @pytest.fixture()
 def model(
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
     base_model: QualityErrorsTreeBaseModel,
 ) -> FilterByExtentProxyModel:
 
@@ -174,7 +174,7 @@ class ModelAndFilters(NamedTuple):
 @pytest.fixture()
 def filter_proxy_model_and_filters(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> ModelAndFilters:
 
     filter_model = FilterProxyModel()
@@ -206,7 +206,7 @@ def filter_proxy_model_and_filters(
 def test_base_model(
     base_model: QualityErrorsTreeBaseModel,
     qtmodeltester: ModelTester,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> None:
     base_model.refresh_model(quality_errors)
 
@@ -572,7 +572,7 @@ def test_model_checkable_flags(model: FilterByExtentProxyModel):
 )
 def test_model_data_count_changes_when_filter_is_applied(
     filter_proxy_model_and_filters: ModelAndFilters,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
     accepted_error_types: Optional[Set[QualityErrorType]],
     accepted_feature_types: Optional[Set[str]],
     accepted_attribute_names: Optional[Set[str]],
@@ -645,7 +645,7 @@ def test_model_data_count_changes_when_filter_is_applied(
 
 def test_refresh_model_updates_data_partially_when_data_is_refreshed(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ):
     base_model.refresh_model(quality_errors)
 
@@ -669,7 +669,7 @@ def test_refresh_model_updates_data_partially_when_data_is_refreshed(
 
 def test_refresh_model_does_nothing_if_data_does_not_change(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ):
     base_model.refresh_model(quality_errors)
 

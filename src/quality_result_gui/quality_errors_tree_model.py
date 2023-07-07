@@ -57,7 +57,6 @@ from quality_result_gui.api.types.quality_error import (
     ERROR_TYPE_LABEL,
     QualityError,
     QualityErrorPriority,
-    QualityErrorsByPriority,
 )
 from quality_result_gui.quality_error_manager_settings import (
     QualityResultManagerSettings,
@@ -85,24 +84,15 @@ COLUMN_HEADERS = {
 
 
 def get_error_feature_types(
-    errors_by_priority: List[QualityErrorsByPriority],
+    quality_results: List[QualityError],
 ) -> Set[str]:
-    return {
-        errors.feature_type
-        for errors_by_feature_type in errors_by_priority
-        for errors in errors_by_feature_type.errors
-    }
+    return {errors.feature_type for errors in quality_results}
 
 
 def get_error_feature_attributes(
-    quality_errors: List[QualityErrorsByPriority],
+    quality_errors: List[QualityError],
 ) -> Set[str]:
-    return {
-        error.attribute_name
-        for errors_by_priority in quality_errors
-        for error in errors_by_priority.get_all_errors()
-        if error.attribute_name
-    }
+    return {error.attribute_name for error in quality_errors if error.attribute_name}
 
 
 def _get_quality_errors_indexes(
@@ -303,10 +293,10 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             QualityErrorTreeItemType.HEADER,
         )
         # Show error priority rows always
-        for priority in list(QualityErrorPriority):
+        for priority in [1, 2, 3]:
             priority_item = QualityErrorTreeItem(
-                [priority, None],
-                str(priority.value),
+                [QualityErrorPriority(priority), None],
+                str(QualityErrorPriority(priority).value),
                 QualityErrorTreeItemType.PRIORITY,
                 self._root_item,
             )
@@ -450,11 +440,9 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return super().flags(index)
 
-    def refresh_model(self, quality_errors: List[QualityErrorsByPriority]) -> None:
+    def refresh_model(self, quality_errors: List[QualityError]) -> None:
         updated_quality_error_ids = {
-            error.unique_identifier
-            for errors_by_priority in quality_errors
-            for error in errors_by_priority.get_all_errors()
+            error.unique_identifier for error in quality_errors
         }
 
         current_quality_error_ids = set()
@@ -476,8 +464,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         errors_to_be_added = (
             error
-            for errors_by_priority in quality_errors
-            for error in errors_by_priority.get_all_errors()
+            for error in quality_errors
             if error.unique_identifier in new_error_ids
         )
 
