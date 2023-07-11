@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.0] - 2023-07-11
 
 - Refactor!: replace hierachical representation of quality errors with a flat quality error list
 
@@ -76,3 +76,4 @@
 [1.1.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.4
 [1.1.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.5
 [1.1.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v1.1.6
+[2.0.0]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.0
