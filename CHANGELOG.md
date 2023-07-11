@@ -4,6 +4,8 @@
 
 ## [2.0.1] - 2023-07-11
 
+- Feat: Add Finnish translations
+
 ## [2.0.0] - 2023-07-11
 
 - Refactor!: replace hierachical representation of quality errors with a flat quality error list
