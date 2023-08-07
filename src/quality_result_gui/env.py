@@ -18,9 +18,21 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import os
+from pathlib import Path
 
 IS_DEVELOPMENT_MODE = os.environ.get("IS_DEVELOPMENT_MODE", "0").lower() in (
     "1",
     "true",
     "yes",
+)
+
+TEST_JSON_FILE_PATH = (
+    str(
+        (
+            Path(__file__).parent
+            / "dev_tools/example_quality_errors/quality_errors.json"
+        ).resolve()
+    )
+    if IS_DEVELOPMENT_MODE
+    else None
 )
