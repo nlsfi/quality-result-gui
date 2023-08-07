@@ -34,10 +34,10 @@ from qgis_plugin_tools.tools.resources import resources_path
 
 import quality_result_gui
 import quality_result_gui_plugin
+from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
 from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui_plugin.dev_tools.dev_tools_dialog import DevToolsDialog
 from quality_result_gui_plugin.dev_tools.mock_api_client import MockQualityResultClient
-from quality_result_gui_plugin.env import IS_DEVELOPMENT_MODE
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,13 +86,7 @@ class QualityResultGuiPlugin:
 
         # Add shortcut action to open qulity results form example json when in dev mode
         if IS_DEVELOPMENT_MODE and self.dev_tool_action is None:
-
-            self._test_json_file_path = str(
-                (
-                    Path(__file__).parent
-                    / "dev_tools/example_quality_errors/quality_errors.json"
-                ).resolve()
-            )
+            self._test_json_file_path = TEST_JSON_FILE_PATH or ""
             self.dev_tool_action = QAction(
                 QIcon(resources_path("icons/quality_result_gui.svg")),
                 "Test quality result GUI",
@@ -122,7 +116,6 @@ class QualityResultGuiPlugin:
             self.quality_error_manager = None
 
     def _on_open_dev_tools_called(self) -> None:
-
         dialog = DevToolsDialog(iface.mainWindow())
         if dialog.exec_():
             self._test_json_file_path = (

@@ -17,16 +17,23 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+import json
 import logging
-from typing import Iterable, List, Optional
+from pathlib import Path
+from typing import Iterable, List, Optional, cast
 
 from qgis.core import QgsAnnotationLayer, QgsCoordinateReferenceSystem, QgsProject
+from qgis.gui import QgisInterface
+from qgis.utils import iface as utils_iface
 
 from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui.configuration import QualityLayerStyleConfig
+from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
+
+iface = cast(QgisInterface, utils_iface)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +68,17 @@ class QualityErrorVisualizer:
             self._quality_error_layer.add_or_replace_annotation(
                 quality_error, use_highlighted_style=False
             )
+
+        # In dev mode define map extent when all errors are added to layer
+        if IS_DEVELOPMENT_MODE and TEST_JSON_FILE_PATH:
+            layer = self._quality_error_layer.find_layer_from_project()
+            amount_of_added_errors = len(layer.items().keys()) if layer else 0
+            if (
+                len(json.loads(Path(TEST_JSON_FILE_PATH).read_text()))
+                == amount_of_added_errors
+                and layer
+            ):
+                iface.mapCanvas().setExtent(layer.extent())
 
     def remove_errors(self, quality_errors: Iterable[QualityError]) -> None:
         errors = list(quality_errors)
