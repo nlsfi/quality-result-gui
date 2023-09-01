@@ -5,7 +5,7 @@ qgisMaximumVersion=3.99
 description=QGIS plugin for visualizing quality check results defined in JSON format
 version=0.0.0.development
 author=National Land Survey of Finland
-email=eero.hietanen@maanmittauslaitos.fi
+email=os@nls.fi
 
 about=QGIS plugin for visualizing quality check results defined in JSON format.
 

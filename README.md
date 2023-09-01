@@ -70,8 +70,6 @@ This tool is part of the topographic data production system developed in Nationa
 - [Abstract for FOSS4G](https://talks.osgeo.org/foss4g-2022/talk/TDDGJ9/)
 - [General news article about the project](https://www.maanmittauslaitos.fi/en/topical_issues/topographic-data-production-system-upgraded-using-open-source-solutions)
 
-Contact details: eero.hietanen@maanmittauslaitos.fi
-
 Copyright (C) 2022 [National Land Survey of Finland].
 
 [National Land Survey of Finland]: https://www.maanmittauslaitos.fi/en
