@@ -34,9 +34,9 @@ from quality_result_gui.api.types.quality_error import (
 )
 from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui.quality_errors_filters import (
-    ATTRIBUTE_NAME_FILTER_MENU_LABEL,
-    ERROR_TYPE_FILTER_MENU_LABEL,
-    FEATURE_TYPE_FILTER_MENU_LABEL,
+    AttributeFilter,
+    ErrorTypeFilter,
+    FeatureTypeFilter,
 )
 from quality_result_gui.ui.quality_errors_tree_filter_menu import (
     QualityErrorsTreeFilterMenu,
@@ -55,7 +55,9 @@ def error_type_menu(
     get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
     filter_menu: QualityErrorsTreeFilterMenu,
 ) -> QMenu:
-    menu = get_submenu_from_menu(filter_menu, ERROR_TYPE_FILTER_MENU_LABEL)
+    menu = get_submenu_from_menu(
+        filter_menu, ErrorTypeFilter.get_error_type_filter_menu_label()
+    )
     assert menu is not None
     return menu
 
@@ -65,7 +67,10 @@ def feature_type_menu(
     get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
     filter_menu: QualityErrorsTreeFilterMenu,
 ) -> QMenu:
-    menu = get_submenu_from_menu(filter_menu, FEATURE_TYPE_FILTER_MENU_LABEL)
+    menu = get_submenu_from_menu(
+        filter_menu,
+        FeatureTypeFilter.get_feature_type_filter_menu_label(),
+    )
     assert menu is not None
     return menu
 
@@ -75,7 +80,10 @@ def attribute_menu(
     get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
     filter_menu: QualityErrorsTreeFilterMenu,
 ) -> QMenu:
-    menu = get_submenu_from_menu(filter_menu, ATTRIBUTE_NAME_FILTER_MENU_LABEL)
+    menu = get_submenu_from_menu(
+        filter_menu,
+        AttributeFilter.get_attribute_name_filter_menu_label(),
+    )
     assert menu is not None
     return menu
 
@@ -199,7 +207,7 @@ def test_reset_filters_action_restores_check_boxes(
     filter_menu: QualityErrorsTreeFilterMenu,
 ):
     filter_by_attribute_error_action = get_action_from_menu(
-        error_type_menu, ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]
+        error_type_menu, ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]()
     )
     assert filter_by_attribute_error_action is not None
     assert filter_by_attribute_error_action.isChecked() is True
@@ -217,7 +225,7 @@ def test_reset_filters_action_restores_check_boxes(
     # Do selection in error type filter menu (in this test checkbox is toggled to false):
     trigger_action(
         error_type_menu,
-        ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE],
+        ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
     )
     trigger_action(
         feature_type_menu,
@@ -250,13 +258,13 @@ def test_reset_filters_action_restores_check_boxes(
     ),
     [
         (
-            ERROR_TYPE_FILTER_MENU_LABEL,
-            [ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]],
+            ErrorTypeFilter.get_error_type_filter_menu_label(),
+            [ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]()],
             ["building_part_area", "chimney_point"],
             [
-                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY],
-                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY],
-                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY],
+                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY](),
+                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY](),
+                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY](),
             ],
             [
                 "floors_above_ground",
@@ -266,15 +274,15 @@ def test_reset_filters_action_restores_check_boxes(
             ],
         ),
         (
-            ERROR_TYPE_FILTER_MENU_LABEL,
+            ErrorTypeFilter.get_error_type_filter_menu_label(),
             [
-                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE],
-                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY],
+                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
+                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY](),
             ],
             ["building_part_area", "chimney_point"],
             [
-                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY],
-                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY],
+                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY](),
+                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY](),
             ],
             [
                 "floors_above_ground",
@@ -284,14 +292,14 @@ def test_reset_filters_action_restores_check_boxes(
             ],
         ),
         (
-            FEATURE_TYPE_FILTER_MENU_LABEL,
+            FeatureTypeFilter.get_feature_type_filter_menu_label(),
             ["chimney_point"],
             ["building_part_area"],
             [
-                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE],
-                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY],
-                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY],
-                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY],
+                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
+                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY](),
+                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY](),
+                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY](),
             ],
             [
                 "floors_above_ground",
@@ -301,14 +309,14 @@ def test_reset_filters_action_restores_check_boxes(
             ],
         ),
         (
-            ATTRIBUTE_NAME_FILTER_MENU_LABEL,
+            AttributeFilter.get_attribute_name_filter_menu_label(),
             ["height_relative"],
             ["building_part_area", "chimney_point"],
             [
-                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE],
-                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY],
-                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY],
-                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY],
+                ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
+                ERROR_TYPE_LABEL[QualityErrorType.CONTINUITY](),
+                ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY](),
+                ERROR_TYPE_LABEL[QualityErrorType.TOPOLOGY](),
             ],
             ["floors_above_ground", "height_absolute", "vtj_prt"],
         ),
@@ -337,7 +345,10 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     expected_error_types: list[int],
 ):
     # Baseline filters for menu
-    assert get_checked_menu_items(error_type_menu) == sorted(ERROR_TYPE_LABEL.values())
+    labels = []
+    for error_type_label in ERROR_TYPE_LABEL.values():
+        labels.append(error_type_label())
+    assert get_checked_menu_items(error_type_menu) == sorted(labels)
     assert get_checked_menu_items(feature_type_menu) == error_feature_types
     assert get_checked_menu_items(attribute_menu) == error_feature_attributes
 
@@ -357,7 +368,10 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     trigger_action(filter_menu, "Reset filters")
 
     # Filters should be back to baseline
-    assert get_checked_menu_items(error_type_menu) == sorted(ERROR_TYPE_LABEL.values())
+    labels = []
+    for error_type_label in ERROR_TYPE_LABEL.values():
+        labels.append(error_type_label())
+    assert get_checked_menu_items(error_type_menu) == sorted(labels)
     assert get_checked_menu_items(feature_type_menu) == error_feature_types
     assert get_checked_menu_items(attribute_menu) == error_feature_attributes
 
@@ -368,9 +382,18 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
         "selected_filter_value",
     ),
     [
-        (ERROR_TYPE_FILTER_MENU_LABEL, ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]),
-        (FEATURE_TYPE_FILTER_MENU_LABEL, "chimney_point"),
-        (ATTRIBUTE_NAME_FILTER_MENU_LABEL, "height_relative"),
+        (
+            ErrorTypeFilter.get_error_type_filter_menu_label(),
+            ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
+        ),
+        (
+            FeatureTypeFilter.get_feature_type_filter_menu_label(),
+            "chimney_point",
+        ),
+        (
+            AttributeFilter.get_attribute_name_filter_menu_label(),
+            "height_relative",
+        ),
     ],
     ids=[
         "Filter out attribute errors",
@@ -542,16 +565,18 @@ def test_updating_filter_refreshes_errors_on_tree_view_and_map(
 
     # Test: unselect all attribute errors from filter menu
     # -> 1 geometry error should remain of quality_rules
-    error_type_menu = get_submenu_from_menu(filter_menu, ERROR_TYPE_FILTER_MENU_LABEL)
+    error_type_menu = get_submenu_from_menu(
+        filter_menu, ErrorTypeFilter.get_error_type_filter_menu_label()
+    )
     trigger_action(
         error_type_menu,
-        ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE],
+        ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE](),
     )
 
     model = quality_result_manager_with_data.dock_widget.error_tree_view.model()
     root_index = model.index(0, 0, QModelIndex())
     # Check priority is correct -> should only have 1 feature_type
-    assert model.data(root_index) == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]
+    assert model.data(root_index) == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]()
     assert model.rowCount(root_index) == 1
 
     # Check feature type is correct -> should have 1 feature id
@@ -562,7 +587,7 @@ def test_updating_filter_refreshes_errors_on_tree_view_and_map(
     assert model.rowCount(root_index.child(0, 0).child(0, 0)) == 1
     assert (
         model.data(root_index.child(0, 0).child(0, 0).child(0, 0))
-        == ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY]
+        == ERROR_TYPE_LABEL[QualityErrorType.GEOMETRY]()
     )
 
     # Test annotation layer contain only 1 feature
@@ -577,13 +602,16 @@ def test_filter_menu_label_aliases(
     get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
 ):
     feature_type_menu = get_submenu_from_menu(
-        filter_menu_with_chimney_point_alias, FEATURE_TYPE_FILTER_MENU_LABEL
+        filter_menu_with_chimney_point_alias,
+        FeatureTypeFilter.get_feature_type_filter_menu_label(),
     )
     attribute_type_menu = get_submenu_from_menu(
-        filter_menu_with_chimney_point_alias, ATTRIBUTE_NAME_FILTER_MENU_LABEL
+        filter_menu_with_chimney_point_alias,
+        AttributeFilter.get_attribute_name_filter_menu_label(),
     )
     feature_type_menu = get_submenu_from_menu(
-        filter_menu_with_chimney_point_alias, FEATURE_TYPE_FILTER_MENU_LABEL
+        filter_menu_with_chimney_point_alias,
+        FeatureTypeFilter.get_feature_type_filter_menu_label(),
     )
 
     assert feature_type_menu is not None

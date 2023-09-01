@@ -31,12 +31,28 @@ class QualityErrorType(Enum):
     TOPOLOGY = 3
     CONTINUITY = 4
 
+    @staticmethod
+    def get_attribute_error_type_label() -> str:
+        return tr("Attribute error")
+
+    @staticmethod
+    def get_geometry_error_type_label() -> str:
+        return tr("Geometry error")
+
+    @staticmethod
+    def get_topology_error_type_label() -> str:
+        return tr("Topology error")
+
+    @staticmethod
+    def get_continuity_error_type_label() -> str:
+        return tr("Continuity error")
+
 
 ERROR_TYPE_LABEL = {
-    QualityErrorType.ATTRIBUTE: tr("Attribute error"),
-    QualityErrorType.GEOMETRY: tr("Geometry error"),
-    QualityErrorType.TOPOLOGY: tr("Topology error"),
-    QualityErrorType.CONTINUITY: tr("Continuity error"),
+    QualityErrorType.ATTRIBUTE: lambda: QualityErrorType.get_attribute_error_type_label(),  # noqa: E501
+    QualityErrorType.GEOMETRY: lambda: QualityErrorType.get_geometry_error_type_label(),
+    QualityErrorType.TOPOLOGY: lambda: QualityErrorType.get_topology_error_type_label(),
+    QualityErrorType.CONTINUITY: lambda: QualityErrorType.get_continuity_error_type_label(),  # noqa: E501
 }
 
 
@@ -45,11 +61,23 @@ class QualityErrorPriority(Enum):
     WARNING = 2
     INFO = 3
 
+    @staticmethod
+    def get_fatal_error_priority_label() -> str:
+        return tr("Fatal")
+
+    @staticmethod
+    def get_warning_error_priority_label() -> str:
+        return tr("Warning")
+
+    @staticmethod
+    def get_info_error_priority_label() -> str:
+        return tr("Info")
+
 
 ERROR_PRIORITY_LABEL = {
-    QualityErrorPriority.FATAL: tr("Fatal"),
-    QualityErrorPriority.WARNING: tr("Warning"),
-    QualityErrorPriority.INFO: tr("Info"),
+    QualityErrorPriority.FATAL: lambda: QualityErrorPriority.get_fatal_error_priority_label(),  # noqa: E501
+    QualityErrorPriority.WARNING: lambda: QualityErrorPriority.get_warning_error_priority_label(),  # noqa: E501
+    QualityErrorPriority.INFO: lambda: QualityErrorPriority.get_info_error_priority_label(),  # noqa: E501
 }
 
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Make Finnish translations visible
+
 ## [2.0.1] - 2023-07-12
 
 - Feat: Add Finnish translations

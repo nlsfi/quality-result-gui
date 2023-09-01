@@ -338,7 +338,7 @@ def test_total_number_of_errors_is_shown_in_header(
 
     assert "4/5" in model.headerData(0, Qt.Horizontal).value()
 
-    error_type_filter._refresh_filters(ERROR_TYPE_LABEL)
+    error_type_filter._refresh_error_type_filters(ERROR_TYPE_LABEL)
     feature_type_filter._remove_filter_item("building_part_area")
 
     assert "1/5" in model.headerData(0, Qt.Horizontal).value()
@@ -698,7 +698,7 @@ def test_no_rows_visible_when_all_user_processed(
     filter_proxy_model_and_filters.feature_type_filter._refresh_filters(
         {"chimney_point": "chimney_point"}
     )
-    filter_proxy_model_and_filters.error_type_filter._refresh_filters(
+    filter_proxy_model_and_filters.error_type_filter._refresh_error_type_filters(
         {QualityErrorType.ATTRIBUTE: ERROR_TYPE_LABEL[QualityErrorType.ATTRIBUTE]}
     )
 

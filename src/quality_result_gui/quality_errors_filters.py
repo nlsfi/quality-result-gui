@@ -21,7 +21,17 @@
 import bisect
 from abc import abstractmethod
 from functools import partial
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    List,
+    Optional,
+    Set,
+    cast,
+)
 
 from qgis.PyQt.QtCore import QObject, QSignalBlocker, pyqtSignal
 from qgis.PyQt.QtGui import QMouseEvent
@@ -36,10 +46,6 @@ from quality_result_gui.quality_errors_tree_model import QualityErrorTreeItemTyp
 
 if TYPE_CHECKING:
     from qgis.PyQt.QtWidgets import QWidget
-
-FEATURE_TYPE_FILTER_MENU_LABEL = tr("Feature type")
-ERROR_TYPE_FILTER_MENU_LABEL = tr("Error type")
-ATTRIBUTE_NAME_FILTER_MENU_LABEL = tr("Attribute Filter")
 
 
 class FilterMenu(QMenu):
@@ -297,6 +303,30 @@ class AbstractQualityErrorFilter(QObject):
         for filter_value in values_to_be_added:
             self._add_filter_item(filter_value, new_filters[filter_value])
 
+    def _refresh_error_type_filters(
+        self, new_filters: dict[Any, Callable[[], str]]
+    ) -> None:
+        """Adds filters not yet present and removes filters not present anymore.
+
+        Args:
+            new_filters (dict[Any, Callable[[], str]]): Filters that should
+              be available after the refresh. Dict keys are the filter values
+              and dict values are labels for the filters.
+        """
+
+        new_values = set(new_filters.keys())
+        current_values = set(self._filter_value_action_map.keys())
+
+        values_to_be_added = new_values - current_values
+        values_to_be_removed = current_values - new_values
+
+        for filter_value in values_to_be_removed:
+            self._remove_filter_item(filter_value)
+
+        for filter_value in values_to_be_added:
+            filter_label = new_filters[filter_value]()
+            self._add_filter_item(filter_value, filter_label)
+
     def _add_filter_item(self, filter_value: Any, filter_label: str) -> None:
         """Adds a filter item to the filter
 
@@ -339,11 +369,15 @@ class ErrorTypeFilter(AbstractQualityErrorFilter):
     _accepted_values: Set[QualityErrorTreeItemType]
 
     def __init__(self) -> None:
-        super().__init__(ERROR_TYPE_FILTER_MENU_LABEL)
+        super().__init__(self.get_error_type_filter_menu_label())
         self.menu.set_select_all_section_enabled(True)
         self.menu.set_sorted(True)
 
-        self._refresh_filters(ERROR_TYPE_LABEL)
+        self._refresh_error_type_filters(ERROR_TYPE_LABEL)
+
+    @staticmethod
+    def get_error_type_filter_menu_label() -> str:
+        return tr("Error type")
 
     def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
         if item_type == QualityErrorTreeItemType.ERROR:
@@ -363,9 +397,13 @@ class FeatureTypeFilter(AbstractQualityErrorFilter):
     _accepted_values: Set[str]
 
     def __init__(self) -> None:
-        super().__init__(FEATURE_TYPE_FILTER_MENU_LABEL)
+        super().__init__(self.get_feature_type_filter_menu_label())
         self.menu.set_select_all_section_enabled(True)
         self.menu.set_sorted(True)
+
+    @staticmethod
+    def get_feature_type_filter_menu_label() -> str:
+        return tr("Feature type")
 
     def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
         if item_type == QualityErrorTreeItemType.FEATURE_TYPE:
@@ -403,9 +441,13 @@ class AttributeFilter(AbstractQualityErrorFilter):
     _accepted_values: Set[str]
 
     def __init__(self) -> None:
-        super().__init__(ATTRIBUTE_NAME_FILTER_MENU_LABEL)
+        super().__init__(self.get_attribute_name_filter_menu_label())
         self.menu.set_select_all_section_enabled(True)
         self.menu.set_sorted(True)
+
+    @staticmethod
+    def get_attribute_name_filter_menu_label() -> str:
+        return tr("Attribute Filter")
 
     def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
         if item_type == QualityErrorTreeItemType.ERROR:
