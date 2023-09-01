@@ -34,7 +34,7 @@ from quality_result_gui.quality_error_visualizer import QualityErrorVisualizer
 # index of fatal errors in quality error tree model
 def _count_num_fatal_rows(model: QAbstractItemModel) -> int:
     first_index = model.index(0, 0, QModelIndex())
-    if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]:
+    if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]():
         return _count_children_rows(model, model.index(0, 0, QModelIndex()))
     else:
         return 0
@@ -43,9 +43,9 @@ def _count_num_fatal_rows(model: QAbstractItemModel) -> int:
 # index of warnings in quality error tree model
 def _count_num_warning_rows(model: QAbstractItemModel) -> int:
     first_index = model.index(0, 0, QModelIndex())
-    if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]:
+    if first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.FATAL]():
         return _count_children_rows(model, model.index(1, 0, QModelIndex()))
-    elif first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.WARNING]:
+    elif first_index.data() == ERROR_PRIORITY_LABEL[QualityErrorPriority.WARNING]():
         return _count_children_rows(model, model.index(0, 0, QModelIndex()))
     else:
         return 0

@@ -157,9 +157,10 @@ class QualityResultManager(QObject):
         self.visualizer.remove_quality_error_layer()
 
     def _update_info_label(self, status: CheckStatus) -> None:
-        status_text = CHECK_STATUS_LABELS.get(
-            status, tr("Status of fetching quality result unknown")
-        )
+        try:
+            status_text = CHECK_STATUS_LABELS[status]()
+        except ValueError:
+            status_text = tr("Status of fetching quality result unknown")
         self.dock_widget.info_label.setText(status_text)
 
     def show_dock_widget(self) -> None:

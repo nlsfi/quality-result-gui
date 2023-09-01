@@ -44,12 +44,28 @@ class CheckStatus(Enum):
     RESULT_UPDATED = auto()
     RESULT_FAILED = auto()
 
+    @staticmethod
+    def get_result_updated_check_status_label() -> str:
+        return tr("Quality results are up to date")
+
+    @staticmethod
+    def get_result_ongoing_check_status_label() -> str:
+        return tr("Quality check is in progress")
+
+    @staticmethod
+    def get_result_failed_check_status_label() -> str:
+        return tr("Quality result update failed")
+
+    @staticmethod
+    def get_checking_check_status_label() -> str:
+        return tr("Checking for quality result updates")
+
 
 CHECK_STATUS_LABELS = {
-    CheckStatus.CHECKING: tr("Checking for quality result updates"),
-    CheckStatus.RESULT_ONGOING: tr("Quality check is in progress"),
-    CheckStatus.RESULT_FAILED: tr("Quality result update failed"),
-    CheckStatus.RESULT_UPDATED: tr("Quality results are up to date"),
+    CheckStatus.CHECKING: lambda: CheckStatus.get_checking_check_status_label(),
+    CheckStatus.RESULT_ONGOING: lambda: CheckStatus.get_result_ongoing_check_status_label(),  # noqa: E501
+    CheckStatus.RESULT_FAILED: lambda: CheckStatus.get_result_failed_check_status_label(),  # noqa: E501
+    CheckStatus.RESULT_UPDATED: lambda: CheckStatus.get_result_updated_check_status_label(),  # noqa: E501
 }
 
 

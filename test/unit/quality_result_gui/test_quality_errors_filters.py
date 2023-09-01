@@ -156,11 +156,11 @@ def test_deselect_action_unchecks_all(
 ):
 
     error_type_filter_menu = ErrorTypeFilter()
-    error_type_filter_menu._refresh_filters(ERROR_TYPE_LABEL)
+    error_type_filter_menu._refresh_error_type_filters(ERROR_TYPE_LABEL)
 
     # As a default, boolean value for all feature types is True
     for error_type in ERROR_TYPE_LABEL.values():
-        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type())
         assert filter_action is not None
         assert filter_action.isChecked() is True
 
@@ -168,7 +168,7 @@ def test_deselect_action_unchecks_all(
     trigger_action(error_type_filter_menu.menu, "Deselect all")
 
     for error_type in ERROR_TYPE_LABEL.values():
-        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type())
         assert filter_action is not None
         assert filter_action.isChecked() is False
 
@@ -178,7 +178,7 @@ def test_select_action_checks_all(
     trigger_action: Callable[[QMenu, str], None],
 ):
     error_type_filter_menu = ErrorTypeFilter()
-    error_type_filter_menu._refresh_filters(ERROR_TYPE_LABEL)
+    error_type_filter_menu._refresh_error_type_filters(ERROR_TYPE_LABEL)
 
     # Setup using Deselect all button -> unchecks all checkboxes
     trigger_action(error_type_filter_menu.menu, "Deselect all")
@@ -187,6 +187,6 @@ def test_select_action_checks_all(
     trigger_action(error_type_filter_menu.menu, "Select all")
 
     for error_type in ERROR_TYPE_LABEL.values():
-        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type)
+        filter_action = get_action_from_menu(error_type_filter_menu.menu, error_type())
         assert filter_action is not None
         assert filter_action.isChecked() is True

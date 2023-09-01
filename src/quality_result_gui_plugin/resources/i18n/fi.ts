@@ -9,32 +9,32 @@
         <translation>Attribuuttivirhe</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="37"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="40"/>
         <source>Geometry error</source>
         <translation>Geometriavirhe</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="38"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="44"/>
         <source>Topology error</source>
         <translation>Topologiavirhe</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="39"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="48"/>
         <source>Continuity error</source>
         <translation>Jatkuvuusvirhe</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="50"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="66"/>
         <source>Fatal</source>
         <translation>Hylkäävä</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="51"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="70"/>
         <source>Warning</source>
         <translation>Vakava huomautus</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/api/types/quality_error.py" line="52"/>
+        <location filename="src/quality_result_gui/api/types/quality_error.py" line="74"/>
         <source>Info</source>
         <translation>Info</translation>
     </message>
@@ -59,52 +59,52 @@
         <translation>Laatuajon tulokset ovat päivitetty</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_filters.py" line="42"/>
+        <location filename="src/quality_result_gui/quality_errors_filters.py" line="406"/>
         <source>Feature type</source>
         <translation>Kohdeluokan mukaan</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_filters.py" line="43"/>
+        <location filename="src/quality_result_gui/quality_errors_filters.py" line="380"/>
         <source>Error type</source>
         <translation>Virhetyypin mukaan</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_filters.py" line="44"/>
+        <location filename="src/quality_result_gui/quality_errors_filters.py" line="450"/>
         <source>Attribute Filter</source>
         <translation>Ominaisuustiedon mukaan</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_filters.py" line="114"/>
+        <location filename="src/quality_result_gui/quality_errors_filters.py" line="118"/>
         <source>Select all</source>
         <translation>Valitse kaikki</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_filters.py" line="117"/>
+        <location filename="src/quality_result_gui/quality_errors_filters.py" line="121"/>
         <source>Deselect all</source>
         <translation>Poista valinnat</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_tree_model.py" line="82"/>
+        <location filename="src/quality_result_gui/quality_errors_tree_model.py" line="81"/>
         <source>Errors</source>
         <translation>Virheet</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_errors_tree_model.py" line="83"/>
+        <location filename="src/quality_result_gui/quality_errors_tree_model.py" line="82"/>
         <source>Error description</source>
         <translation>Virheen kuvaus</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_error_manager.py" line="160"/>
+        <location filename="src/quality_result_gui/quality_error_manager.py" line="161"/>
         <source>Status of fetching quality result unknown</source>
         <translation>Laatuajon status ei tiedossa</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/quality_layer.py" line="95"/>
+        <location filename="src/quality_result_gui/quality_layer.py" line="96"/>
         <source>Quality errors</source>
         <translation>Laatuvirheet</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui/ui/quality_errors_dock.py" line="76"/>
+        <location filename="src/quality_result_gui/ui/quality_errors_dock.py" line="77"/>
         <source>Toggle show errors on map filter</source>
         <translation>Näytä virheet kartalla</translation>
     </message>
@@ -114,12 +114,12 @@
         <translation>Palauta oletussuodatukset</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui_plugin/plugin.py" line="68"/>
+        <location filename="src/quality_result_gui_plugin/plugin.py" line="60"/>
         <source>Quality result GUI</source>
         <translation>Laatudialogi</translation>
     </message>
     <message>
-        <location filename="src/quality_result_gui_plugin/plugin.py" line="76"/>
+        <location filename="src/quality_result_gui_plugin/plugin.py" line="78"/>
         <source>Development tools</source>
         <translation>Kehitystyökalut</translation>
     </message>

@@ -33,9 +33,9 @@ from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.quality_error_manager import QualityResultManager
 from quality_result_gui.quality_errors_filters import (
-    ATTRIBUTE_NAME_FILTER_MENU_LABEL,
-    ERROR_TYPE_FILTER_MENU_LABEL,
-    FEATURE_TYPE_FILTER_MENU_LABEL,
+    AttributeFilter,
+    ErrorTypeFilter,
+    FeatureTypeFilter,
 )
 from quality_result_gui.style.default_style import DefaultErrorSymbol
 from quality_result_gui.style.quality_layer_error_symbol import ErrorSymbol
@@ -85,9 +85,9 @@ def test_quality_result_manager_inits_correctly(
     assert len(manager.dock_widget.filter_menu.actions()) == 5
 
     for action_name in [
-        FEATURE_TYPE_FILTER_MENU_LABEL,
-        ERROR_TYPE_FILTER_MENU_LABEL,
-        ATTRIBUTE_NAME_FILTER_MENU_LABEL,
+        FeatureTypeFilter.get_feature_type_filter_menu_label(),
+        ErrorTypeFilter.get_error_type_filter_menu_label(),
+        AttributeFilter.get_attribute_name_filter_menu_label(),
         "Reset filters",
     ]:
         assert is_action_present(manager.dock_widget.filter_menu, action_name)

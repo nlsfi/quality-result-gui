@@ -76,10 +76,18 @@ class ModelColumn(enum.Enum):
     TYPE_OR_ID = 0
     ERROR_DESCRIPTION = 1
 
+    @staticmethod
+    def get_type_or_id_label() -> str:
+        return tr("Errors")
+
+    @staticmethod
+    def get_error_description_label() -> str:
+        return tr("Error description")
+
 
 COLUMN_HEADERS = {
-    ModelColumn.TYPE_OR_ID: tr("Errors"),
-    ModelColumn.ERROR_DESCRIPTION: tr("Error description"),
+    ModelColumn.TYPE_OR_ID: lambda: ModelColumn.get_type_or_id_label(),
+    ModelColumn.ERROR_DESCRIPTION: lambda: ModelColumn.get_error_description_label(),
 }
 
 
@@ -223,7 +231,7 @@ class QualityErrorTreeItem:
 
         if role == Qt.DisplayRole and column == ModelColumn.TYPE_OR_ID:
             if self.item_type == QualityErrorTreeItemType.PRIORITY:
-                column_data = ERROR_PRIORITY_LABEL[QualityErrorPriority(item_data)]
+                column_data = ERROR_PRIORITY_LABEL[QualityErrorPriority(item_data)]()
 
             elif self.item_type == QualityErrorTreeItemType.FEATURE_TYPE:
                 column_data = (
@@ -237,7 +245,7 @@ class QualityErrorTreeItem:
 
             elif self.item_type == QualityErrorTreeItemType.ERROR:
                 quality_error = cast(QualityError, item_data)
-                column_data = ERROR_TYPE_LABEL[quality_error.error_type]
+                column_data = ERROR_TYPE_LABEL[quality_error.error_type]()
             return QVariant(column_data)
 
         if (
@@ -384,10 +392,10 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                 if model_column == ModelColumn.TYPE_OR_ID:
                     total_count = _count_all_rows(self)
                     return QVariant(
-                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f"{COLUMN_HEADERS[model_column]()}"
                         f" ({total_count}/{total_count})"
                     )
-                return COLUMN_HEADERS.get(model_column, QVariant())
+                return COLUMN_HEADERS[model_column]()
             except ValueError:
                 return QVariant()
         return QVariant()
@@ -733,10 +741,10 @@ class FilterProxyModel(AbstractFilterProxyModel):
 
                     filtered_count = _count_all_rows(self)
                     return QVariant(
-                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f"{COLUMN_HEADERS[model_column]()}"
                         f" ({filtered_count}/{total_count})"
                     )
-                return COLUMN_HEADERS.get(model_column, QVariant())
+                return COLUMN_HEADERS[model_column]()
             except ValueError:
                 return QVariant()
         return QVariant()
@@ -797,10 +805,10 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
 
                     filtered_count = _count_all_rows(self)
                     return QVariant(
-                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f"{COLUMN_HEADERS[model_column]()}"
                         f" ({filtered_count}/{total_count})"
                     )
-                return COLUMN_HEADERS.get(model_column, QVariant())
+                return COLUMN_HEADERS[model_column]()
             except ValueError:
                 return QVariant()
         return QVariant()
@@ -845,10 +853,10 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
 
                     filtered_count = _count_all_rows(self)
                     return QVariant(
-                        f"{COLUMN_HEADERS.get(model_column, QVariant())}"
+                        f"{COLUMN_HEADERS[model_column]()}"
                         f" ({filtered_count}/{total_count})"
                     )
-                return COLUMN_HEADERS.get(model_column, QVariant())
+                return COLUMN_HEADERS[model_column]()
             except ValueError:
                 return QVariant()
         return QVariant()
