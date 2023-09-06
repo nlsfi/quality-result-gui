@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [2.0.2] - 2023-09-06
 
 - Fix: Make Finnish translations visible
