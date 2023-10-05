@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [2.0.4] - 2023-10-05
 
 - Fix: Redraw map when an error is selected and errors are not visualized on map
