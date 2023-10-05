@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.4] - 2023-10-05
 
 - Fix: Redraw map when an error is selected and errors are not visualized on map
 
@@ -96,3 +96,4 @@
 [2.0.1]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.1
 [2.0.2]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.2
 [2.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.3
+[2.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.4
