@@ -72,6 +72,7 @@ def zoom_to_geometries_and_flash(
             )
         iface.mapCanvas().setExtent(view_extent)
     iface.mapCanvas().flashGeometries(geometries, crs)
+    iface.mapCanvas().redrawAllLayers()
 
 
 def get_extent_from_geometries(geometries: List[QgsGeometry]) -> Optional[QgsRectangle]:
