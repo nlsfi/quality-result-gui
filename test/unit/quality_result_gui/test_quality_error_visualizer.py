@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Generator, List
+from collections.abc import Generator
 from unittest.mock import ANY
 
 import pytest
@@ -29,7 +29,6 @@ from qgis.core import (
     QgsRectangle,
 )
 from qgis.gui import QgisInterface
-
 from quality_result_gui import SelectionType
 from quality_result_gui.api.types.quality_error import (
     QualityError,
@@ -58,7 +57,7 @@ def visualizer() -> Generator[QualityErrorVisualizer, None, None]:
 
 
 @pytest.fixture()
-def visualized_errors() -> List[QualityError]:
+def visualized_errors() -> list[QualityError]:
     return [
         _create_test_quality_error(
             QualityErrorPriority.FATAL, "1", QgsGeometry.fromWkt("Point(1 1)")
@@ -101,7 +100,7 @@ def test_add_new_errors_adds_geometries_to_annotation_layer(
 
     assert layer is not None
 
-    for key in visualizer._quality_error_layer._annotation_ids.keys():
+    for key in visualizer._quality_error_layer._annotation_ids:
         assert key in [
             "1",
             "2",
@@ -109,7 +108,7 @@ def test_add_new_errors_adds_geometries_to_annotation_layer(
 
     assert len(layer.items()) == 2
 
-    for key in layer.items().keys():
+    for key in layer.items():
         assert key in sum(visualizer._quality_error_layer._annotation_ids.values(), [])
         assert layer.item(key).geometry().isEmpty() is False
 
@@ -117,7 +116,6 @@ def test_add_new_errors_adds_geometries_to_annotation_layer(
 def test_add_new_errors_does_nothing_with_empty_input(
     visualizer: QualityErrorVisualizer,
 ):
-
     # Test
     visualizer.add_new_errors([])
 
@@ -127,7 +125,6 @@ def test_add_new_errors_does_nothing_with_empty_input(
 def test_add_new_errors_does_nothing_with_empty_input_geometry(
     visualizer: QualityErrorVisualizer,
 ):
-
     # Test
     visualizer.add_new_errors(
         [_create_test_quality_error(QualityErrorPriority.FATAL, "1", QgsGeometry())]
@@ -139,7 +136,6 @@ def test_add_new_errors_does_nothing_with_empty_input_geometry(
 def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
     visualizer: QualityErrorVisualizer,
 ):
-
     priority = QualityErrorPriority.FATAL
     errors = [
         _create_test_quality_error(priority, "1", QgsGeometry.fromWkt("Point(2 3)")),
@@ -166,7 +162,7 @@ def test_add_new_errors_works_with_multiple_geoms_with_same_geometry_type(
 )
 def test_remove_errors_removes_features_from_annotation_layer(
     visualizer: QualityErrorVisualizer,
-    visualized_errors: List[QualityError],
+    visualized_errors: list[QualityError],
     remove_selected_error: bool,
 ):
     visualizer.add_new_errors(visualized_errors)
@@ -184,7 +180,7 @@ def test_remove_errors_removes_features_from_annotation_layer(
 
     if remove_selected_error:
         assert get_num_visualized_features(visualizer) == num_errors_before_removal - 3
-        for key in visualizer._quality_error_layer._annotation_ids.keys():
+        for key in visualizer._quality_error_layer._annotation_ids:
             assert key == visualized_errors[2].unique_identifier
     else:
         assert get_num_visualized_features(visualizer) == num_errors_before_removal - 2
@@ -195,7 +191,7 @@ def test_remove_errors_removes_features_from_annotation_layer(
 
 
 def test_remove_errors_does_nothing_with_empty_input(
-    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
+    visualizer: QualityErrorVisualizer, visualized_errors: list[QualityError]
 ):
     visualizer.add_new_errors(visualized_errors)
     visualizer.refresh_selected_error(visualized_errors[0])
@@ -213,7 +209,7 @@ def test_remove_errors_does_nothing_with_empty_input(
 
 
 def test_hide_errors_changes_quality_layer_visibility(
-    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
+    visualizer: QualityErrorVisualizer, visualized_errors: list[QualityError]
 ):
     root: QgsLayerTree = QgsProject.instance().layerTreeRoot()
 
@@ -235,9 +231,8 @@ def test_hide_errors_changes_quality_layer_visibility(
 
 def test_add_new_errors_replaces_annotation_features_if_same_id(
     visualizer: QualityErrorVisualizer,
-    visualized_errors: List[QualityError],
+    visualized_errors: list[QualityError],
 ):
-
     visualizer.add_new_errors(visualized_errors)
     assert get_num_visualized_features(visualizer) == len(visualized_errors)
 
@@ -254,9 +249,8 @@ def test_add_new_errors_replaces_annotation_features_if_same_id(
 
 
 def test_refresh_selected_errors_replaces_selected_features_only(
-    visualizer: QualityErrorVisualizer, visualized_errors: List[QualityError]
+    visualizer: QualityErrorVisualizer, visualized_errors: list[QualityError]
 ):
-
     visualizer.add_new_errors(visualized_errors)
     visualizer.refresh_selected_error(visualized_errors[0])
 
@@ -339,11 +333,11 @@ def test_on_error_selected(
         "empty list",
     ],
 )
-def test_zoom_to_geometries_and_flash(  # noqa: QGS105
+def test_zoom_to_geometries_and_flash(
     visualizer: QualityErrorVisualizer,
     qgis_iface: QgisInterface,
     preserve_scale: bool,
-    input_geoms: List[QgsGeometry],
+    input_geoms: list[QgsGeometry],
     should_zoom_to_feature: bool,
 ):
     qgis_iface.mapCanvas().setExtent(QgsRectangle(100, 100, 200, 200))

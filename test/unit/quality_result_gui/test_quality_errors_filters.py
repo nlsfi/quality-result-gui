@@ -22,7 +22,6 @@ from unittest.mock import ANY
 
 import pytest
 from qgis.PyQt.QtWidgets import QAction, QMenu
-
 from quality_result_gui.api.types.quality_error import ERROR_TYPE_LABEL
 from quality_result_gui.quality_errors_filters import ErrorTypeFilter, FilterMenu
 
@@ -154,7 +153,6 @@ def test_deselect_action_unchecks_all(
     get_action_from_menu: Callable[[QMenu, str], Optional[QAction]],
     trigger_action: Callable[[QMenu, str], None],
 ):
-
     error_type_filter_menu = ErrorTypeFilter()
     error_type_filter_menu._refresh_error_type_filters(ERROR_TYPE_LABEL)
 

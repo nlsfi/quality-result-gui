@@ -17,14 +17,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import pytest
 from pytestqt.qtbot import QtBot
 from qgis.core import QgsFeature, QgsGeometry
 from qgis.PyQt.QtCore import QModelIndex
 from qgis.PyQt.QtWidgets import QAction, QMenu
-
 from quality_result_gui.api.types.quality_error import (
     ERROR_PRIORITY_LABEL,
     ERROR_TYPE_LABEL,
@@ -89,7 +88,7 @@ def attribute_menu(
 
 
 @pytest.fixture()
-def quality_errors_with_fence() -> List[QualityError]:
+def quality_errors_with_fence() -> list[QualityError]:
     return [
         QualityError(
             QualityErrorPriority.FATAL,
@@ -134,7 +133,7 @@ def quality_errors_with_fence() -> List[QualityError]:
 
 
 @pytest.fixture()
-def quality_errors_without_chimney_point() -> List[QualityError]:
+def quality_errors_without_chimney_point() -> list[QualityError]:
     return [
         QualityError(
             QualityErrorPriority.FATAL,
@@ -166,7 +165,7 @@ def quality_errors_without_chimney_point() -> List[QualityError]:
 
 
 @pytest.fixture()
-def quality_errors_without_building_part_area() -> List[QualityError]:
+def quality_errors_without_building_part_area() -> list[QualityError]:
     return [
         QualityError(
             QualityErrorPriority.FATAL,
@@ -329,7 +328,7 @@ def test_reset_filters_action_restores_check_boxes(
     ],
 )
 def test_actions_are_connected_to_correct_implementation_methods_and_filters_are_applied(
-    get_checked_menu_items: Callable[[QMenu], List[str]],
+    get_checked_menu_items: Callable[[QMenu], list[str]],
     get_submenu_from_menu: Callable[[QMenu, str], Optional[QMenu]],
     trigger_action: Callable[[QMenu, str], None],
     error_type_menu: QMenu,
@@ -339,7 +338,7 @@ def test_actions_are_connected_to_correct_implementation_methods_and_filters_are
     error_feature_types: list[str],
     error_feature_attributes: list[str],
     selected_filter_condition: str,
-    selected_filter_values: List[str],
+    selected_filter_values: list[str],
     expected_feature_types: list[str],
     expected_feature_attributes: list[str],
     expected_error_types: list[int],
@@ -482,11 +481,11 @@ def test_is_any_filter_active_returns_true_all_false_based_on_filter(
 )
 def test_filters_are_retained_when_data_changes(
     qtbot: QtBot,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
     error_feature_types: list[str],
     error_feature_attributes: list[str],
     quality_result_manager_with_data: QualityResultManager,
-    get_checked_menu_items: Callable[[QMenu], List[str]],
+    get_checked_menu_items: Callable[[QMenu], list[str]],
     trigger_action: Callable[[QMenu, str], None],
     feature_type_menu: QMenu,
     attribute_menu: QMenu,

@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,10 +18,9 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from qgis.core import QgsGeometry
-
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
@@ -31,8 +30,8 @@ from quality_result_gui.api.types.quality_error import (
 
 @dataclass
 class QualityErrorResponse:
-    quality_results: List[QualityError] = field(init=False)
-    _errors_obj: List[Dict[str, Any]]
+    quality_results: list[QualityError] = field(init=False)
+    _errors_obj: list[dict[str, Any]]
 
     def __post_init__(self) -> None:
         self.quality_results = [

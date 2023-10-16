@@ -22,7 +22,6 @@ from pytest_mock import MockerFixture
 from qgis.core import QgsRectangle
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex
-
 from quality_result_gui.api.types.quality_error import (
     ERROR_PRIORITY_LABEL,
     QualityErrorPriority,
@@ -75,7 +74,7 @@ def _count_children_rows(model: QAbstractItemModel, priority_index: QModelIndex)
         "Only feature 2b89a0b0 within view extent",
     ],
 )
-def test_filter_with_map_extent_check_box(  # noqa: QGS105
+def test_filter_with_map_extent_check_box(
     qgis_iface: QgisInterface,
     quality_result_manager_with_data: QualityResultManager,
     mocker: MockerFixture,

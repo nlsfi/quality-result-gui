@@ -17,12 +17,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Iterator, List
+from collections.abc import Iterator
 from unittest.mock import ANY
 
 import pytest
 from qgis.core import QgsAnnotationLayer, QgsGeometry, QgsProject
-
 from quality_result_gui.api.types.quality_error import QualityErrorPriority
 from quality_result_gui.quality_error_visualizer import QualityError
 from quality_result_gui.quality_layer import QualityErrorLayer
@@ -37,7 +36,7 @@ def _create_test_quality_error(
 
 
 @pytest.fixture()
-def quality_layer(qgis_new_project) -> QualityErrorLayer:
+def quality_layer(qgis_new_project: None) -> QualityErrorLayer:
     return QualityErrorLayer()
 
 
@@ -140,7 +139,7 @@ def test_add_or_replace_annotation_with_new_quality_errors(
     assert list(quality_layer_created._annotation_ids.keys()) == ["1"]
     assert len(annotation_layer.items()) == num_resulting_annotations
 
-    for key in annotation_layer.items().keys():
+    for key in annotation_layer.items():
         assert key in sum(quality_layer_created._annotation_ids.values(), [])
         assert annotation_layer.item(key).geometry().isEmpty() is False
 
@@ -192,7 +191,7 @@ def test_add_or_replace_annotation_with_updated_quality_errors(
     old_geom: QgsGeometry,
     num_old_items: int,
     new_geom: QgsGeometry,
-    expected_geoms_as_wkt: List[str],
+    expected_geoms_as_wkt: list[str],
 ):
     assert not old_geom.isNull(), "Input WKT was not valid"
     assert not new_geom.isNull(), "Input WKT was not valid"
@@ -211,7 +210,7 @@ def test_add_or_replace_annotation_with_updated_quality_errors(
 
     assert len(annotation_layer.items()) == len(expected_geoms_as_wkt)
 
-    for key in annotation_layer.items().keys():
+    for key in annotation_layer.items():
         assert annotation_layer.item(key).geometry().asWkt() in expected_geoms_as_wkt
 
 

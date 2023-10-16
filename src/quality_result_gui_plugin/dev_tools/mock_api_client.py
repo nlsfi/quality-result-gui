@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -20,12 +20,12 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from qgis.core import QgsCoordinateReferenceSystem
-
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import QualityError
+
 from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResponse
 
 
@@ -33,7 +33,7 @@ from quality_result_gui_plugin.dev_tools.response_parser import QualityErrorResp
 class MockQualityResultClient(QualityResultClient):
     json_file_path: Path
 
-    def get_results(self) -> Optional[List[QualityError]]:
+    def get_results(self) -> Optional[list[QualityError]]:
         """
         Retrieve latest quality errors from API
 

@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,13 +17,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, Generator, Optional
+from collections.abc import Generator
+from typing import Any, Optional
 from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 from pytestqt.qtbot import QtBot
-
 from quality_result_gui.api.quality_api_client import (
     QualityResultClient,
     QualityResultClientError,

@@ -17,14 +17,17 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+from typing import TYPE_CHECKING
+
 import pytest
 from pytest_mock import MockerFixture
 from pytestqt.qtbot import QtBot
 from qgis.gui import QgsGui
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QShortcut
-
 from quality_result_gui.ui.quality_errors_dock import QualityErrorsDockWidget
+
+if TYPE_CHECKING:
+    from qgis.PyQt.QtWidgets import QShortcut
 
 
 @pytest.fixture()
@@ -53,7 +56,6 @@ def test_quality_errors_dock_opens_and_closes(dock_widget: QualityErrorsDockWidg
     ],
 )
 def test_update_filter_menu_icon_state(mocker: MockerFixture, has_filters_active: bool):
-
     dock_widget = QualityErrorsDockWidget()
     m_is_any_filter_active = mocker.patch.object(
         dock_widget.filter_menu,
@@ -72,7 +74,6 @@ def test_update_filter_menu_icon_state(mocker: MockerFixture, has_filters_active
 def test_shortcut_for_toggle_errors_toggles_checkbox(
     dock_widget: QualityErrorsDockWidget,
 ) -> None:
-
     dock_widget.show()
 
     shortcut = dock_widget.shortcut_for_toggle_errors

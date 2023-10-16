@@ -17,7 +17,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Callable, Generator, List, Optional
+from collections.abc import Generator
+from typing import Callable, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,7 +28,6 @@ from qgis.core import QgsLayerTree, QgsProject
 from qgis.gui import QgsGui
 from qgis.PyQt.QtCore import QModelIndex, Qt
 from qgis.PyQt.QtWidgets import QMenu
-
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import QualityError
 from quality_result_gui.configuration import QualityLayerStyleConfig
@@ -56,7 +56,7 @@ def quality_result_manager(
 @pytest.fixture()
 def quality_result_manager_with_data(
     quality_result_manager: QualityResultManager,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
     qtbot: QtBot,
 ) -> QualityResultManager:
     with qtbot.waitSignal(
@@ -127,7 +127,6 @@ def test_show_dock_widget_starts_fetcher_and_shows_widget(
 def test_close_and_reopen_preserves_error_visibility_on_map(
     mock_api_client: QualityResultClient,
 ) -> None:
-
     quality_result_manager = QualityResultManager(mock_api_client, None)
 
     def _check_quality_layer_visibility(expected_visibility: bool) -> None:
@@ -184,7 +183,6 @@ def test_model_set_data_user_processed(
     expected_callback_value: bool,
     callback_called: bool,
 ) -> None:
-
     quality_result_manager_with_data.error_checked.connect(m_user_processed_callback)
 
     model = quality_result_manager_with_data._styled_model
@@ -206,7 +204,7 @@ def test_model_set_data_user_processed(
 def test_override_quality_layer_style_changes_annotation_style(
     qtbot: QtBot,
     mock_api_client: QualityResultClient,
-    single_quality_error: List[QualityError],
+    single_quality_error: list[QualityError],
 ):
     class MockStyle(QualityLayerStyleConfig):
         def create_error_symbol(self, quality_error: QualityError) -> ErrorSymbol:
@@ -237,7 +235,6 @@ def test_override_quality_layer_style_changes_annotation_style(
 def test_shortcut_for_toggle_errors_is_unregistered_after_unload(
     quality_result_manager: QualityResultManager,
 ) -> None:
-
     quality_result_manager.show_dock_widget()
 
     shortcut_name = (

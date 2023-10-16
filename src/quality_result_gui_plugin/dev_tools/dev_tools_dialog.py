@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -35,7 +35,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class DevToolsDialog(QDialog, FORM_CLASS):
-
     quality_errors_data_file_widget: QgsFileWidget
     btn_open_quality_errors_dialog: QPushButton
 

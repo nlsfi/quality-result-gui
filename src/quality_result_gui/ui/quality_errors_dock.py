@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import TYPE_CHECKING, Optional, Type
+from typing import TYPE_CHECKING, Optional
 
 from qgis.core import QgsApplication
 from qgis.gui import QgsGui
@@ -46,10 +46,10 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-DockWidgetUi: Type[QDockWidget] = load_ui_file(__package__, "quality_errors_dock.ui")
+DockWidgetUi: type[QDockWidget] = load_ui_file(__package__, "quality_errors_dock.ui")
 
 
-class QualityErrorsDockWidget(DockWidgetUi):  # type: ignore
+class QualityErrorsDockWidget(DockWidgetUi):  # type: ignore[valid-type]
     """
     Graphical user interface for quality errors dock widget.
     """
@@ -102,7 +102,7 @@ class QualityErrorsDockWidget(DockWidgetUi):  # type: ignore
         self._register_shortcut()
         return super().show()
 
-    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (qt override)
+    def closeEvent(self, event: QCloseEvent) -> None:  # (qt override)
         QgsGui.shortcutsManager().unregisterShortcut(self.shortcut_for_toggle_errors)
 
         self.closed.emit()

@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Dict, Tuple, Union
+from typing import Union
 
 from qgis.core import (
     QgsDrawSourceEffect,
@@ -31,7 +31,7 @@ from qgis.PyQt.QtGui import QColor
 
 
 def set_symbol_layer_data_defined_property_expressions(
-    symbol_layer: QgsSymbolLayer, data_defined_property_expressions: Dict[str, str]
+    symbol_layer: QgsSymbolLayer, data_defined_property_expressions: dict[str, str]
 ) -> None:
     """
     Sets the symbol layer data defined properties with expressions.
@@ -58,8 +58,8 @@ def set_symbol_layer_data_defined_property_expressions(
 def set_symbol_layer_simple_outer_glow_effect(
     symbol_layer: QgsSymbolLayer,
     color_rgba: str,
-    spread: Tuple[float, str] = (2.0, "MM"),
-    blur: Tuple[float, str] = (2.0, "MM"),
+    spread: tuple[float, str] = (2.0, "MM"),
+    blur: tuple[float, str] = (2.0, "MM"),
     opacity: float = 1,
 ) -> None:
     """
@@ -89,7 +89,7 @@ def set_symbol_layer_simple_outer_glow_effect(
 
 
 def get_color(
-    hex_or_rgb: Union[str, Tuple[int, int, int]], opacity: int = 100
+    hex_or_rgb: Union[str, tuple[int, int, int]], opacity: int = 100
 ) -> QColor:
     color = QColor(hex_or_rgb)
     color.setAlpha(int(opacity / 100 * 255))

@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -95,5 +95,5 @@ class QualityError:
     geometry: QgsGeometry
     is_user_processed: bool
 
-    def __getitem__(self, item: str) -> Any:
+    def __getitem__(self, item: str) -> Any:  # noqa: ANN401
         return getattr(self, item)

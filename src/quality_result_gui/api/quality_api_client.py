@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Optional
 
 from qgis.core import QgsCoordinateReferenceSystem
 
@@ -27,7 +27,7 @@ from quality_result_gui.api.types.quality_error import QualityError
 
 class QualityResultClient(ABC):
     @abstractmethod
-    def get_results(self) -> Optional[List[QualityError]]:
+    def get_results(self) -> Optional[list[QualityError]]:
         """
         Retrieve latest quality errors from API
 

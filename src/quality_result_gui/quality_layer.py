@@ -18,7 +18,8 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional, Union
 
 from qgis.core import (
     QgsAnnotationLayer,
@@ -59,7 +60,7 @@ class QualityErrorLayer:
     LAYER_ID_PROPERTY = "quality-result-gui-layer"
 
     def __init__(self) -> None:
-        self._annotation_ids: Dict[str, List[str]] = {}
+        self._annotation_ids: dict[str, list[str]] = {}
         self.style: "QualityLayerStyleConfig" = DefaultStyleConfig()
 
     @property
@@ -165,14 +166,14 @@ class QualityErrorLayer:
                 # Consume exception, feature is not found
                 pass
 
-    def _create_annotations(
+    def _create_annotations(  # noqa: C901, PLR0912
         self,
         quality_error: "QualityError",
         use_highlighted_style: bool,
-    ) -> List[
+    ) -> list[
         Union[QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem]
     ]:
-        annotations: List[
+        annotations: list[
             Union[
                 QgsAnnotationMarkerItem, QgsAnnotationPolygonItem, QgsAnnotationLineItem
             ]

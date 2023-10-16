@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import List, Optional
+from typing import Optional
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
@@ -46,7 +46,7 @@ def set_visibility_checked(layer: QgsVectorLayer, checked: bool) -> None:
 
 
 def zoom_to_geometries_and_flash(
-    geometries: List[QgsGeometry],
+    geometries: list[QgsGeometry],
     crs: QgsCoordinateReferenceSystem,
     preserve_scale: bool = False,
     min_extent_height: Optional[int] = None,
@@ -75,7 +75,7 @@ def zoom_to_geometries_and_flash(
     iface.mapCanvas().redrawAllLayers()
 
 
-def get_extent_from_geometries(geometries: List[QgsGeometry]) -> Optional[QgsRectangle]:
+def get_extent_from_geometries(geometries: list[QgsGeometry]) -> Optional[QgsRectangle]:
     if len(geometries) == 0:
         return None
 

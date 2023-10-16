@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import TYPE_CHECKING, Dict, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QObject, pyqtSignal
@@ -183,7 +183,7 @@ class QualityResultManager(QObject):
         self.dock_widget.filter_menu.add_filter_menu(filter.menu)
         self._filter_model.add_filter(filter)
 
-    def set_layer_mapping(self, layer_mapping: Dict[str, str]) -> None:
+    def set_layer_mapping(self, layer_mapping: dict[str, str]) -> None:
         QualityResultManagerSettings.get().set_layer_mapping(
             LayerMapping(layer_map=layer_mapping)
         )

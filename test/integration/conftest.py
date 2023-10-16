@@ -17,27 +17,27 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import TYPE_CHECKING, Generator, List
+from collections.abc import Generator
+from typing import TYPE_CHECKING
 
 import pytest
 from pytestqt.qtbot import QtBot
 from qgis.core import QgsField, QgsProject, QgsVectorLayer, edit
 from qgis.PyQt.QtCore import QVariant
 
-from quality_result_gui.ui.quality_errors_tree_filter_menu import (
-    QualityErrorsTreeFilterMenu,
-)
-
 if TYPE_CHECKING:
     from quality_result_gui.api.quality_api_client import QualityResultClient
     from quality_result_gui.api.types.quality_error import QualityError
     from quality_result_gui.quality_error_manager import QualityResultManager
+    from quality_result_gui.ui.quality_errors_tree_filter_menu import (
+        QualityErrorsTreeFilterMenu,
+    )
 
 
 @pytest.fixture()
 def quality_result_manager(
     qgis_new_project: None,
-    bypass_log_if_fails: None,
+    _bypass_log_if_fails: None,
     qtbot: QtBot,
     mock_api_client: "QualityResultClient",
 ) -> Generator["QualityResultManager", None, None]:
@@ -55,7 +55,7 @@ def quality_result_manager(
 @pytest.fixture()
 def quality_result_manager_with_data(
     quality_result_manager: "QualityResultManager",
-    quality_errors: List["QualityError"],
+    quality_errors: list["QualityError"],
     qtbot: QtBot,
 ) -> "QualityResultManager":
     with qtbot.waitSignal(
@@ -70,7 +70,7 @@ def quality_result_manager_with_data(
 @pytest.fixture()
 def quality_result_manager_with_data_and_layer_mapping(
     quality_result_manager: "QualityResultManager",
-    quality_errors: List["QualityError"],
+    quality_errors: list["QualityError"],
     qtbot: QtBot,
 ) -> Generator["QualityResultManager", None, None]:
     layer = QgsVectorLayer("NoGeometry", "mock", "memory")

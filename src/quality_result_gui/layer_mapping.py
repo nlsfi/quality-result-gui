@@ -18,14 +18,14 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 from qgis.core import QgsField, QgsProject, QgsVectorLayer
 
 
 @dataclass
 class LayerMapping:
-    layer_map: Optional[Dict[str, str]]
+    layer_map: Optional[dict[str, str]]
 
     def get_layer_alias(self, feature_type: str) -> str:
         layer = self._get_layer(feature_type)

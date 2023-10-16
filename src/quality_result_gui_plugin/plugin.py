@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Optional, cast
 
 import qgis_plugin_tools
+import quality_result_gui
 from qgis.core import QgsApplication, QgsProject
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QTranslator
@@ -31,11 +32,10 @@ from qgis.utils import iface as utils_iface
 from qgis_plugin_tools.tools.custom_logging import setup_loggers
 from qgis_plugin_tools.tools.i18n import setup_translation, tr
 from qgis_plugin_tools.tools.resources import resources_path
-
-import quality_result_gui
-import quality_result_gui_plugin
 from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
 from quality_result_gui.quality_error_manager import QualityResultManager
+
+import quality_result_gui_plugin
 from quality_result_gui_plugin.dev_tools.dev_tools_dialog import DevToolsDialog
 from quality_result_gui_plugin.dev_tools.mock_api_client import MockQualityResultClient
 
@@ -64,7 +64,7 @@ class QualityResultGuiPlugin:
         self.dev_tool_action: Optional[QAction] = None
         self._test_json_file_path = ""
 
-    def initGui(self) -> None:  # noqa: N802 (qgis naming)
+    def initGui(self) -> None:  # (qgis naming)
         self._teardown_loggers = setup_loggers(
             quality_result_gui.__name__,
             quality_result_gui_plugin.__name__,

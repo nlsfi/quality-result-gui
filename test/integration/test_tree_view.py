@@ -18,7 +18,6 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 from copy import copy
-from typing import List
 
 import pytest
 from pytest_mock import MockerFixture
@@ -26,7 +25,6 @@ from pytestqt.qtbot import QtBot
 from qgis.core import QgsGeometry, QgsRectangle
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QAbstractItemModel, QCoreApplication, QModelIndex, Qt
-
 from quality_result_gui.api.types.quality_error import (
     QualityError,
     QualityErrorPriority,
@@ -109,7 +107,7 @@ def test_quality_error_tree_view_performance_with_big_dataset(
 
 def test_quality_error_tree_view_updates_view_partially_when_data_is_refreshed(
     quality_result_manager_with_data: QualityResultManager,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ) -> None:
     model = quality_result_manager_with_data.dock_widget.error_tree_view.model()
     original_quality_errors = copy(quality_errors)
@@ -171,7 +169,7 @@ def test_quality_error_tree_view_updates_view_partially_when_data_is_refreshed(
         "attribute-error-selected",
     ],
 )
-def test_clicking_tree_view_row_zooms_to_feature_if_feature_or_quality_error_selected(  # noqa: QGS105
+def test_clicking_tree_view_row_zooms_to_feature_if_feature_or_quality_error_selected(
     quality_result_manager_with_data: QualityResultManager,
     qtbot: QtBot,
     qgis_iface: QgisInterface,
@@ -275,7 +273,7 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
     )
 
     assert m_add_or_replace_annotation.call_count == 2
-    quality_errors: List[QualityError] = [
+    quality_errors: list[QualityError] = [
         call_args[0][1] for call_args in m_add_or_replace_annotation.call_args_list
     ]
     assert len(quality_errors) == 2
@@ -286,7 +284,7 @@ def test_changing_model_data_sends_error_geometries_to_visualizer(
 
 def test_model_reset_expands_error_rows_recursively_on_tree_view(
     quality_result_manager_with_data: QualityResultManager,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ) -> None:
     quality_result_manager_with_data._fetcher.results_received.emit(quality_errors)
 

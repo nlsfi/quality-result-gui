@@ -19,7 +19,7 @@
 
 from dataclasses import dataclass
 from importlib.resources import as_file, files
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from qgis.core import (
     QgsCentroidFillSymbolLayer,
@@ -131,7 +131,6 @@ class DefaultErrorSymbol(ErrorSymbol):
         self,
         quality_error: "QualityError",
     ) -> None:
-
         self.style: QualityLayerStyle = QualityLayerStyle(
             COLORS_FOR_ERRORS,
             line_width=1.2,
@@ -299,7 +298,7 @@ class DefaultErrorSymbol(ErrorSymbol):
     def _set_enabled_expression(
         self,
         priority_symbol_layer: QgsSymbolLayer,
-        geometry_layers: List[QgsSymbolLayer],
+        geometry_layers: list[QgsSymbolLayer],
     ) -> None:
         if (
             self.icon_symbol_enabled_expression is not None
@@ -318,7 +317,6 @@ class DefaultErrorSymbol(ErrorSymbol):
     def _create_priority_symbol_layer(
         self, priority: QualityErrorPriority
     ) -> QgsSvgMarkerSymbolLayer:
-
         file_path = files(resources).joinpath("icons")
 
         if priority == QualityErrorPriority.FATAL:
@@ -328,9 +326,9 @@ class DefaultErrorSymbol(ErrorSymbol):
         elif priority == QualityErrorPriority.INFO:
             file_path = file_path.joinpath("quality_error_info.svg")
         else:
-            raise ValueError(f"Unknown priority {str(priority)}")
+            raise ValueError(f"Unknown priority {priority!s}")
 
-        style = dict({})
+        style = {}
         with as_file(file_path) as svg_file:
             style["name"] = str(svg_file)
 
