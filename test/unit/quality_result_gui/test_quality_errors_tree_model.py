@@ -17,12 +17,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Dict, List, NamedTuple, Optional, Set
+from typing import NamedTuple, Optional
 
 import pytest
 from pytestqt.modeltest import ModelTester
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant
-
 from quality_result_gui.api.types.quality_error import (
     ERROR_TYPE_LABEL,
     QualityError,
@@ -44,17 +43,17 @@ from quality_result_gui.quality_errors_tree_model import (
 )
 
 
-def _feature_type_filters(quality_errors: List[QualityError]) -> Set[str]:
+def _feature_type_filters(quality_errors: list[QualityError]) -> set[str]:
     return get_error_feature_types(quality_errors)
 
 
 def _feature_attribute_filters(
-    quality_errors: List[QualityError],
-) -> Set[str]:
+    quality_errors: list[QualityError],
+) -> set[str]:
     return get_error_feature_attributes(quality_errors)
 
 
-def _error_type_filters() -> Set[QualityErrorType]:
+def _error_type_filters() -> set[QualityErrorType]:
     return set(QualityErrorType)
 
 
@@ -126,7 +125,7 @@ def _priority_1_feature_type_1_feature_1_error_2_description_index(
 
 @pytest.fixture()
 def feature_type_filter(
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ) -> FeatureTypeFilter:
     feature_type_filter = FeatureTypeFilter()
     for feature_type in get_error_feature_types(quality_errors):
@@ -141,10 +140,9 @@ def base_model() -> QualityErrorsTreeBaseModel:
 
 @pytest.fixture()
 def model(
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
     base_model: QualityErrorsTreeBaseModel,
 ) -> FilterByExtentProxyModel:
-
     styled_model = StyleProxyModel(None)
     styled_model.setSourceModel(base_model)
 
@@ -174,9 +172,8 @@ class ModelAndFilters(NamedTuple):
 @pytest.fixture()
 def filter_proxy_model_and_filters(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ) -> ModelAndFilters:
-
     filter_model = FilterProxyModel()
     filter_model.setSourceModel(base_model)
 
@@ -206,7 +203,7 @@ def filter_proxy_model_and_filters(
 def test_base_model(
     base_model: QualityErrorsTreeBaseModel,
     qtmodeltester: ModelTester,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ) -> None:
     base_model.refresh_model(quality_errors)
 
@@ -323,7 +320,6 @@ def test_model_header_data(model: FilterByExtentProxyModel):
 def test_total_number_of_errors_is_shown_in_header(
     filter_proxy_model_and_filters: ModelAndFilters,
 ):
-
     (
         _,
         model,
@@ -572,11 +568,11 @@ def test_model_checkable_flags(model: FilterByExtentProxyModel):
 )
 def test_model_data_count_changes_when_filter_is_applied(
     filter_proxy_model_and_filters: ModelAndFilters,
-    quality_errors: List[QualityError],
-    accepted_error_types: Optional[Set[QualityErrorType]],
-    accepted_feature_types: Optional[Set[str]],
-    accepted_attribute_names: Optional[Set[str]],
-    expected_counts: Dict[str, int],
+    quality_errors: list[QualityError],
+    accepted_error_types: Optional[set[QualityErrorType]],
+    accepted_feature_types: Optional[set[str]],
+    accepted_attribute_names: Optional[set[str]],
+    expected_counts: dict[str, int],
 ):
     accepted_feature_types = (
         accepted_feature_types
@@ -585,9 +581,7 @@ def test_model_data_count_changes_when_filter_is_applied(
     )
     for (
         filter_value
-    ) in (
-        filter_proxy_model_and_filters.feature_type_filter._filter_value_action_map.keys()
-    ):
+    ) in filter_proxy_model_and_filters.feature_type_filter._filter_value_action_map:
         filter_proxy_model_and_filters.feature_type_filter._sync_filtered(
             filter_value, filter_value in accepted_feature_types
         )
@@ -599,9 +593,7 @@ def test_model_data_count_changes_when_filter_is_applied(
     )
     for (
         filter_value
-    ) in (
-        filter_proxy_model_and_filters.attribute_name_filter._filter_value_action_map.keys()
-    ):
+    ) in filter_proxy_model_and_filters.attribute_name_filter._filter_value_action_map:
         filter_proxy_model_and_filters.attribute_name_filter._sync_filtered(
             filter_value, filter_value in accepted_attribute_names
         )
@@ -613,9 +605,7 @@ def test_model_data_count_changes_when_filter_is_applied(
     )
     for (
         filter_value
-    ) in (
-        filter_proxy_model_and_filters.error_type_filter._filter_value_action_map.keys()
-    ):
+    ) in filter_proxy_model_and_filters.error_type_filter._filter_value_action_map:
         filter_proxy_model_and_filters.error_type_filter._sync_filtered(
             filter_value, filter_value in accepted_error_types
         )
@@ -645,7 +635,7 @@ def test_model_data_count_changes_when_filter_is_applied(
 
 def test_refresh_model_updates_data_partially_when_data_is_refreshed(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ):
     base_model.refresh_model(quality_errors)
 
@@ -669,7 +659,7 @@ def test_refresh_model_updates_data_partially_when_data_is_refreshed(
 
 def test_refresh_model_does_nothing_if_data_does_not_change(
     base_model: QualityErrorsTreeBaseModel,
-    quality_errors: List[QualityError],
+    quality_errors: list[QualityError],
 ):
     base_model.refresh_model(quality_errors)
 
@@ -691,7 +681,6 @@ def test_refresh_model_does_nothing_if_data_does_not_change(
 def test_no_rows_visible_when_all_user_processed(
     filter_proxy_model_and_filters: ModelAndFilters,
 ):
-
     model = FilterByShowUserProcessedProxyModel()
 
     model.setSourceModel(filter_proxy_model_and_filters.filter_proxy_model)

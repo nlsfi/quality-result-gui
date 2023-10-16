@@ -17,8 +17,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
+from collections.abc import Generator
 from types import GeneratorType
-from typing import TYPE_CHECKING, Generator, List, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt, QVariant, pyqtSignal
 from qgis.PyQt.QtWidgets import QTreeView, QWidget
@@ -70,7 +71,7 @@ class QualityErrorTreeView(QTreeView):
 
         self.setStyleSheet(TREE_VIEW_STYLE)
 
-    def setModel(  # noqa: N802 (override qt method)
+    def setModel(  # (override qt method)
         self, model: Optional[QAbstractItemModel]
     ) -> None:
         super().setModel(model)
@@ -82,9 +83,7 @@ class QualityErrorTreeView(QTreeView):
         model.rowsInserted.connect(self._on_model_rows_inserted)
         model.rowsAboutToBeRemoved.connect(self._on_rows_about_to_be_removed)
 
-    def mousePressEvent(  # noqa: N802 (override qt method)
-        self, event: "QMouseEvent"
-    ) -> None:
+    def mousePressEvent(self, event: "QMouseEvent") -> None:  # (override qt method)
         if event.button() == Qt.MouseButton.LeftButton:
             self.current_selection_type = SelectionType.LeftClick
         elif event.button() == Qt.MouseButton.RightButton:
@@ -95,9 +94,7 @@ class QualityErrorTreeView(QTreeView):
 
         self.current_selection_type = SelectionType.Other
 
-    def keyPressEvent(  # noqa: N802 (override qt method)
-        self, event: "QKeyEvent"
-    ) -> None:
+    def keyPressEvent(self, event: "QKeyEvent") -> None:  # (override qt method)
         self.current_selection_type = SelectionType.Keyboard
 
         # Calling super will trigger currentChanged if arrow keys used
@@ -105,7 +102,7 @@ class QualityErrorTreeView(QTreeView):
 
         self.current_selection_type = SelectionType.Other
 
-    def get_all_quality_errors(self) -> List[QualityError]:
+    def get_all_quality_errors(self) -> list[QualityError]:
         return [
             error
             for i in range(self.model().rowCount())

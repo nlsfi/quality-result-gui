@@ -25,11 +25,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
-    Hashable,
-    List,
     Optional,
-    Set,
     cast,
 )
 
@@ -45,6 +41,8 @@ from quality_result_gui.quality_error_manager_settings import (
 from quality_result_gui.quality_errors_tree_model import QualityErrorTreeItemType
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable
+
     from qgis.PyQt.QtWidgets import QWidget
 
 
@@ -58,9 +56,9 @@ class FilterMenu(QMenu):
         self._select_all_section_enabled = False
         self._sorted = False
 
-        self._filter_actions: List[QAction] = []
+        self._filter_actions: list[QAction] = []
 
-    def mouseReleaseEvent(self, e: QMouseEvent) -> None:  # noqa: N802 (qt override)
+    def mouseReleaseEvent(self, e: QMouseEvent) -> None:  # (qt override)
         if not self.activeAction() or not self.activeAction().isEnabled():
             super().mouseReleaseEvent(e)
         else:
@@ -123,7 +121,7 @@ class FilterMenu(QMenu):
 
         existing_actions = self.actions()
         first_action = existing_actions[0] if existing_actions else None
-        separator = self.insertSeparator(first_action)  # type: ignore
+        separator = self.insertSeparator(first_action)
         self.insertAction(separator, deselect_all_action)
         self.insertAction(deselect_all_action, select_all_action)
 
@@ -229,13 +227,15 @@ class AbstractQualityErrorFilter(QObject):
         """
 
         super().__init__(parent=parent)
-        self._accepted_values: Set[Any] = set()
-        self._filter_value_action_map: Dict[Hashable, QAction] = {}
+        self._accepted_values: set[Any] = set()
+        self._filter_value_action_map: dict[Hashable, QAction] = {}
 
         self.menu = FilterMenu(title)
 
     @abstractmethod
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+    def accept_row(
+        self, item_type: QualityErrorTreeItemType, item_value: Any  # noqa: ANN401
+    ) -> bool:
         """The actual filter function that inherited classes should be implemented.
 
         Args:
@@ -250,7 +250,7 @@ class AbstractQualityErrorFilter(QObject):
         """
         raise NotImplementedError()
 
-    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
+    def update_filter_from_errors(self, quality_errors: list["QualityError"]) -> None:
         """Updates filters dynamically from a given list of quality errors.
 
         Should be implemented in inherited classes if feature is wanted.
@@ -264,7 +264,7 @@ class AbstractQualityErrorFilter(QObject):
         """
         raise NotImplementedError()
 
-    def _sync_filtered(self, value: Any, checked: bool) -> None:
+    def _sync_filtered(self, value: Any, checked: bool) -> None:  # noqa: ANN401
         """Syncs accepted filter values
 
         Should be connected to checkable action's toggle signal with functool.partial
@@ -282,7 +282,7 @@ class AbstractQualityErrorFilter(QObject):
 
         self.filters_changed.emit()
 
-    def _refresh_filters(self, new_filters: Dict[Any, str]) -> None:
+    def _refresh_filters(self, new_filters: dict[Any, str]) -> None:
         """Adds filters not yet present and removes filters not present anymore.
 
         Args:
@@ -327,7 +327,9 @@ class AbstractQualityErrorFilter(QObject):
             filter_label = new_filters[filter_value]()
             self._add_filter_item(filter_value, filter_label)
 
-    def _add_filter_item(self, filter_value: Any, filter_label: str) -> None:
+    def _add_filter_item(
+        self, filter_value: Any, filter_label: str  # noqa: ANN401
+    ) -> None:
         """Adds a filter item to the filter
 
         Args:
@@ -343,7 +345,7 @@ class AbstractQualityErrorFilter(QObject):
 
         self.filters_changed.emit()
 
-    def _remove_filter_item(self, filter_value: Any) -> None:
+    def _remove_filter_item(self, filter_value: Any) -> None:  # noqa: ANN401
         """Removes the filter item
 
         Args:
@@ -366,7 +368,7 @@ class ErrorTypeFilter(AbstractQualityErrorFilter):
     This is a static filter that shows always all the defined error types.
     """
 
-    _accepted_values: Set[QualityErrorTreeItemType]
+    _accepted_values: set[QualityErrorTreeItemType]
 
     def __init__(self) -> None:
         super().__init__(self.get_error_type_filter_menu_label())
@@ -379,7 +381,9 @@ class ErrorTypeFilter(AbstractQualityErrorFilter):
     def get_error_type_filter_menu_label() -> str:
         return tr("Error type")
 
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+    def accept_row(
+        self, item_type: QualityErrorTreeItemType, item_value: Any  # noqa: ANN401
+    ) -> bool:
         if item_type == QualityErrorTreeItemType.ERROR:
             return cast(QualityError, item_value).error_type in self._accepted_values
 
@@ -394,7 +398,7 @@ class FeatureTypeFilter(AbstractQualityErrorFilter):
     received errors.
     """
 
-    _accepted_values: Set[str]
+    _accepted_values: set[str]
 
     def __init__(self) -> None:
         super().__init__(self.get_feature_type_filter_menu_label())
@@ -405,13 +409,15 @@ class FeatureTypeFilter(AbstractQualityErrorFilter):
     def get_feature_type_filter_menu_label() -> str:
         return tr("Feature type")
 
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+    def accept_row(
+        self, item_type: QualityErrorTreeItemType, item_value: Any  # noqa: ANN401
+    ) -> bool:
         if item_type == QualityErrorTreeItemType.FEATURE_TYPE:
             return cast(str, item_value) in self._accepted_values
 
         return True
 
-    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
+    def update_filter_from_errors(self, quality_errors: list["QualityError"]) -> None:
         """
 
         Args:
@@ -438,7 +444,7 @@ class AttributeFilter(AbstractQualityErrorFilter):
     received errors.
     """
 
-    _accepted_values: Set[str]
+    _accepted_values: set[str]
 
     def __init__(self) -> None:
         super().__init__(self.get_attribute_name_filter_menu_label())
@@ -449,7 +455,9 @@ class AttributeFilter(AbstractQualityErrorFilter):
     def get_attribute_name_filter_menu_label() -> str:
         return tr("Attribute Filter")
 
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+    def accept_row(
+        self, item_type: QualityErrorTreeItemType, item_value: Any  # noqa: ANN401
+    ) -> bool:
         if item_type == QualityErrorTreeItemType.ERROR:
             attribute_name = cast(QualityError, item_value).attribute_name
             if attribute_name:
@@ -457,7 +465,7 @@ class AttributeFilter(AbstractQualityErrorFilter):
 
         return True
 
-    def update_filter_from_errors(self, quality_errors: List["QualityError"]) -> None:
+    def update_filter_from_errors(self, quality_errors: list["QualityError"]) -> None:
         attribute_names_in_errors = {  # Dict[filter_value, filter_label]
             error.attribute_name: self._get_label_value(
                 error.feature_type, error.attribute_name

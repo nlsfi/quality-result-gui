@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -19,7 +19,7 @@
 
 import logging
 from enum import Enum, auto
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from qgis.PyQt.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 from qgis_plugin_tools.tools.i18n import tr
@@ -112,7 +112,7 @@ class PollingWorker(QObject):
 
         except (QualityResultClientError, QualityResultServerError) as e:
             LOGGER.warning(
-                f"failed to check quality results api: {str(e)}", stack_info=True
+                f"failed to check quality results api: {e!s}", stack_info=True
             )
             self.status_changed.emit(CheckStatus.RESULT_FAILED)
 
@@ -145,7 +145,7 @@ class BackgroundQualityResultsFetcher(QObject):
         self.status_changed.emit(status)
 
     @pyqtSlot(list)
-    def _worker_results_received(self, results: List["QualityError"]) -> None:
+    def _worker_results_received(self, results: list["QualityError"]) -> None:
         self.results_received.emit(results)
 
     @pyqtSlot()

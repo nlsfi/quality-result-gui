@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -22,8 +22,7 @@ from qgis.gui import QgisInterface
 from quality_result_gui_plugin.plugin import QualityResultGuiPlugin
 
 
-def classFactory(  # noqa: N802 (qgis naming)
+def classFactory(  # (qgis naming)
     iface: QgisInterface,
 ) -> "QualityResultGuiPlugin":
-
     return QualityResultGuiPlugin()

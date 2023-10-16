@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -21,17 +21,12 @@ import contextlib
 import enum
 import logging
 from abc import abstractmethod
+from collections.abc import Iterable, Iterator
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
     NewType,
     Optional,
-    Set,
-    Tuple,
     Union,
     cast,
     overload,
@@ -92,14 +87,14 @@ COLUMN_HEADERS = {
 
 
 def get_error_feature_types(
-    quality_results: List[QualityError],
-) -> Set[str]:
+    quality_results: list[QualityError],
+) -> set[str]:
     return {errors.feature_type for errors in quality_results}
 
 
 def get_error_feature_attributes(
-    quality_errors: List[QualityError],
-) -> Set[str]:
+    quality_errors: list[QualityError],
+) -> set[str]:
     return {error.attribute_name for error in quality_errors if error.attribute_name}
 
 
@@ -157,14 +152,14 @@ class QualityErrorTreeItemType(enum.Enum):
 
 ErrorDataType = NewType(
     "ErrorDataType",
-    Tuple[QualityErrorTreeItemType, Any],
+    tuple[QualityErrorTreeItemType, Any],
 )
 
 
 class QualityErrorTreeItem:
     def __init__(
         self,
-        data: List[Any],
+        data: list[Any],
         key: str,
         item_type: QualityErrorTreeItemType,
         parent: Optional["QualityErrorTreeItem"] = None,
@@ -172,8 +167,8 @@ class QualityErrorTreeItem:
         self.key = key
         self._item_parent = parent
         self._item_data = data
-        self._child_items: List["QualityErrorTreeItem"] = []
-        self._child_item_map: Dict[str, int] = {}
+        self._child_items: list["QualityErrorTreeItem"] = []
+        self._child_item_map: dict[str, int] = {}
 
         self.item_type = item_type
 
@@ -204,7 +199,7 @@ class QualityErrorTreeItem:
     def column_count(self) -> int:
         return len(self._item_data)
 
-    def data(
+    def data(  # noqa: C901, PLR0911, PLR0912
         self, column_index: int, role: Qt.ItemDataRole = Qt.DisplayRole
     ) -> QVariant:
         if not (column_index >= 0 and column_index < len(self._item_data)):
@@ -351,7 +346,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return self.createIndex(parent_item.row(), 0, parent_item)
 
-    def rowCount(self, parent: QModelIndex) -> int:  # noqa: N802 (qt override)
+    def rowCount(self, parent: QModelIndex) -> int:  # (qt override)
         if parent.column() > 0:
             return 0
 
@@ -362,7 +357,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return parent_item.child_count()
 
-    def columnCount(self, parent: QModelIndex) -> int:  # noqa: N802 (qt override)
+    def columnCount(self, parent: QModelIndex) -> int:  # (qt override)
         if not parent.isValid():
             parent_item = self._root_item
         else:
@@ -380,7 +375,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return item.data(index.column(), role)
 
-    def headerData(  # noqa: N802 (qt override)
+    def headerData(  # (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -400,8 +395,11 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                 return QVariant()
         return QVariant()
 
-    def setData(  # noqa: N802 (qt override)
-        self, index: QModelIndex, value: Any, role: Qt.ItemDataRole = Qt.EditRole
+    def setData(  # (qt override)
+        self,
+        index: QModelIndex,
+        value: Any,  # noqa: ANN401
+        role: Qt.ItemDataRole = Qt.EditRole,
     ) -> bool:
         if not index.isValid() or role == Qt.EditRole:
             return False
@@ -448,7 +446,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return super().flags(index)
 
-    def refresh_model(self, quality_errors: List[QualityError]) -> None:
+    def refresh_model(self, quality_errors: list[QualityError]) -> None:
         updated_quality_error_ids = {
             error.unique_identifier for error in quality_errors
         }
@@ -476,7 +474,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             if error.unique_identifier in new_error_ids
         )
 
-        errors_to_be_deleted: List[Tuple[QualityErrorTreeItem, QModelIndex]] = []
+        errors_to_be_deleted: list[tuple[QualityErrorTreeItem, QModelIndex]] = []
 
         for i in range(self.rowCount(QModelIndex())):
             for index in _get_quality_errors_indexes(
@@ -493,7 +491,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
     def _update_model_data(
         self,
         errors_to_be_added: Iterable[QualityError],
-        errors_to_be_deleted: List[Tuple[QualityErrorTreeItem, QModelIndex]],
+        errors_to_be_deleted: list[tuple[QualityErrorTreeItem, QModelIndex]],
     ) -> None:
         """
         Updates model data based on new and deleted quality errors.
@@ -663,7 +661,7 @@ class AbstractFilterProxyModel(QSortFilterProxyModel):
         super().__init__(parent)
         self.setFilterRole(Qt.UserRole)
 
-    def filterAcceptsRow(  # noqa: N802 (qt override)
+    def filterAcceptsRow(  # (qt override)
         self, source_row: int, source_parent: QModelIndex
     ) -> bool:
         source_index = self.sourceModel().index(source_row, 0, source_parent)
@@ -689,7 +687,9 @@ class AbstractFilterProxyModel(QSortFilterProxyModel):
 
     @abstractmethod
     def accept_row(
-        self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
+        self,
+        tree_item_type: QualityErrorTreeItemType,
+        tree_item_value: Any,  # noqa: ANN401
     ) -> bool:
         raise NotImplementedError()
 
@@ -705,7 +705,7 @@ class FilterProxyModel(AbstractFilterProxyModel):
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
 
-        self._filters: List["AbstractQualityErrorFilter"] = []
+        self._filters: list["AbstractQualityErrorFilter"] = []
 
     def add_filter(self, filter: "AbstractQualityErrorFilter") -> None:
         filter.filters_changed.connect(self.invalidateFilter)
@@ -713,7 +713,9 @@ class FilterProxyModel(AbstractFilterProxyModel):
 
         self.invalidateFilter()
 
-    def accept_row(self, item_type: QualityErrorTreeItemType, item_value: Any) -> bool:
+    def accept_row(
+        self, item_type: QualityErrorTreeItemType, item_value: Any  # noqa: ANN401
+    ) -> bool:
         # TODO: Check only the changed filters.
         # Now this checks all the filters when one changes
         return all(
@@ -721,7 +723,7 @@ class FilterProxyModel(AbstractFilterProxyModel):
             for quality_filter in self._filters
         )
 
-    def headerData(  # noqa: N802 (qt override)
+    def headerData(  # (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -774,7 +776,9 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
             self.set_extent(None)
 
     def accept_row(
-        self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
+        self,
+        tree_item_type: QualityErrorTreeItemType,
+        tree_item_value: Any,  # noqa: ANN401
     ) -> bool:
         if not self._extent:
             return True
@@ -785,7 +789,7 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
 
         return quality_error.geometry.intersects(self._extent)
 
-    def headerData(  # noqa: N802 (qt override)
+    def headerData(  # (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -825,7 +829,9 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
         self.invalidateFilter()
 
     def accept_row(
-        self, tree_item_type: QualityErrorTreeItemType, tree_item_value: Any
+        self,
+        tree_item_type: QualityErrorTreeItemType,
+        tree_item_value: Any,  # noqa: ANN401
     ) -> bool:
         return not (
             self._show_processed_errors is False
@@ -833,7 +839,7 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
             and cast(QualityError, tree_item_value).is_user_processed is True
         )
 
-    def headerData(  # noqa: N802 (qt override)
+    def headerData(  # (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,

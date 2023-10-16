@@ -17,14 +17,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 
 import pytest
 from pytest_mock import MockerFixture
 from qgis.core import QgsCoordinateReferenceSystem, QgsGeometry
 from qgis.PyQt.QtWidgets import QAction, QMenu
 from qgis_plugin_tools.tools.messages import MsgBar
-
 from quality_result_gui.api.quality_api_client import QualityResultClient
 from quality_result_gui.api.types.quality_error import (
     QualityError,
@@ -34,7 +33,7 @@ from quality_result_gui.api.types.quality_error import (
 
 
 class MockQualityResultClient(QualityResultClient):
-    def get_results(self) -> Optional[List[QualityError]]:
+    def get_results(self) -> Optional[list[QualityError]]:
         return []
 
     def get_crs(self) -> QgsCoordinateReferenceSystem:
@@ -47,7 +46,7 @@ def mock_api_client() -> QualityResultClient:
 
 
 @pytest.fixture()
-def bypass_log_if_fails(mocker: MockerFixture) -> None:
+def _bypass_log_if_fails(mocker: MockerFixture) -> None:
     """Throws unhandled exception even though it is caught with log_if_fails"""
 
     def mock_msg_bar(*args: Any, **kwargs: Any):
@@ -64,7 +63,7 @@ def bypass_log_if_fails(mocker: MockerFixture) -> None:
 
 
 @pytest.fixture()
-def quality_errors() -> List[QualityError]:
+def quality_errors() -> list[QualityError]:
     return [
         QualityError(
             QualityErrorPriority.FATAL,
@@ -152,7 +151,7 @@ def error_feature_attributes() -> list[str]:
 
 
 @pytest.fixture()
-def single_quality_error() -> List[QualityError]:
+def single_quality_error() -> list[QualityError]:
     return [
         QualityError(
             QualityErrorPriority.FATAL,
@@ -187,8 +186,8 @@ def get_submenu_from_menu() -> Callable[[QMenu, str], Optional[QMenu]]:
 
 
 @pytest.fixture()
-def get_checked_menu_items() -> Callable[[QMenu], List[str]]:
-    def _get_checked_menu_items(menu: QMenu) -> List[str]:
+def get_checked_menu_items() -> Callable[[QMenu], list[str]]:
+    def _get_checked_menu_items(menu: QMenu) -> list[str]:
         return [
             action.text()
             for action in menu.actions()

@@ -19,19 +19,22 @@
 
 import json
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from qgis.core import QgsAnnotationLayer, QgsCoordinateReferenceSystem, QgsProject
 from qgis.gui import QgisInterface
 from qgis.utils import iface as utils_iface
 
 from quality_result_gui.api.types.quality_error import QualityError
-from quality_result_gui.configuration import QualityLayerStyleConfig
 from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
+
+if TYPE_CHECKING:
+    from quality_result_gui.configuration import QualityLayerStyleConfig
 
 iface = cast(QgisInterface, utils_iface)
 
@@ -143,7 +146,7 @@ class QualityErrorVisualizer:
             QgsProject.instance().removeMapLayer(layer.id())
 
     def zoom_to_geometries_and_flash(
-        self, quality_errors: List[QualityError], preserve_scale: bool = False
+        self, quality_errors: list[QualityError], preserve_scale: bool = False
     ) -> None:
         if len(quality_errors) > 0:
             layer_utils.zoom_to_geometries_and_flash(

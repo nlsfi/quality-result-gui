@@ -1,4 +1,4 @@
-#  Copyright (C) 2022 National Land Survey of Finland
+#  Copyright (C) 2022-2023 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -17,13 +17,12 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 from pytest_mock import MockerFixture
 from qgis.core import QgsSettings
 from qgis.utils import iface
-
 from quality_result_gui_plugin import classFactory
 from quality_result_gui_plugin.dev_tools.dev_tools_dialog import DevToolsDialog
 from quality_result_gui_plugin.plugin import QualityResultGuiPlugin
