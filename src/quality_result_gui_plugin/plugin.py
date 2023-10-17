@@ -64,7 +64,7 @@ class QualityResultGuiPlugin:
         self.dev_tool_action: Optional[QAction] = None
         self._test_json_file_path = ""
 
-    def initGui(self) -> None:  # (qgis naming)
+    def initGui(self) -> None:  # noqa: N802 (qgis naming)
         self._teardown_loggers = setup_loggers(
             quality_result_gui.__name__,
             quality_result_gui_plugin.__name__,

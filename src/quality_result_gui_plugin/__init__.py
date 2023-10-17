@@ -22,7 +22,7 @@ from qgis.gui import QgisInterface
 from quality_result_gui_plugin.plugin import QualityResultGuiPlugin
 
 
-def classFactory(  # (qgis naming)
+def classFactory(  # noqa: N802 (qgis naming)
     iface: QgisInterface,
 ) -> "QualityResultGuiPlugin":
     return QualityResultGuiPlugin()

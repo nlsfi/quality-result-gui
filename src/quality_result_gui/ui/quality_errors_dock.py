@@ -102,7 +102,7 @@ class QualityErrorsDockWidget(DockWidgetUi):  # type: ignore[valid-type]
         self._register_shortcut()
         return super().show()
 
-    def closeEvent(self, event: QCloseEvent) -> None:  # (qt override)
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (qt override)
         QgsGui.shortcutsManager().unregisterShortcut(self.shortcut_for_toggle_errors)
 
         self.closed.emit()

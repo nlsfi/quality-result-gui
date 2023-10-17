@@ -346,7 +346,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return self.createIndex(parent_item.row(), 0, parent_item)
 
-    def rowCount(self, parent: QModelIndex) -> int:  # (qt override)
+    def rowCount(self, parent: QModelIndex) -> int:  # noqa: N802  (qt override)
         if parent.column() > 0:
             return 0
 
@@ -357,7 +357,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return parent_item.child_count()
 
-    def columnCount(self, parent: QModelIndex) -> int:  # (qt override)
+    def columnCount(self, parent: QModelIndex) -> int:  # noqa: N802  (qt override)
         if not parent.isValid():
             parent_item = self._root_item
         else:
@@ -375,7 +375,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return item.data(index.column(), role)
 
-    def headerData(  # (qt override)
+    def headerData(  # noqa: N802 (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -395,7 +395,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                 return QVariant()
         return QVariant()
 
-    def setData(  # (qt override)
+    def setData(  # noqa: N802 (qt override)
         self,
         index: QModelIndex,
         value: Any,  # noqa: ANN401
@@ -428,7 +428,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
 
         return False
 
-    def flags(  # (qt override)
+    def flags(
         self,
         index: QModelIndex,
     ) -> Qt.ItemFlags:
@@ -661,7 +661,7 @@ class AbstractFilterProxyModel(QSortFilterProxyModel):
         super().__init__(parent)
         self.setFilterRole(Qt.UserRole)
 
-    def filterAcceptsRow(  # (qt override)
+    def filterAcceptsRow(  # noqa: N802 (qt override)
         self, source_row: int, source_parent: QModelIndex
     ) -> bool:
         source_index = self.sourceModel().index(source_row, 0, source_parent)
@@ -723,7 +723,7 @@ class FilterProxyModel(AbstractFilterProxyModel):
             for quality_filter in self._filters
         )
 
-    def headerData(  # (qt override)
+    def headerData(  # noqa: N802 (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -789,7 +789,7 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
 
         return quality_error.geometry.intersects(self._extent)
 
-    def headerData(  # (qt override)
+    def headerData(  # noqa: N802 (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,
@@ -839,7 +839,7 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
             and cast(QualityError, tree_item_value).is_user_processed is True
         )
 
-    def headerData(  # (qt override)
+    def headerData(  # noqa: N802 (qt override)
         self,
         section: int,
         orientation: Qt.Orientation,

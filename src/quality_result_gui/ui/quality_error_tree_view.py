@@ -71,7 +71,7 @@ class QualityErrorTreeView(QTreeView):
 
         self.setStyleSheet(TREE_VIEW_STYLE)
 
-    def setModel(  # (override qt method)
+    def setModel(  # noqa: N802 (override qt method)
         self, model: Optional[QAbstractItemModel]
     ) -> None:
         super().setModel(model)
@@ -83,7 +83,9 @@ class QualityErrorTreeView(QTreeView):
         model.rowsInserted.connect(self._on_model_rows_inserted)
         model.rowsAboutToBeRemoved.connect(self._on_rows_about_to_be_removed)
 
-    def mousePressEvent(self, event: "QMouseEvent") -> None:  # (override qt method)
+    def mousePressEvent(  # noqa: N802 (override qt method)
+        self, event: "QMouseEvent"
+    ) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self.current_selection_type = SelectionType.LeftClick
         elif event.button() == Qt.MouseButton.RightButton:
@@ -94,7 +96,9 @@ class QualityErrorTreeView(QTreeView):
 
         self.current_selection_type = SelectionType.Other
 
-    def keyPressEvent(self, event: "QKeyEvent") -> None:  # (override qt method)
+    def keyPressEvent(  # noqa: N802 (override qt method)
+        self, event: "QKeyEvent"
+    ) -> None:
         self.current_selection_type = SelectionType.Keyboard
 
         # Calling super will trigger currentChanged if arrow keys used

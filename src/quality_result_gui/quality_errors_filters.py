@@ -58,7 +58,7 @@ class FilterMenu(QMenu):
 
         self._filter_actions: list[QAction] = []
 
-    def mouseReleaseEvent(self, e: QMouseEvent) -> None:  # (qt override)
+    def mouseReleaseEvent(self, e: QMouseEvent) -> None:  # noqa: N802 (qt override)
         if not self.activeAction() or not self.activeAction().isEnabled():
             super().mouseReleaseEvent(e)
         else:
