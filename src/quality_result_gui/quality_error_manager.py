@@ -105,9 +105,15 @@ class QualityResultManager(QObject):
 
         self._filter_user_processed_model = FilterByShowUserProcessedProxyModel()
         self._filter_user_processed_model.setSourceModel(self._filter_model)
+        self._base_model.filterable_data_changed.connect(
+            self._filter_user_processed_model.invalidateFilter
+        )
 
         self._filter_map_extent_model = FilterByExtentProxyModel()
         self._filter_map_extent_model.setSourceModel(self._filter_user_processed_model)
+        self._base_model.filterable_data_changed.connect(
+            self._filter_map_extent_model.invalidateFilter
+        )
 
         self._styled_model = StyleProxyModel()
         self._styled_model.setSourceModel(self._filter_map_extent_model)

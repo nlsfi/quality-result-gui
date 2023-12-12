@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Filter newly inserted quality error rows correctly with user processed and map extent filters
+
 ## [2.0.4] - 2023-10-05
 
 - Fix: Redraw map when an error is selected and errors are not visualized on map
