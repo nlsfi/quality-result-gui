@@ -1,4 +1,4 @@
-#  Copyright (C) 2022-2023 National Land Survey of Finland
+#  Copyright (C) 2022-2024 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -32,7 +32,7 @@ from qgis.utils import iface as utils_iface
 from qgis_plugin_tools.tools.custom_logging import setup_loggers
 from qgis_plugin_tools.tools.i18n import setup_translation, tr
 from qgis_plugin_tools.tools.resources import resources_path
-from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
+from quality_result_gui import env
 from quality_result_gui.quality_error_manager import QualityResultManager
 
 import quality_result_gui_plugin
@@ -85,8 +85,18 @@ class QualityResultGuiPlugin:
         iface.addPluginToMenu(self._menu_name, self.show_dev_tools_dialog_action)
 
         # Add shortcut action to open qulity results form example json when in dev mode
-        if IS_DEVELOPMENT_MODE and self.dev_tool_action is None:
-            self._test_json_file_path = TEST_JSON_FILE_PATH or ""
+        if env.IS_DEVELOPMENT_MODE and self.dev_tool_action is None:
+            env.test_json_file_path = (
+                str(
+                    (
+                        Path(__file__).parent
+                        / "dev_tools/example_quality_errors/quality_errors.json"
+                    ).resolve()
+                )
+                if env.IS_DEVELOPMENT_MODE
+                else None
+            )
+            self._test_json_file_path = env.test_json_file_path or ""
             self.dev_tool_action = QAction(
                 QIcon(resources_path("icons/quality_result_gui.svg")),
                 "Test quality result GUI",

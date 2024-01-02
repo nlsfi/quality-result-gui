@@ -1,4 +1,4 @@
-#  Copyright (C) 2023 National Land Survey of Finland
+#  Copyright (C) 2023-2024 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -40,12 +40,14 @@ def quality_result_manager(
     _bypass_log_if_fails: None,
     qtbot: QtBot,
     mock_api_client: "QualityResultClient",
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Generator["QualityResultManager", None, None]:
     from quality_result_gui.quality_error_manager import QualityResultManager
 
     manager = QualityResultManager(mock_api_client, None)
     qtbot.addWidget(manager.dock_widget)
 
+    monkeypatch.setenv("IS_DEVELOPMENT_MODE", "f")
     manager.dock_widget.show()
 
     yield manager
