@@ -1,0 +1,67 @@
+[
+    {
+        "priority": 1,
+        "feature_type": "building_part_area",
+        "feature_id": "123c1e9b-fade-410d-9b7e-f7ad32317883",
+        "error_id": 1,
+        "unique_identifier": "1",
+        "error_type": 1,
+        "attribute_name": null,
+        "error_description": "Invalid geometry",
+        "extra_info": null,
+        "wkt_geom": "POINT ((5 5))",
+        "is_user_processed": false
+    },
+    {
+        "priority": 1,
+        "feature_type": "building_part_area",
+        "feature_id": "123c1e9b-fade-410d-9b7e-f7ad32317883",
+        "error_id": 2,
+        "unique_identifier": "2",
+        "error_type": 2,
+        "attribute_name": "vtj_prt",
+        "error_description": "Invalid value",
+        "extra_info": null,
+        "wkt_geom": "POLYGON((0 0, 0 5, 5 5, 5 0, 0 0))",
+        "is_user_processed": true
+    },
+    {
+        "priority": 1,
+        "feature_type": "building_part_area",
+        "feature_id": "604eb499-cff7-4d28-bb31-154106480eca",
+        "error_id": 3,
+        "unique_identifier": "3",
+        "error_type": 2,
+        "attribute_name": "height_absolute",
+        "error_description": "Invalid value",
+        "extra_info": null,
+        "wkt_geom": "POLYGON((10 10, 10 15, 15 15, 15 10, 10 10))",
+        "is_user_processed": false
+    },
+    {
+        "priority": 1,
+        "feature_type": "chimney_point",
+        "feature_id": "7067408f-e7ff-4be4-9def-fe17e9b6bdb2",
+        "error_id": 4,
+        "unique_identifier": "4",
+        "error_type": 2,
+        "attribute_name": "height_relative",
+        "error_description": "Invalid value",
+        "extra_info": null,
+        "wkt_geom": "POLYGON((20 20, 20 25, 25 25, 25 20, 20 20))",
+        "is_user_processed": false
+    },
+    {
+        "priority": 2,
+        "feature_type": "building_part_area",
+        "feature_id": "2b89a0b0-33f8-4241-b169-70b4a8c0f941",
+        "error_id": 102,
+        "unique_identifier": "102",
+        "error_type": 2,
+        "attribute_name": "floors_above_ground",
+        "error_description": "Missing value",
+        "extra_info": null,
+        "wkt_geom": "POLYGON((30 30, 30 35, 35 35, 35 30, 30 30))",
+        "is_user_processed": false
+    }
+]
