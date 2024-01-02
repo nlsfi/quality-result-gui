@@ -21,7 +21,7 @@ import pytest
 from pytest_mock import MockerFixture
 from qgis.core import QgsRectangle
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex
+from qgis.PyQt.QtCore import QAbstractItemModel, QModelIndex, Qt
 from quality_result_gui.api.types.quality_error import (
     ERROR_PRIORITY_LABEL,
     QualityErrorPriority,
@@ -122,6 +122,61 @@ def test_filter_with_user_processed_check_box(
     )
 
     assert _count_num_fatal_rows(model) == 3
+    assert _count_num_warning_rows(model) == 1
+
+
+def test_filter_with_user_processed_check_box_and_map_extent_check_box(
+    qgis_iface: QgisInterface,
+    quality_result_manager_with_data: QualityResultManager,
+    mocker: MockerFixture,
+) -> None:
+    qgis_iface.mapCanvas().setExtent(QgsRectangle(-1000, -1000, 1000, 1000))
+
+    # Initialize check box values
+    quality_result_manager_with_data.dock_widget.filter_with_map_extent_check_box.setChecked(
+        True
+    )
+    quality_result_manager_with_data.dock_widget.show_user_processed_errors_check_box.setChecked(
+        True
+    )
+
+    model = quality_result_manager_with_data.dock_widget.error_tree_view.model()
+
+    # Initial counts
+    assert _count_num_fatal_rows(model) == 4
+    assert _count_num_warning_rows(model) == 1
+
+    # Mock canvas extent to return exact extent needed in test (as setExtent depends on window size)
+    extent = QgsRectangle(10, 10, 100, 100)
+    mocker.patch.object(
+        quality_result_manager_with_data._filter_map_extent_model,
+        "_extent",
+        return_value=extent,
+    )
+    # Filter first by map extent
+    qgis_iface.mapCanvas().setExtent(extent)
+    assert _count_num_fatal_rows(model) == 2
+    assert _count_num_warning_rows(model) == 1
+
+    # Filter by user processed
+    quality_result_manager_with_data.dock_widget.show_user_processed_errors_check_box.setChecked(
+        False
+    )
+
+    # Mark first fatal error as processed -> should be filtered out
+    model.setData(
+        model.index(0, 0, QModelIndex()).child(0, 0).child(0, 0).child(0, 0),
+        Qt.Checked,
+        Qt.CheckStateRole,
+    )
+    assert _count_num_fatal_rows(model) == 1
+    assert _count_num_warning_rows(model) == 1
+
+    # Show user processed rows
+    quality_result_manager_with_data.dock_widget.show_user_processed_errors_check_box.setChecked(
+        True
+    )
+    assert _count_num_fatal_rows(model) == 2
     assert _count_num_warning_rows(model) == 1
 
 
