@@ -1,4 +1,4 @@
-#  Copyright (C) 2022-2023 National Land Survey of Finland
+#  Copyright (C) 2022-2024 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -27,8 +27,8 @@ from qgis.core import QgsAnnotationLayer, QgsCoordinateReferenceSystem, QgsProje
 from qgis.gui import QgisInterface
 from qgis.utils import iface as utils_iface
 
+from quality_result_gui import env
 from quality_result_gui.api.types.quality_error import QualityError
-from quality_result_gui.env import IS_DEVELOPMENT_MODE, TEST_JSON_FILE_PATH
 from quality_result_gui.quality_layer import QualityErrorLayer
 from quality_result_gui.ui.quality_error_tree_view import SelectionType
 from quality_result_gui.utils import layer_utils
@@ -73,11 +73,11 @@ class QualityErrorVisualizer:
             )
 
         # In dev mode define map extent when all errors are added to layer
-        if IS_DEVELOPMENT_MODE and TEST_JSON_FILE_PATH:
+        if env.IS_DEVELOPMENT_MODE and env.test_json_file_path:
             layer = self._quality_error_layer.find_layer_from_project()
             amount_of_added_errors = len(layer.items().keys()) if layer else 0
             if (
-                len(json.loads(Path(TEST_JSON_FILE_PATH).read_text()))
+                len(json.loads(Path(env.test_json_file_path).read_text()))
                 == amount_of_added_errors
                 and layer
             ):
