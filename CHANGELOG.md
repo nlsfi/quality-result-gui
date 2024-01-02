@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Show correct results when user processed filter is toggled with map extent filter active
+
 ## [2.0.5] - 2023-12-12
 
 - Fix: Filter newly inserted quality error rows correctly with user processed and map extent filters

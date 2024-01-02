@@ -1,4 +1,4 @@
-#  Copyright (C) 2023 National Land Survey of Finland
+#  Copyright (C) 2023-2024 National Land Survey of Finland
 #  (https://www.maanmittauslaitos.fi/en).
 #
 #
@@ -94,6 +94,7 @@ class QualityResultManager(QObject):
 
         self._base_model = QualityErrorsTreeBaseModel()
         self._base_model.error_checked.connect(self.error_checked)
+
         self._fetcher.results_received.connect(self._base_model.refresh_model)
 
         self._filter_model = FilterProxyModel()
@@ -103,15 +104,28 @@ class QualityResultManager(QObject):
             self._filter_model.invalidateFilter
         )
 
+        # Checkbox for filtering out user processed rows
         self._filter_user_processed_model = FilterByShowUserProcessedProxyModel()
         self._filter_user_processed_model.setSourceModel(self._filter_model)
         self._base_model.filterable_data_changed.connect(
             self._filter_user_processed_model.invalidateFilter
         )
+        self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
+            self._filter_user_processed_model.set_show_processed_errors
+        )
 
+        # Checkbox for filtering out rows outside map extent
         self._filter_map_extent_model = FilterByExtentProxyModel()
         self._filter_map_extent_model.setSourceModel(self._filter_user_processed_model)
         self._base_model.filterable_data_changed.connect(
+            self._filter_map_extent_model.invalidateFilter
+        )
+        self.dock_widget.filter_with_map_extent_check_box.toggled.connect(
+            self._filter_map_extent_model.set_enabled
+        )
+
+        # Invalidate map extent filter also when user processed checkbox is toggled
+        self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
             self._filter_map_extent_model.invalidateFilter
         )
 
@@ -120,12 +134,7 @@ class QualityResultManager(QObject):
 
         self.dock_widget.error_tree_view.setModel(self._styled_model)
 
-        self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
-            self._filter_user_processed_model.set_show_processed_errors
-        )
-        self.dock_widget.filter_with_map_extent_check_box.toggled.connect(
-            self._filter_map_extent_model.set_enabled
-        )
+        # Checkbox for showing errors on map
         self.dock_widget.show_errors_on_map_check_box.toggled.connect(
             self.visualizer.toggle_visibility
         )
