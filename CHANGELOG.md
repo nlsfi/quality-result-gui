@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.6] - 2024-01-05
 
 - Fix: Show correct results when user processed filter is toggled with map extent filter active
 
@@ -106,3 +106,4 @@
 [2.0.3]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.3
 [2.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.4
 [2.0.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.5
+[2.0.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.6
