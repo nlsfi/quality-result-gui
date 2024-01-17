@@ -657,9 +657,15 @@ class StyleProxyModel(QIdentityProxyModel):
 
 
 class AbstractFilterProxyModel(QSortFilterProxyModel):
+    filter_invalidated = pyqtSignal()
+
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
         self.setFilterRole(Qt.UserRole)
+
+    def invalidateFilter(self) -> None:  # noqa: N802 (qt override)
+        super().invalidateFilter()
+        self.filter_invalidated.emit()
 
     def filterAcceptsRow(  # noqa: N802 (qt override)
         self, source_row: int, source_parent: QModelIndex

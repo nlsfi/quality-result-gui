@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Process modifications in quality error tree correctly when multiple filters are present
+
 ## [2.0.6] - 2024-01-05
 
 - Fix: Show correct results when user processed filter is toggled with map extent filter active
