@@ -18,7 +18,7 @@
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
 
-__version__ = "2.0.6.post0"
+__version__ = "2.0.7"
 
 
 from enum import Enum, auto

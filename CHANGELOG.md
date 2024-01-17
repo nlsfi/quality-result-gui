@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.7] - 2024-01-17
 
 - Fix: Process modifications in quality error tree correctly when multiple filters are present
 
@@ -111,3 +111,4 @@
 [2.0.4]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.4
 [2.0.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.5
 [2.0.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.6
+[2.0.7]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.7
