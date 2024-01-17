@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [2.0.7] - 2024-01-17
 
 - Fix: Process modifications in quality error tree correctly when multiple filters are present
