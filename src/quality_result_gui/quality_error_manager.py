@@ -107,7 +107,7 @@ class QualityResultManager(QObject):
         # Checkbox for filtering out user processed rows
         self._filter_user_processed_model = FilterByShowUserProcessedProxyModel()
         self._filter_user_processed_model.setSourceModel(self._filter_model)
-        self._base_model.filterable_data_changed.connect(
+        self._filter_model.filter_invalidated.connect(
             self._filter_user_processed_model.invalidateFilter
         )
         self.dock_widget.show_user_processed_errors_check_box.toggled.connect(
@@ -117,7 +117,7 @@ class QualityResultManager(QObject):
         # Checkbox for filtering out rows outside map extent
         self._filter_map_extent_model = FilterByExtentProxyModel()
         self._filter_map_extent_model.setSourceModel(self._filter_user_processed_model)
-        self._base_model.filterable_data_changed.connect(
+        self._filter_user_processed_model.filter_invalidated.connect(
             self._filter_map_extent_model.invalidateFilter
         )
         self.dock_widget.filter_with_map_extent_check_box.toggled.connect(
