@@ -39,6 +39,18 @@ Or run specific tests with:
 docker run --rm -it qgis-quality-result-gui pytest test/unit/quality_result_gui/test_quality_data_fetcher.py
 ```
 
+## Translations
+
+To update or add translations with the wanted language, run the following in the root of the project:
+
+```bash
+(.venv) python tools/update-translations.py src/quality_result_gui src/quality_result_gui/resources/i18n <locale>
+```
+
+You can then open the *.ts* files you wish to translate with Qt Linguist and make the changes.
+
+Compile the translations to *.qm* files with *File -> Release*
+
 ## Release steps
 
 When the branch is in a releasable state, trigger the `Create draft release` workflow from GitHub Actions. Pass the to-be-released version number as an input to the workflow.
