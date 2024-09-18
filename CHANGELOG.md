@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Feat: Add finnish translations
 - Fix: Set annotation rendering order based on priority
 
 ## [2.0.7] - 2024-01-17
