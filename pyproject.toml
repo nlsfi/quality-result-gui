@@ -48,6 +48,10 @@ ban-relative-imports = "all"
     "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLR0913", # Too many arguments to function call (len(args) > 5)
     ]
+"tools*" = [
+    "T201",
+    "N999"
+]
 
 
 [tool.flake8]
