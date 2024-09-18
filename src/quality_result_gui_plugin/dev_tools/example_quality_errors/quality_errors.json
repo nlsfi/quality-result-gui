@@ -52,6 +52,32 @@
     "wkt_geom": "PolygonZ ((232237.78700000001117587 6712152.30400000046938658 3.875, 232247.94500000000698492 6712143.11799999978393316 0, 232253.35300000000279397 6712148.50900000054389238 3.81499999999999995, 232248.9370000000053551 6712152.56199999991804361 3.81499999999999995, 232243.10899999999674037 6712158.15400000009685755 3.875, 232237.78700000001117587 6712152.30400000046938658 3.875))"
   },
   {
+    "priority": 2,
+    "feature_type": "chimney_point",
+    "feature_id": "978d7670-5107-495f-a033-82c22f713c91",
+    "error_id": 6,
+    "unique_identifier": "61",
+    "error_type": 1,
+    "attribute_name": null,
+    "error_description": "Self-intersection",
+    "extra_info": null,
+    "is_user_processed": false,
+    "wkt_geom": "PointZ (233041.0456 6711924.7397 0)"
+  },
+  {
+    "priority": 1,
+    "feature_type": "chimney_point",
+    "feature_id": "978d7670-5107-495f-a033-82c22f713c91",
+    "error_id": 6,
+    "unique_identifier": "62",
+    "error_type": 1,
+    "attribute_name": "height_relative",
+    "error_description": "Invalid value",
+    "extra_info": null,
+    "is_user_processed": false,
+    "wkt_geom": "PointZ (233041.0456 6711924.7397 0)"
+  },
+  {
     "priority": 1,
     "feature_type": "chimney_point",
     "feature_id": "978d7670-5107-495f-a033-82c22f713c90",

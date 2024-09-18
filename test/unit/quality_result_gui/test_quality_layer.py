@@ -17,7 +17,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with quality-result-gui. If not, see <https://www.gnu.org/licenses/>.
 
-from collections.abc import Iterator
 from unittest.mock import ANY
 
 import pytest
@@ -43,14 +42,11 @@ def quality_layer(qgis_new_project: None) -> QualityErrorLayer:
 @pytest.fixture()
 def quality_layer_created(
     quality_layer: QualityErrorLayer,
-) -> Iterator[QualityErrorLayer]:
+) -> QualityErrorLayer:
     annotation_layer = quality_layer.get_annotation_layer()
     assert isinstance(annotation_layer, QgsAnnotationLayer)
     QgsProject.instance().addMapLayer(annotation_layer)
-
-    yield quality_layer
-
-    QgsProject.instance().removeMapLayer(annotation_layer.id())
+    return quality_layer
 
 
 def test_find_layer_from_project_when_not_added_to_project_should_do_nothing(
@@ -141,7 +137,9 @@ def test_add_or_replace_annotation_with_new_quality_errors(
 
     for key in annotation_layer.items():
         assert key in sum(quality_layer_created._annotation_ids.values(), [])
-        assert annotation_layer.item(key).geometry().isEmpty() is False
+        item = annotation_layer.item(key)
+        assert not item.geometry().isEmpty()
+        assert item.zIndex() == -priority.value
 
 
 @pytest.mark.parametrize(

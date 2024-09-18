@@ -250,4 +250,8 @@ class QualityErrorLayer:
         else:
             raise ValueError(f"Unsupported geom type: {geom_type}")
 
+        for annotation in annotations:
+            # Set z-index based on the priority
+            annotation.setZIndex(-quality_error.priority.value)
+
         return annotations
