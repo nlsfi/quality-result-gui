@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.8] - 2024-09-27
 
 - Feat: Add finnish translations
 - Fix: Set annotation rendering order based on priority
@@ -117,3 +117,4 @@
 [2.0.5]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.5
 [2.0.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.6
 [2.0.7]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.7
+[2.0.8]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.8
