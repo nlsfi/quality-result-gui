@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## Unreleased
+
 ## [2.0.8] - 2024-09-27
 
 - Feat: Add finnish translations
