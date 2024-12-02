@@ -1,4 +1,4 @@
-FROM qgis/qgis:release-3_22
+FROM qgis/qgis:3.40.1-jammy
 
 WORKDIR /code
 RUN pip3 install virtualenv && virtualenv .venv --system-site-packages
