@@ -13,13 +13,16 @@ jobs:
       image: qgis/qgis:${{ matrix.qgis-image-tags }}
     strategy:
       matrix:
-        qgis-image-tags: [release-3_22, release-3_34]
+        qgis-image-tags: [release-3_22, release-3_28, release-3_34, "3.40"]
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
-          pip3 install virtualenv && virtualenv .venv --system-site-packages
+          apt update
+          apt install -y python3-venv
+      - run: |
+          python3 -m venv --system-site-packages .venv
       - run: |
           .venv/bin/pip3 install -q -r requirements.txt --no-deps --only-binary=:all:
           .venv/bin/pip3 install . --no-deps
