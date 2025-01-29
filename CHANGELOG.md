@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix: Fix missing localization by including them in setuptools build
+
 ## [2.0.8] - 2024-09-27
 
 - Feat: Add finnish translations
