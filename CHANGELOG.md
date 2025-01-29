@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## [2.0.9] - 2025-01-29
 
 - Fix: Fix missing localization by including them in setuptools build
 
@@ -122,3 +122,4 @@
 [2.0.6]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.6
 [2.0.7]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.7
 [2.0.8]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.8
+[2.0.9]: https://github.com/nlsfi/quality-result-gui/releases/tag/v2.0.9
