@@ -169,7 +169,7 @@ class QualityErrorTreeView(QTreeView):
         self,
         row_index: QModelIndex,
     ) -> Optional[QualityError]:
-        data = row_index.data(Qt.UserRole)
+        data = row_index.data(Qt.ItemDataRole.UserRole)
 
         if not QVariant(data).isValid():
             return None

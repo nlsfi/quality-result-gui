@@ -56,6 +56,7 @@ from quality_result_gui.api.types.quality_error import (
 from quality_result_gui.quality_error_manager_settings import (
     QualityResultManagerSettings,
 )
+from quality_result_gui.utils.qt_utils import NULL
 
 if TYPE_CHECKING:
     from qgis.core import QgsRectangle
@@ -107,7 +108,7 @@ def _get_quality_errors_indexes(
 
     row_count = model.rowCount(index)
     if row_count == 0:
-        data = index.data(Qt.UserRole)
+        data = index.data(Qt.ItemDataRole.UserRole)
         (item_type, _) = cast(ErrorDataType, data)
         if item_type == QualityErrorTreeItemType.ERROR:
             # Index is for quality error row, which has no children
@@ -123,7 +124,7 @@ def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> 
     num_rows = 0
     row_count = model.rowCount(index)
     if row_count == 0:
-        data = index.data(Qt.UserRole)
+        data = index.data(Qt.ItemDataRole.UserRole)
         (item_type, _) = cast(ErrorDataType, data)
         if item_type == QualityErrorTreeItemType.ERROR:
             # Index is for quality error row
@@ -200,20 +201,20 @@ class QualityErrorTreeItem:
         return len(self._item_data)
 
     def data(  # noqa: C901, PLR0911, PLR0912
-        self, column_index: int, role: Qt.ItemDataRole = Qt.DisplayRole
+        self, column_index: int, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole
     ) -> QVariant:
         if not (column_index >= 0 and column_index < len(self._item_data)):
-            return QVariant()
+            return NULL
 
         item_data = self._item_data[column_index]
-        column_data = QVariant()
+        column_data = NULL
 
         column = ModelColumn(column_index)
 
         if self.item_type == QualityErrorTreeItemType.HEADER:
-            return QVariant()
+            return NULL
 
-        if role == Qt.UserRole and column in [
+        if role == Qt.ItemDataRole.UserRole and column in [
             ModelColumn.TYPE_OR_ID,
             ModelColumn.ERROR_DESCRIPTION,
         ]:
@@ -224,7 +225,7 @@ class QualityErrorTreeItem:
             )
             return (self.item_type, self._item_data[index])
 
-        if role == Qt.DisplayRole and column == ModelColumn.TYPE_OR_ID:
+        if role == Qt.ItemDataRole.DisplayRole and column == ModelColumn.TYPE_OR_ID:
             if self.item_type == QualityErrorTreeItemType.PRIORITY:
                 column_data = ERROR_PRIORITY_LABEL[QualityErrorPriority(item_data)]()
 
@@ -244,14 +245,14 @@ class QualityErrorTreeItem:
             return QVariant(column_data)
 
         if (
-            role == Qt.DisplayRole
+            role == Qt.ItemDataRole.DisplayRole
             and column == ModelColumn.ERROR_DESCRIPTION
             and self.item_type == QualityErrorTreeItemType.ERROR
         ):
             return item_data["error_description"]
 
         if (
-            role == Qt.ToolTipRole
+            role == Qt.ItemDataRole.ToolTipRole
             and column == ModelColumn.ERROR_DESCRIPTION
             and self.item_type == QualityErrorTreeItemType.ERROR
         ):
@@ -261,17 +262,17 @@ class QualityErrorTreeItem:
             return f"<p>{item_data['error_description']}</p><p>{extra_info}</p>"
 
         if (
-            role == Qt.CheckStateRole
+            role == Qt.ItemDataRole.CheckStateRole
             and column == ModelColumn.TYPE_OR_ID
             and self.item_type == QualityErrorTreeItemType.ERROR
         ):
             quality_error = cast(QualityError, item_data)
             if quality_error.is_user_processed is True:
-                return QVariant(Qt.Checked)
+                return QVariant(Qt.CheckState.Checked)
             else:
-                return QVariant(Qt.Unchecked)
+                return QVariant(Qt.CheckState.Unchecked)
 
-        return QVariant()
+        return NULL
 
     def parent(self) -> Optional["QualityErrorTreeItem"]:
         return self._item_parent
@@ -366,10 +367,10 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         return parent_item.column_count()
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
+        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole
     ) -> QVariant:
         if not index.isValid():
-            return QVariant()
+            return NULL
 
         item: QualityErrorTreeItem = index.internalPointer()
 
@@ -379,9 +380,12 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         self,
         section: int,
         orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
+        role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole,
     ) -> QVariant:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             try:
                 model_column = ModelColumn(section)
                 if model_column == ModelColumn.TYPE_OR_ID:
@@ -392,16 +396,16 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
                     )
                 return COLUMN_HEADERS[model_column]()
             except ValueError:
-                return QVariant()
-        return QVariant()
+                return NULL
+        return NULL
 
     def setData(  # noqa: N802 (qt override)
         self,
         index: QModelIndex,
         value: Any,  # noqa: ANN401
-        role: Qt.ItemDataRole = Qt.EditRole,
+        role: Qt.ItemDataRole = Qt.ItemDataRole.EditRole,
     ) -> bool:
-        if not index.isValid() or role == Qt.EditRole:
+        if not index.isValid() or role == Qt.ItemDataRole.EditRole:
             return False
 
         column = ModelColumn(index.column())
@@ -413,8 +417,8 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         ):
             quality_error = cast(QualityError, item._item_data[0])
 
-            if role == Qt.CheckStateRole:
-                checked = value == Qt.Checked
+            if role == Qt.ItemDataRole.CheckStateRole:
+                checked = value == Qt.CheckState.Checked
                 quality_error.is_user_processed = checked
 
                 self.error_checked.emit(quality_error.unique_identifier, checked)
@@ -433,7 +437,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         index: QModelIndex,
     ) -> Qt.ItemFlags:
         if not index.isValid():
-            return Qt.NoItemFlags
+            return Qt.ItemFlag.NoItemFlags
 
         column = ModelColumn(index.column())
         item: QualityErrorTreeItem = index.internalPointer()
@@ -442,7 +446,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             column == ModelColumn.TYPE_OR_ID
             and item.item_type == QualityErrorTreeItemType.ERROR
         ):
-            return super().flags(index) | Qt.ItemIsUserCheckable
+            return super().flags(index) | Qt.ItemFlag.ItemIsUserCheckable
 
         return super().flags(index)
 
@@ -456,7 +460,7 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
             for index in _get_quality_errors_indexes(
                 self, self.index(i, 0, QModelIndex())
             ):
-                _, item_data = index.data(Qt.UserRole)
+                _, item_data = index.data(Qt.ItemDataRole.UserRole)
                 current_quality_error_ids.add(
                     cast(QualityError, item_data).unique_identifier
                 )
@@ -607,10 +611,10 @@ class StyleProxyModel(QIdentityProxyModel):
         super().__init__(parent)
 
     def data(
-        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.DisplayRole
+        self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole
     ) -> QVariant:
         source_index = self.mapToSource(index)
-        data = self.sourceModel().data(source_index, Qt.UserRole)
+        data = self.sourceModel().data(source_index, Qt.ItemDataRole.UserRole)
 
         if not QVariant(data).isValid():
             return self.sourceModel().data(source_index, role)
@@ -618,7 +622,7 @@ class StyleProxyModel(QIdentityProxyModel):
         (item_type, item_data) = cast(ErrorDataType, data)
         column = ModelColumn(index.column())
         if (
-            role == Qt.FontRole
+            role == Qt.ItemDataRole.FontRole
             and column == ModelColumn.TYPE_OR_ID
             and item_type == QualityErrorTreeItemType.PRIORITY
         ):
@@ -628,7 +632,7 @@ class StyleProxyModel(QIdentityProxyModel):
             return QVariant(font)
 
         if (
-            role == Qt.FontRole
+            role == Qt.ItemDataRole.FontRole
             and column == ModelColumn.TYPE_OR_ID
             and item_type == QualityErrorTreeItemType.FEATURE_TYPE
         ):
@@ -637,15 +641,15 @@ class StyleProxyModel(QIdentityProxyModel):
             return QVariant(font)
 
         if (
-            role == Qt.ForegroundRole
+            role == Qt.ItemDataRole.ForegroundRole
             and column == ModelColumn.TYPE_OR_ID
             and item_type == QualityErrorTreeItemType.ERROR
             and cast(QualityError, item_data).is_user_processed is True
         ):
-            return QVariant(QColor(Qt.lightGray))
+            return QVariant(QColor(Qt.GlobalColor.lightGray))
 
         if (
-            role == Qt.ForegroundRole
+            role == Qt.ItemDataRole.ForegroundRole
             and column == ModelColumn.TYPE_OR_ID
             and item_type == QualityErrorTreeItemType.FEATURE
         ):
@@ -661,7 +665,7 @@ class AbstractFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
-        self.setFilterRole(Qt.UserRole)
+        self.setFilterRole(Qt.ItemDataRole.UserRole)
 
     def invalidateFilter(self) -> None:  # noqa: N802 (qt override)
         super().invalidateFilter()
@@ -733,9 +737,12 @@ class FilterProxyModel(AbstractFilterProxyModel):
         self,
         section: int,
         orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
+        role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole,
     ) -> QVariant:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             try:
                 model_column = ModelColumn(section)
                 if model_column == ModelColumn.TYPE_OR_ID:
@@ -754,8 +761,8 @@ class FilterProxyModel(AbstractFilterProxyModel):
                     )
                 return COLUMN_HEADERS[model_column]()
             except ValueError:
-                return QVariant()
-        return QVariant()
+                return NULL
+        return NULL
 
 
 class FilterByExtentProxyModel(AbstractFilterProxyModel):
@@ -799,9 +806,12 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
         self,
         section: int,
         orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
+        role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole,
     ) -> QVariant:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             try:
                 model_column = ModelColumn(section)
                 if model_column == ModelColumn.TYPE_OR_ID:
@@ -820,8 +830,8 @@ class FilterByExtentProxyModel(AbstractFilterProxyModel):
                     )
                 return COLUMN_HEADERS[model_column]()
             except ValueError:
-                return QVariant()
-        return QVariant()
+                return NULL
+        return NULL
 
 
 class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
@@ -849,9 +859,12 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
         self,
         section: int,
         orientation: Qt.Orientation,
-        role: Qt.ItemDataRole = Qt.DisplayRole,
+        role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole,
     ) -> QVariant:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             try:
                 model_column = ModelColumn(section)
                 if model_column == ModelColumn.TYPE_OR_ID:
@@ -870,5 +883,5 @@ class FilterByShowUserProcessedProxyModel(AbstractFilterProxyModel):
                     )
                 return COLUMN_HEADERS[model_column]()
             except ValueError:
-                return QVariant()
-        return QVariant()
+                return NULL
+        return NULL

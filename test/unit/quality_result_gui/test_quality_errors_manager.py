@@ -169,9 +169,21 @@ def test_close_and_reopen_preserves_error_visibility_on_map(
         "callback_called",
     ),
     [
-        (-1, Qt.EditRole, Qt.Unchecked, None, False),
-        (Qt.Checked, Qt.CheckStateRole, Qt.Checked, True, True),
-        (Qt.Unchecked, Qt.CheckStateRole, Qt.Unchecked, False, True),
+        (-1, Qt.ItemDataRole.EditRole, Qt.CheckState.Unchecked, None, False),
+        (
+            Qt.CheckState.Checked,
+            Qt.ItemDataRole.CheckStateRole,
+            Qt.CheckState.Checked,
+            True,
+            True,
+        ),
+        (
+            Qt.CheckState.Unchecked,
+            Qt.ItemDataRole.CheckStateRole,
+            Qt.CheckState.Unchecked,
+            False,
+            True,
+        ),
     ],
 )
 def test_model_set_data_user_processed(
@@ -191,7 +203,7 @@ def test_model_set_data_user_processed(
     )
 
     model.setData(first_error_row_index, value, role)
-    check_state = model.data(first_error_row_index, Qt.CheckStateRole)
+    check_state = model.data(first_error_row_index, Qt.ItemDataRole.CheckStateRole)
     assert check_state == expected_check_state
 
     if callback_called:
