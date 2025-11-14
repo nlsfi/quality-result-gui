@@ -34,7 +34,7 @@ jobs:
   plugin_zip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v3
         with:
           python-version: "3.9"
@@ -45,7 +45,7 @@ jobs:
           pip install . --no-deps
       - run: |
           qgis-plugin-dev-tools build
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: plugin-zip
           path: dist/*.zip
