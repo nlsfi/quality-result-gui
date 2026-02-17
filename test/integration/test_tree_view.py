@@ -136,8 +136,8 @@ def test_quality_error_tree_view_updates_view_partially_when_data_is_refreshed(
 @pytest.mark.parametrize(
     ("mouse_button", "should_preserve_scale"),
     [
-        (Qt.LeftButton, False),
-        (Qt.RightButton, True),
+        (Qt.MouseButton.LeftButton, False),
+        (Qt.MouseButton.RightButton, True),
     ],
     ids=[
         "with-left",

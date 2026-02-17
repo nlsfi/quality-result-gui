@@ -166,8 +166,8 @@ def test_filter_with_user_processed_check_box_and_map_extent_check_box(
     # Mark first fatal error as processed -> should be filtered out
     model.setData(
         model.index(0, 0, QModelIndex()).child(0, 0).child(0, 0).child(0, 0),
-        Qt.Checked,
-        Qt.CheckStateRole,
+        Qt.CheckState.Checked,
+        Qt.ItemDataRole.CheckStateRole,
     )
     assert _count_num_fatal_rows(model) == 1
     assert _count_num_warning_rows(model) == 1

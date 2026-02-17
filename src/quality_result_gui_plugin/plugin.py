@@ -127,7 +127,7 @@ class QualityResultGuiPlugin:
 
     def _on_open_dev_tools_called(self) -> None:
         dialog = DevToolsDialog(iface.mainWindow())
-        if dialog.exec_():
+        if dialog.exec():
             self._test_json_file_path = (
                 dialog.quality_errors_data_file_widget.filePath()
             )

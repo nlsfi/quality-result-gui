@@ -305,15 +305,17 @@ def test_model_header_data(model: FilterByExtentProxyModel):
     base_model = QualityErrorsTreeBaseModel(None)
     model.setSourceModel(base_model)
 
-    assert not QVariant(model.headerData(0, Qt.Vertical)).isValid()
-    assert QVariant(model.headerData(0, Qt.Horizontal)).isValid()
+    assert not QVariant(model.headerData(0, Qt.Orientation.Vertical)).isValid()
+    assert QVariant(model.headerData(0, Qt.Orientation.Horizontal)).isValid()
 
     for valid_col_index in [0, 1]:
-        assert QVariant(model.headerData(valid_col_index, Qt.Horizontal)).isValid()
+        assert QVariant(
+            model.headerData(valid_col_index, Qt.Orientation.Horizontal)
+        ).isValid()
 
     for invalid_col_index in [-1, 2, 3, 4, 5, 10, 99]:
         assert not QVariant(
-            model.headerData(invalid_col_index, Qt.Horizontal)
+            model.headerData(invalid_col_index, Qt.Orientation.Horizontal)
         ).isValid()
 
 
@@ -328,16 +330,16 @@ def test_total_number_of_errors_is_shown_in_header(
         *_,
     ) = filter_proxy_model_and_filters
 
-    assert "5/5" in model.headerData(0, Qt.Horizontal).value()
+    assert "5/5" in model.headerData(0, Qt.Orientation.Horizontal).value()
 
     error_type_filter._remove_filter_item(QualityErrorType.GEOMETRY)
 
-    assert "4/5" in model.headerData(0, Qt.Horizontal).value()
+    assert "4/5" in model.headerData(0, Qt.Orientation.Horizontal).value()
 
     error_type_filter._refresh_error_type_filters(ERROR_TYPE_LABEL)
     feature_type_filter._remove_filter_item("building_part_area")
 
-    assert "1/5" in model.headerData(0, Qt.Horizontal).value()
+    assert "1/5" in model.headerData(0, Qt.Orientation.Horizontal).value()
 
 
 def test_model_data_invalid_index(model: FilterByExtentProxyModel):
@@ -400,7 +402,7 @@ def test_model_data_error(
     )
     extra_info = model.data(
         _priority_1_feature_type_1_feature_1_error_1_description_index(model),
-        Qt.ToolTipRole,
+        Qt.ItemDataRole.ToolTipRole,
     )
     assert "Invalid geometry" in extra_info
     assert "Extra info" in extra_info
@@ -420,42 +422,51 @@ def test_model_data_error(
 def test_model_data_user_processed_values(model: FilterByExtentProxyModel):
     assert (
         model.data(
-            _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.CheckStateRole
+            _priority_1_feature_type_1_feature_1_error_1_index(model),
+            Qt.ItemDataRole.CheckStateRole,
         )
-        == Qt.Unchecked
+        == Qt.CheckState.Unchecked
     )
     assert (
         model.data(
-            _priority_1_feature_type_1_feature_1_error_2_index(model), Qt.CheckStateRole
+            _priority_1_feature_type_1_feature_1_error_2_index(model),
+            Qt.ItemDataRole.CheckStateRole,
         )
-        == Qt.Checked
+        == Qt.CheckState.Checked
     )
 
 
 def test_model_data_error_text_color(model: FilterByExtentProxyModel):
     assert (
         model.data(
-            _priority_1_feature_type_1_feature_1_error_1_index(model), Qt.ForegroundRole
+            _priority_1_feature_type_1_feature_1_error_1_index(model),
+            Qt.ItemDataRole.ForegroundRole,
         )
         is None
     )
     assert (
         model.data(
-            _priority_1_feature_type_1_feature_1_error_2_index(model), Qt.ForegroundRole
+            _priority_1_feature_type_1_feature_1_error_2_index(model),
+            Qt.ItemDataRole.ForegroundRole,
         )
-        == Qt.lightGray
+        == Qt.GlobalColor.lightGray
     )
 
 
 def test_model_checkable_flags(model: FilterByExtentProxyModel):
     invalid_index_flags = model.flags(QModelIndex())
-    assert int(invalid_index_flags) == Qt.NoItemFlags
+    assert int(invalid_index_flags) == Qt.ItemFlag.NoItemFlags
 
     error_flags = model.flags(_priority_1_feature_type_1_feature_1_error_1_index(model))
-    assert int(error_flags & Qt.ItemIsUserCheckable) == Qt.ItemIsUserCheckable
+    assert (
+        int(error_flags & Qt.ItemFlag.ItemIsUserCheckable)
+        == Qt.ItemFlag.ItemIsUserCheckable
+    )
 
     priority_flags = model.flags(_priority_1_index(model))
-    assert int(priority_flags & Qt.ItemIsUserCheckable) == Qt.NoItemFlags
+    assert (
+        int(priority_flags & Qt.ItemFlag.ItemIsUserCheckable) == Qt.ItemFlag.NoItemFlags
+    )
 
 
 @pytest.mark.parametrize(
@@ -700,8 +711,8 @@ def test_no_rows_visible_when_all_user_processed(
 
     model.setData(
         _priority_1_feature_type_1_feature_1_error_1_index(model),
-        Qt.Checked,
-        Qt.CheckStateRole,
+        Qt.CheckState.Checked,
+        Qt.ItemDataRole.CheckStateRole,
     )
     model.set_show_processed_errors(False)
 

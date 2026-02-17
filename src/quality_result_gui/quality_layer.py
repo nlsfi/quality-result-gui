@@ -189,7 +189,7 @@ class QualityErrorLayer:
 
         symbol = self.style.create_error_symbol(quality_error)
 
-        if geom_type == QgsWkbTypes.PointGeometry:
+        if geom_type == QgsWkbTypes.GeometryType.PointGeometry:
             points = []
             if geometry.isMultipart() is False:
                 point = QgsPoint()
@@ -208,7 +208,7 @@ class QualityErrorLayer:
                 )
                 annotations.append(annotation)
 
-        elif geom_type == QgsWkbTypes.PolygonGeometry:
+        elif geom_type == QgsWkbTypes.GeometryType.PolygonGeometry:
             polygons = []
 
             if geometry.isMultipart() is False:
@@ -228,7 +228,7 @@ class QualityErrorLayer:
                 )
                 annotations.append(annotation)
 
-        elif geom_type == QgsWkbTypes.LineGeometry:
+        elif geom_type == QgsWkbTypes.GeometryType.LineGeometry:
             lines = []
             if geometry.isMultipart() is False:
                 line = QgsLineString()

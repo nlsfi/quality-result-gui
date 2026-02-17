@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Chore: Add qt6 and QGIS 4 support
+
 ## [2.0.9] - 2025-01-29
 
 - Fix: Fix missing localization by including them in setuptools build

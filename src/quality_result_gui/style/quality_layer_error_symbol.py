@@ -47,11 +47,11 @@ class ErrorSymbol(BaseSymbol, ABC):
     def to_qgs_symbol(
         self, geometry_type: QgsWkbTypes.GeometryType, highlighted: bool = False
     ) -> QgsSymbol:
-        if geometry_type == QgsWkbTypes.PolygonGeometry:
+        if geometry_type == QgsWkbTypes.GeometryType.PolygonGeometry:
             return self._get_polygon_symbol(highlighted)
-        if geometry_type == QgsWkbTypes.LineGeometry:
+        if geometry_type == QgsWkbTypes.GeometryType.LineGeometry:
             return self._get_line_symbol(highlighted)
-        if geometry_type == QgsWkbTypes.PointGeometry:
+        if geometry_type == QgsWkbTypes.GeometryType.PointGeometry:
             return self._get_point_symbol(highlighted)
         raise NotImplementedError()
 
