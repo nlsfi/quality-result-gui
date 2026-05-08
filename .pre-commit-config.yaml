@@ -2,7 +2,7 @@ default_stages: [commit]
 default_install_hook_types: [pre-commit, commit-msg]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -11,20 +11,20 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.292
+    rev: 42f98979dbdfcd148dff424477552b8816a7cf01  # frozen: v0.0.292
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 05f0a8ce1f71fbb36e1e032d3b518c7b945089a2  # frozen: 25.11.0
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
+    rev: 6e63c9e9c65e1df04465cdcda0f2490e89291f58  # frozen: v1.4.1
     hooks:
       - id: mypy
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: d93590f5be797aabb60e3b09f2f52dddb02f349f  # frozen: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies:
@@ -32,18 +32,18 @@ repos:
           - flake8-spellcheck==0.28.0
           - flake8-qgis==1.0.0
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.32.2
+    rev: e72a3ca1632f0b11a07d171449fe447a7ff6795e  # frozen: v0.48.0
     hooks:
       - id: markdownlint
         args: ["--fix"]
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.30.0
+    rev: 9d0f59876dc6882e263b2657ab42a1ced4c0207d  # frozen: v1.30.0
     hooks:
       - id: yamllint
         args: [--strict, -c=.yamllint]
   # commit-msg hooks
   - repo: https://github.com/jorisroovers/gitlint
-    rev: v0.18.0
+    rev: acc9d9de6369b76d22cb4167029d2035e8730b98  # frozen: v0.19.1
     hooks:
       - id: gitlint
         stages: [commit-msg]

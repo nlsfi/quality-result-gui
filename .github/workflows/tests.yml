@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       - run: |
           apt update
           apt install -y python3-venv
@@ -34,8 +34,8 @@ jobs:
   plugin_zip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/setup-python@3542bca2639a428e1796aaa6a2ffef0c0f575566 # v3.1.4
         with:
           python-version: "3.9"
       # Use extra pip install . to do a non-editable install,
@@ -45,7 +45,7 @@ jobs:
           pip install . --no-deps
       - run: |
           qgis-plugin-dev-tools build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: plugin-zip
           path: dist/*.zip

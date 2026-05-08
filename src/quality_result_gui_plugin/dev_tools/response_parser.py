@@ -44,7 +44,7 @@ class QualityErrorResponse:
                 error_type=QualityErrorType(error_obj["error_type"]),
                 attribute_name=error_obj["attribute_name"],
                 error_description=error_obj["error_description"],
-                error_extra_info=error_obj.get("extra_info", None),
+                error_extra_info=error_obj.get("extra_info", None),  # type: ignore[arg-type]
                 geometry=QgsGeometry.fromWkt(error_obj["wkt_geom"]),
                 is_user_processed=error_obj["is_user_processed"],
             )

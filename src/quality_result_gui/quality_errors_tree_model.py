@@ -108,7 +108,7 @@ def _get_quality_errors_indexes(
     row_count = model.rowCount(index)
     if row_count == 0:
         data = index.data(Qt.UserRole)
-        (item_type, _) = cast(ErrorDataType, data)
+        item_type, _ = cast(ErrorDataType, data)
         if item_type == QualityErrorTreeItemType.ERROR:
             # Index is for quality error row, which has no children
             yield index
@@ -124,7 +124,7 @@ def _count_quality_error_rows(model: QAbstractItemModel, index: QModelIndex) -> 
     row_count = model.rowCount(index)
     if row_count == 0:
         data = index.data(Qt.UserRole)
-        (item_type, _) = cast(ErrorDataType, data)
+        item_type, _ = cast(ErrorDataType, data)
         if item_type == QualityErrorTreeItemType.ERROR:
             # Index is for quality error row
             return 1
@@ -322,12 +322,10 @@ class QualityErrorsTreeBaseModel(QAbstractItemModel):
         return QModelIndex()
 
     @overload
-    def parent(self, child: QModelIndex) -> QModelIndex:
-        ...
+    def parent(self, child: QModelIndex) -> QModelIndex: ...
 
     @overload
-    def parent(self) -> QObject:
-        ...
+    def parent(self) -> QObject: ...
 
     def parent(
         self, child: Optional[QModelIndex] = None
@@ -615,7 +613,7 @@ class StyleProxyModel(QIdentityProxyModel):
         if not QVariant(data).isValid():
             return self.sourceModel().data(source_index, role)
 
-        (item_type, item_data) = cast(ErrorDataType, data)
+        item_type, item_data = cast(ErrorDataType, data)
         column = ModelColumn(index.column())
         if (
             role == Qt.FontRole
@@ -680,7 +678,7 @@ class AbstractFilterProxyModel(QSortFilterProxyModel):
             # Always accept anything that did not return valid data
             return True
 
-        (item_type, item_value) = cast(ErrorDataType, data)
+        item_type, item_value = cast(ErrorDataType, data)
 
         row_accepted = self.accept_row(item_type, item_value)
         if not row_accepted:
