@@ -213,7 +213,7 @@ def get_action_from_menu() -> Callable[[QMenu, str], Optional[QAction]]:
 
 @pytest.fixture()
 def is_action_present(
-    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]]
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]],
 ) -> Callable[[QMenu, str], bool]:
     def _is_action_present(menu: QMenu, action_title: str) -> bool:
         return bool(get_action_from_menu(menu, action_title))
@@ -223,7 +223,7 @@ def is_action_present(
 
 @pytest.fixture()
 def trigger_action(
-    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]]
+    get_action_from_menu: Callable[[QMenu, str], Optional[QAction]],
 ) -> Callable[[QMenu, str], None]:
     def _trigger_action(menu: QMenu, action_title: str) -> None:
         action = get_action_from_menu(menu, action_title)
