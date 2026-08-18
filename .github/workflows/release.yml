@@ -8,14 +8,11 @@ jobs:
   pypi:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          python-version: "3.9"
-      - run: |
-          pip install build
-      - run: |
-          python -m build
+          python-version: "3.12"
+      - run: uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -28,20 +25,15 @@ jobs:
   qgis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          python-version: "3.9"
-      # use extra pip install . to do a non-editable install,
-      # so that .dist-info will go the package instead of .egg-info
-      - run: |
-          pip install -r requirements.txt --no-deps --only-binary=:all:
-          pip install . --no-deps
-      - run: |
-          qgis-plugin-dev-tools build
+          python-version: "3.12"
+      # Use --no-editable so .dist-info is written to site-packages instead of .egg-info
+      - run: uv sync --no-editable
+      - run: uv run qgis-plugin-dev-tools build
       # no qgis repo publish yet for the dummy plugin gui
-      # - run: |
-      #     qgis-plugin-dev-tools publish dist/*.zip
+      # - run: uv run qgis-plugin-dev-tools publish dist/*.zip
       #   env:
       #     QPDT_PUBLISH_USERNAME: ${{ secrets.QGIS_REPO_USERNAME }}
       #     QPDT_PUBLISH_PASSWORD: ${{ secrets.QGIS_REPO_PASSWORD }}

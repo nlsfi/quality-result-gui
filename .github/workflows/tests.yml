@@ -13,39 +13,31 @@ jobs:
       image: qgis/qgis:${{ matrix.qgis-image-tags }}
     strategy:
       matrix:
-        qgis-image-tags: [release-3_22, release-3_28, release-3_34, "3.44"]
+        qgis-image-tags: ["3.40", "3.44"]
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          apt update
-          apt install -y python3-venv
-      - run: |
-          python3 -m venv --system-site-packages .venv
-      - run: |
-          .venv/bin/pip3 install -q -r requirements.txt --no-deps --only-binary=:all:
-          .venv/bin/pip3 install . --no-deps
-      - run: |
-          .venv/bin/pytest
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: false
+      - run: uv venv --system-site-packages .venv
+      - run: uv sync
+      - run: .venv/bin/pytest
         env:
           QT_QPA_PLATFORM: offscreen
 
   plugin_zip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          python-version: "3.9"
-      # Use extra pip install . to do a non-editable install,
-      # so that .dist-info will go the package instead of .egg-info
-      - run: |
-          pip install -r requirements.txt --no-deps --only-binary=:all:
-          pip install . --no-deps
-      - run: |
-          qgis-plugin-dev-tools build
-      - uses: actions/upload-artifact@v4
+          python-version: "3.12"
+      # Use --no-editable so .dist-info is written to site-packages instead of .egg-info
+      - run: uv sync --no-editable
+      - run: uv run qgis-plugin-dev-tools build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: plugin-zip
           path: dist/*.zip
